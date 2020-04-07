@@ -1,0 +1,26 @@
+fileFormatVersion: 2
+guid: 4a481f0eaaca4b840b9f5f457e7e090a
+labels:
+- AnySync
+- PUN
+- any
+- buffer
+- netcode
+- network
+- networking
+- photon
+- smooth
+- sync
+- synchronization
+- transform
+- unet
+- websocket
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
