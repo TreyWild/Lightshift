@@ -1,0 +1,16 @@
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\bin\Debug\newGame.dll
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\bin\Debug\newGame.pdb
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\bin\Debug\Player.IO GameLibrary.dll
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\bin\Debug\Player.IO GameLibrary.xml
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\obj\Debug\Game Code.VS2010.csprojAssemblyReference.cache
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\obj\Debug\Game Code.VS2010.csproj.CopyComplete
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\obj\Debug\newGame.dll
+C:\Users\Bryly\Desktop\PlayerIOGameFramework\Serverside\Serverside Code\Game Code\obj\Debug\newGame.pdb
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\bin\Debug\newGame.dll
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\bin\Debug\newGame.pdb
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\bin\Debug\Player.IO GameLibrary.dll
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\bin\Debug\Player.IO GameLibrary.xml
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\obj\Debug\Game Code.VS2010.csprojAssemblyReference.cache
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\obj\Debug\Game Code.VS2010.csproj.CopyComplete
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\obj\Debug\newGame.dll
+C:\Users\Bryly\Desktop\Lightshift\PlayerIOAuthServer\Serverside Code\Game Code\obj\Debug\newGame.pdb
