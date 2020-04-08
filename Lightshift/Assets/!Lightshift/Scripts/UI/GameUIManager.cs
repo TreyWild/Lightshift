@@ -44,9 +44,12 @@ public class GameUIManager : MonoBehaviour
         ShipInterface = shipInterface.GetComponent<ShipInterface>();
 
         _chatBox = Instantiate(_chatBoxPrefab);
+    }
 
-        if (ClientManager.Instance == null)
-            SceneManager.LoadScene(0);
+    private void Start()
+    {
+        if (Server.Instance != null)
+            ToggleAllUI(false);
     }
     public void ToggleSettingsMenu()
     {

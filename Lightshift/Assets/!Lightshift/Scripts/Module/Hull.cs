@@ -19,7 +19,7 @@ public class Hull : NetworkBehaviour
     private SpriteRenderer _hull;
     private Entity _entity;
     private EntityUI _ui;
-    private void Start()
+    private void Awake()
     {
         _ui = GetComponent<EntityUI>();
         _hull = Instantiate(PrefabManager.Instance.hullPrefab, transform).GetComponent<SpriteRenderer>();

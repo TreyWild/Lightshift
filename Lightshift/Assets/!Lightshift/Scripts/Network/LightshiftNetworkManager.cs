@@ -12,9 +12,8 @@ public class LightshiftNetworkManager : NetworkManager
 {
     public override void OnStartServer()
     {
+        gameObject.AddComponent<Server>();
         Debug.Log($"Server Started. Running on {networkAddress}.");
-
-        ServerChangeScene("_GAME_");
     }
 
     public override void OnServerReady(NetworkConnection conn)
@@ -33,14 +32,20 @@ public class LightshiftNetworkManager : NetworkManager
     {
         base.OnClientConnect(conn);
 
-        ClientManager.Instance.Authenticate();
+        gameObject.AddComponent<Game>();
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
-        base.OnClientDisconnect(conn);
-        SceneManager.LoadScene("_AUTHENTICATION_");
-
         Destroy(gameObject);
+    }
+
+    public static void Authenticate(string connectUserId, string authKey) 
+    {
+        var authenticator = FindObjectOfType<LightshiftAuthenticator>();
+        authenticator.userId = connectUserId;
+        authenticator.authKey = authKey;
+
+        singleton.StartClient();
     }
 }

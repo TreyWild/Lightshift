@@ -65,14 +65,11 @@ public class PlayerIONetwork : MonoBehaviour{
 
     public  void JoinServer(string authKey)
     {
-        SceneHandler.LoadScene("_CLIENT_", delegate 
-        {
-            ClientManager.Instance.SetAuth(Client.ConnectUserId, authKey);
-            ServiceConnection.Disconnect();
-        });
+        LightshiftNetworkManager.Authenticate(_client.ConnectUserId, authKey);
+
+        ServiceConnection.Disconnect();
     }
 
-    [Obsolete]
     public void Authenticate(string email, string password)
     {
         loginUI.ShowMessage("Authenting...");
@@ -92,7 +89,6 @@ public class PlayerIONetwork : MonoBehaviour{
         });
     }
 
-    [Obsolete]
     public void Register(string email, string password)
     {
         PlayerIO.QuickConnect.SimpleRegister(gameId, Guid.NewGuid().ToString(), password, email, null, null, null, null, null, delegate (Client client)

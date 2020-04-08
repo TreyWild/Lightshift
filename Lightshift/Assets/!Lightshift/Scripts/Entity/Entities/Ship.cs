@@ -7,19 +7,32 @@ using UnityEngine;
 
 public class Ship : Entity
 {
+    private LightLance _lightLance;
+    private Engine _engine;
+    private Wing _wing;
+    private Hull _hull;
 
-    [Header("Modules")]
-    [SerializeField] private Thruster _engine;
+    public override void OnStartServer()
+    {
+        base.OnStartServer();
 
-
-
-
-    private InputHandler _input;
+        CameraFollow.Instance.Target = transform.gameObject;
+    }
     private void Start()
     {
-        _input = GetComponent<InputHandler>();
+        _lightLance = gameObject.AddComponent<LightLance>();
+        _engine = gameObject.AddComponent<Engine>();
+        _wing = gameObject.AddComponent<Wing>();
+        _hull = gameObject.AddComponent<Hull>();
 
-        SoundManager.Instance.Play(17, transform.position);
+        _hull.SetImage(10, Color.white);
+        _wing.SetImage(13, Color.white);
+        _engine.maxSpeed = 0.2f;
+        _engine.acceleration = 2f;
+        _engine.brakeForce = 2;
+        _engine.weight = .5f;
+
+        _wing.agility = 130f;
     }
 
     private void Update()

@@ -11,6 +11,8 @@ GameObject:
   - component: {fileID: 7018939179485853576}
   - component: {fileID: 8787730838940789662}
   - component: {fileID: 5514582473827743312}
+  - component: {fileID: 463780182}
+  - component: {fileID: 463780183}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -48,16 +50,16 @@ MonoBehaviour:
   runInBackground: 1
   startOnHeadless: 1
   showDebugMessages: 1
-  serverTickRate: 30
-  offlineScene: 
-  onlineScene: 
+  serverTickRate: 60
+  offlineScene: Assets/!Lightshift/Scenes/_AUTHENTICATION_.unity
+  onlineScene: Assets/!Lightshift/Scenes/_GAME_.unity
   transport: {fileID: 5514582473827743312}
   networkAddress: localhost
   maxConnections: 4
-  authenticator: {fileID: 0}
+  authenticator: {fileID: 463780182}
   playerPrefab: {fileID: 2893782170727032538, guid: 39fa288b900eab44db7c45a0fa7f697f,
     type: 3}
-  autoCreatePlayer: 0
+  autoCreatePlayer: 1
   playerSpawnMethod: 0
   spawnPrefabs:
   - {fileID: 146266832440864517, guid: b4bdecad6cb5a304581c2b487137f7e9, type: 3}
@@ -110,3 +112,38 @@ MonoBehaviour:
   CustomTimeoutMultiplier: 3
   PingCalculationEnabled: 1
   PingCalculationFrameTimer: 120
+--- !u!114 &463780182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5524512745480542275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d630a04085867b74a95d45dc7eb05075, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnServerAuthenticated:
+    m_PersistentCalls:
+      m_Calls: []
+  OnClientAuthenticated:
+    m_PersistentCalls:
+      m_Calls: []
+  userId: 
+  authKey: 
+--- !u!114 &463780183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5524512745480542275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6442dc8070ceb41f094e44de0bf87274, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  showGUI: 1
+  offsetX: 0
+  offsetY: 0

@@ -14,7 +14,7 @@ public class BeamToTarget : MonoBehaviour
     public float maxDistance = 100;
 
     public Action<Transform, float> OnFocus;
-    private void Start()
+    private void Awake()
     {
         _lineRenderer = GetComponent<LineRenderer>();
         _lineRenderer.sortingOrder = SortingOrders.LIGHTLANCE;

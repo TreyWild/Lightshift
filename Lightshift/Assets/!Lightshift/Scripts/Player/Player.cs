@@ -25,4 +25,10 @@ public class Player
             PlayerObject.Save();
         }
     }
+
+    public void ConsumeAuthKey() 
+    {
+        PlayerObject.Remove("authKey");
+        PlayerObject.Save();
+    }
 }

@@ -25,6 +25,7 @@ public class SyncTransform : NetworkBehaviour
     private void Start()
     {
         _motionGenerator = new MotionGenerator();
+        _rigidbody = GetComponent<Rigidbody2D>();
     }
 
     private void Update()

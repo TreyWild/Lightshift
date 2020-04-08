@@ -11,8 +11,8 @@ GameObject:
   - component: {fileID: 146266832440864516}
   - component: {fileID: 146266832440864519}
   - component: {fileID: 146266832440864518}
-  - component: {fileID: 1235031489}
   - component: {fileID: 1235031490}
+  - component: {fileID: 5343584851351224138}
   m_Layer: 10
   m_Name: Station
   m_TagString: Untagged
@@ -101,35 +101,12 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   username: 
-  health: 0
-  maxShield: 0
-  maxHealth: 0
-  shield: 0
-  power: 0
-  maxPower: 0
   hasCollision: 0
   teamId: 
-  powerRegen: 0
-  shieldRegen: 0
-  healthRegen: 0
-  maxSpeed: 0
-  acceleration: 0
-  agility: 0
-  weight: 0
-  brakeForce: 0
-  lightLancePullForce: 0
-  lightLanceRange: 0
-  lightLancePowerCost: 0
-  overDrivePowerCost: 0
-  overDriveMultiplier: 0
-  horizontalInput: 0
-  verticalInput: 0
-  lightLance: 0
-  overDrive: 0
   colliders: []
   smoothSync: {fileID: 0}
   rigidBody: {fileID: 0}
-  _shipData:
+  shipData:
     maxShield: 0
     maxHealth: 0
     maxPower: 0
@@ -146,66 +123,10 @@ MonoBehaviour:
     lightLanceRange: 0
     overDrivePowerCost: 0
     overDriveBoostMultiplier: 0
-  IsInSafezone: 0
-  shieldSize: 11
   targetNeutral: {fileID: 0}
   targetEntity: {fileID: 0}
+  IsInSafezone: 0
   stationType: 0
---- !u!114 &1235031489
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 146266832440864517}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad225009ad414e1428332cab226f38fd, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMode: 0
-  syncInterval: 0.1
-  interpolationBackTime: 0.1
-  extrapolationMode: 1
-  useExtrapolationTimeLimit: 1
-  extrapolationTimeLimit: 5
-  useExtrapolationDistanceLimit: 0
-  extrapolationDistanceLimit: 20
-  sendPositionThreshold: 0
-  sendRotationThreshold: 0
-  sendScaleThreshold: 0
-  sendVelocityThreshold: 0
-  sendAngularVelocityThreshold: 0
-  receivedPositionThreshold: 0
-  receivedRotationThreshold: 0
-  snapPositionThreshold: 0
-  snapRotationThreshold: 0
-  snapScaleThreshold: 0
-  positionLerpSpeed: 0.85
-  rotationLerpSpeed: 0.85
-  scaleLerpSpeed: 0.85
-  timeCorrectionSpeed: 0.1
-  snapTimeThreshold: 3
-  syncPosition: 1
-  syncRotation: 6
-  syncScale: 1
-  syncVelocity: 1
-  syncAngularVelocity: 6
-  isPositionCompressed: 0
-  isRotationCompressed: 0
-  isScaleCompressed: 0
-  isVelocityCompressed: 0
-  isAngularVelocityCompressed: 0
-  isSmoothingAuthorityChanges: 0
-  whenToUpdateTransform: 0
-  sendRate: 10
-  networkChannel: 1
-  childObjectToSync: {fileID: 0}
-  setVelocityInsteadOfPositionOnNonOwners: 0
-  maxPositionDifferenceForVelocitySyncing: 10
-  useLocalTransformOnly: 0
-  ownerChangeIndicator: 1
-  receivedStatesCounter: 0
 --- !u!114 &1235031490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -221,6 +142,22 @@ MonoBehaviour:
   sceneId: 0
   serverOnly: 0
   m_AssetId: 
+--- !u!114 &5343584851351224138
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 146266832440864517}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 15e7f81d3cdd93241ae73e988294fe38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  SendRate: 10
+  LocalAuthority: 0
 --- !u!1 &146266832578243503
 GameObject:
   m_ObjectHideFlags: 0

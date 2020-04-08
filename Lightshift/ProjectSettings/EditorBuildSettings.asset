@@ -6,12 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/!Lightshift/Scenes/Authentication/_AUTHENTICATION_.unity
+    path: Assets/!Lightshift/Scenes/_AUTHENTICATION_.unity
     guid: e17660a997d1ee1469bc14f3f99022c7
   - enabled: 1
     path: Assets/!Lightshift/Scenes/_CLIENT_.unity
     guid: 5b9c1a0b2834d9f4b9bec5058d3b8303
   - enabled: 1
-    path: Assets/!Lightshift/Scenes/Game/_GAME_.unity
+    path: Assets/!Lightshift/Scenes/_GAME_.unity
     guid: 33c436254e205c34c8c509e7dc88d2b6
   m_configObjects: {}

@@ -7,6 +7,8 @@ using System;
 
 public class LoginUIManager : MonoBehaviour
 {
+    public GameObject NetworkManagerPrefab;
+
     [Header("Background")]
     public bool RainbowColors = true;
     public float BackgroundSpeed = 0.01f;
@@ -56,6 +58,8 @@ public class LoginUIManager : MonoBehaviour
     private void Awake()
     {
         _camera = Camera.main;
+
+        NetworkManagerPrefab = Instantiate(NetworkManagerPrefab);
     }
     private void Start()
     {

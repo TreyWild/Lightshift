@@ -14,7 +14,7 @@ public class Wing : NetworkBehaviour
 
     [SyncVar]
     public float agility;
-    private void Start()
+    private void Awake()
     {
         _rigidBody = GetComponent<Rigidbody2D>();
         var wings = Instantiate(PrefabManager.Instance.wingPrefab, transform);

@@ -41,7 +41,7 @@ public class ChatBox : MonoBehaviour
 
                 if (msg != "")
                 {
-                    if (ClientManager.Instance == null)
+                    if (Game.Instance == null)
                         AddMessage(msg);
                     else
                         SendChatMessage(msg);

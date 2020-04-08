@@ -21,6 +21,7 @@ public class LightLance : NetworkBehaviour
         _rigidBody = GetComponent<Rigidbody2D>();
         _lightLance = Instantiate(PrefabManager.Instance.lightLancePrefab, transform).GetComponent<BeamToTarget>();
         _lightLance.OnFocus += OnLightLanceFocus;
+        _lightLance.CancelFocus();
     }
 
     public void HandleLightLance(bool active, Transform target)
