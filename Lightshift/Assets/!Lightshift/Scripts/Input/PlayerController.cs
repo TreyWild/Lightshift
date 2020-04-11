@@ -137,14 +137,14 @@ public class PlayerController : NetworkBehaviour
         }
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateDown(bool value)
     {
         Down = value;
         RpcUpdateDown(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateDown(bool value)
     {
         if (hasAuthority)
@@ -153,14 +153,14 @@ public class PlayerController : NetworkBehaviour
         Down = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateUp(bool value)
     {
         Up = value;
         RpcUpdateUp(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateUp(bool value)
     {
         if (hasAuthority)
@@ -169,14 +169,14 @@ public class PlayerController : NetworkBehaviour
         Up = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateLeft(bool value)
     {
         Left = value;
         RpcUpdateLeft(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateLeft(bool value)
     {
         if (hasAuthority)
@@ -185,14 +185,14 @@ public class PlayerController : NetworkBehaviour
         Left = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateRight(bool value)
     {
         Right = value;
         RpcUpdateRight(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateRight(bool value)
     {
         if (hasAuthority)
@@ -201,7 +201,7 @@ public class PlayerController : NetworkBehaviour
         Right = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateOverDrive(bool value)
     {
         OverDrive = value;
@@ -216,14 +216,14 @@ public class PlayerController : NetworkBehaviour
         OverDrive = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateLightLance(bool value)
     {
         LightLance = value;
         RpcUpdateLightLance(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateLightLance(bool value)
     {
         if (hasAuthority)
@@ -232,14 +232,14 @@ public class PlayerController : NetworkBehaviour
         LightLance = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateWeapon(bool value)
     {
         Weapon = value;
         RpcUpdateWeapon(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateWeapon(bool value)
     {
         if (hasAuthority)
@@ -248,14 +248,14 @@ public class PlayerController : NetworkBehaviour
         Weapon = value;
     }
 
-    [Command(channel = 2)]
+    [Command]
     public void CmdUpdateWeaponSlot(short value)
     {
         WeaponSlot = value;
         RpcUpdateWeaponSlot(value);
     }
 
-    [ClientRpc(channel = 2)]
+    [ClientRpc]
     public void RpcUpdateWeaponSlot(short value) 
     {
         if (hasAuthority)
