@@ -10,9 +10,9 @@ GameObject:
   m_Component:
   - component: {fileID: 7018939179485853576}
   - component: {fileID: 8787730838940789662}
-  - component: {fileID: 5514582473827743312}
   - component: {fileID: 463780182}
   - component: {fileID: 463780183}
+  - component: {fileID: 9128234174304946835}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -28,7 +28,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5524512745480542275}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -294.87106, y: 31.121479, z: -247}
+  m_LocalPosition: {x: -365, y: 31.121479, z: -247}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -50,12 +50,12 @@ MonoBehaviour:
   runInBackground: 1
   startOnHeadless: 1
   showDebugMessages: 1
-  serverTickRate: 60
+  serverTickRate: 30
   offlineScene: Assets/!Lightshift/Scenes/_AUTHENTICATION_.unity
   onlineScene: Assets/!Lightshift/Scenes/_GAME_.unity
-  transport: {fileID: 5514582473827743312}
-  networkAddress: localhost
-  maxConnections: 4
+  transport: {fileID: 9128234174304946835}
+  networkAddress: 167.99.149.84
+  maxConnections: 4000
   authenticator: {fileID: 463780182}
   playerPrefab: {fileID: 2893782170727032538, guid: 39fa288b900eab44db7c45a0fa7f697f,
     type: 3}
@@ -63,55 +63,6 @@ MonoBehaviour:
   playerSpawnMethod: 0
   spawnPrefabs:
   - {fileID: 146266832440864517, guid: b4bdecad6cb5a304581c2b487137f7e9, type: 3}
---- !u!114 &5514582473827743312
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5524512745480542275}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 74e9ccf0f80396c4e872809df1897f54, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  OnClientConnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnClientDataReceived:
-    m_PersistentCalls:
-      m_Calls: []
-  OnClientError:
-    m_PersistentCalls:
-      m_Calls: []
-  OnClientDisconnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnServerConnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnServerDataReceived:
-    m_PersistentCalls:
-      m_Calls: []
-  OnServerError:
-    m_PersistentCalls:
-      m_Calls: []
-  OnServerDisconnected:
-    m_PersistentCalls:
-      m_Calls: []
-  DebugEnabled: 1
-  ServerBindAll: 1
-  ServerBindAddress: 127.0.0.1
-  CommunicationPort: 7777
-  MaxPacketSizeInKb: 64
-  Channels: 0100000002000000
-  CustomMaxPeerLimit: 0
-  CustomMaxPeers: 1000
-  CustomTimeoutLimit: 0
-  CustomTimeoutBaseTicks: 5000
-  CustomTimeoutMultiplier: 3
-  PingCalculationEnabled: 1
-  PingCalculationFrameTimer: 120
 --- !u!114 &463780182
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -147,3 +98,52 @@ MonoBehaviour:
   showGUI: 1
   offsetX: 0
   offsetY: 0
+--- !u!114 &9128234174304946835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5524512745480542275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74e9ccf0f80396c4e872809df1897f54, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  OnClientConnected:
+    m_PersistentCalls:
+      m_Calls: []
+  OnClientDataReceived:
+    m_PersistentCalls:
+      m_Calls: []
+  OnClientError:
+    m_PersistentCalls:
+      m_Calls: []
+  OnClientDisconnected:
+    m_PersistentCalls:
+      m_Calls: []
+  OnServerConnected:
+    m_PersistentCalls:
+      m_Calls: []
+  OnServerDataReceived:
+    m_PersistentCalls:
+      m_Calls: []
+  OnServerError:
+    m_PersistentCalls:
+      m_Calls: []
+  OnServerDisconnected:
+    m_PersistentCalls:
+      m_Calls: []
+  DebugEnabled: 0
+  ServerBindAll: 1
+  ServerBindAddress: 127.0.0.1
+  CommunicationPort: 7777
+  MaxPacketSizeInKb: 64
+  Channels: 01000000020000001100000010000000
+  CustomMaxPeerLimit: 0
+  CustomMaxPeers: 1000
+  CustomTimeoutLimit: 0
+  CustomTimeoutBaseTicks: 5000
+  CustomTimeoutMultiplier: 3
+  PingCalculationEnabled: 1
+  PingCalculationFrameTimer: 120

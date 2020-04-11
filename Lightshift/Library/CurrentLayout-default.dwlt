@@ -180,10 +180,10 @@ MonoBehaviour:
     y: 30
     width: 1920
     height: 957
-  m_MinSize: {x: 579, y: 342}
-  m_MaxSize: {x: 12004, y: 8042}
+  m_MinSize: {x: 709, y: 392}
+  m_MaxSize: {x: 18004, y: 14042}
   vertical: 1
-  controlID: 17
+  controlID: 114
 --- !u!114 &9
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -205,10 +205,10 @@ MonoBehaviour:
     y: 0
     width: 1920
     height: 957
-  m_MinSize: {x: 579, y: 342}
-  m_MaxSize: {x: 12004, y: 8042}
+  m_MinSize: {x: 709, y: 392}
+  m_MaxSize: {x: 18004, y: 14042}
   vertical: 0
-  controlID: 18
+  controlID: 115
 --- !u!114 &10
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -230,10 +230,10 @@ MonoBehaviour:
     y: 0
     width: 1492
     height: 957
-  m_MinSize: {x: 303, y: 342}
-  m_MaxSize: {x: 8003, y: 8042}
+  m_MinSize: {x: 433, y: 392}
+  m_MaxSize: {x: 14003, y: 14042}
   vertical: 1
-  controlID: 68
+  controlID: 45
 --- !u!114 &11
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -284,10 +284,10 @@ MonoBehaviour:
     y: 686
     width: 1492
     height: 271
-  m_MinSize: {x: 303, y: 221}
-  m_MaxSize: {x: 8003, y: 4021}
+  m_MinSize: {x: 433, y: 271}
+  m_MaxSize: {x: 14003, y: 10021}
   vertical: 0
-  controlID: 69
+  controlID: 68
 --- !u!114 &13
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -325,7 +325,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 12006, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: ConsoleWindow
+  m_Name: ProjectBrowser
   m_EditorClassIdentifier: 
   m_Children: []
   m_Position:
@@ -334,14 +334,14 @@ MonoBehaviour:
     y: 0
     width: 875
     height: 271
-  m_MinSize: {x: 102, y: 121}
-  m_MaxSize: {x: 4002, y: 4021}
-  m_ActualView: {fileID: 23}
+  m_MinSize: {x: 232, y: 271}
+  m_MaxSize: {x: 10002, y: 10021}
+  m_ActualView: {fileID: 22}
   m_Panes:
   - {fileID: 22}
   - {fileID: 23}
-  m_Selected: 1
-  m_LastSelected: 0
+  m_Selected: 0
+  m_LastSelected: 1
 --- !u!114 &15
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -693,9 +693,9 @@ MonoBehaviour:
   m_SceneHierarchy:
     m_TreeViewState:
       scrollPos: {x: 0, y: 0}
-      m_SelectedIDs: b81efdff
+      m_SelectedIDs: 
       m_LastClickedID: 0
-      m_ExpandedIDs: 5c47fdff3a72fdff7c76fdff209ffdff12a1fdff3aa1fdffdec9fdff9af3fdff0a29fefff29efeff90b5feffce42ffff1643ffff2643ffff4a43ffff3e70ffff129efffff6e0ffff10f9ffff18faffff10fbfffff4ffffff82370100dc690100
+      m_ExpandedIDs: 3ea5feff5aa5feff18b7feff20b7fefff6b8feff12b9feffd4cafeffe0cafeff7acbfeff08e4feffb2e4feff40fdfeffecfdfeffc818ffff7819ffffc22affff4443ffff6e53ffff3e6effff687effffea96ffff12a7ffffa0aaffff48bfffff1cc2ffff4ed2ffffdaeaffff0cfbffff
       m_RenameOverlay:
         m_UserAcceptedRename: 0
         m_Name: 
@@ -747,7 +747,7 @@ MonoBehaviour:
   m_ViewDataDictionary: {fileID: 0}
   m_LockTracker:
     m_IsLocked: 0
-  m_LastSelectedObjectID: 79746
+  m_LastSelectedObjectID: -58576
 --- !u!114 &22
 MonoBehaviour:
   m_ObjectHideFlags: 52
@@ -787,20 +787,20 @@ MonoBehaviour:
     m_SkipHidden: 0
     m_SearchArea: 1
     m_Folders:
-    - Assets/!Lightshift/Prefabs
+    - Assets/!Lightshift/Scenes
   m_ViewMode: 1
   m_StartGridSize: 50
   m_LastFolders:
-  - Assets/!Lightshift/Prefabs
+  - Assets/!Lightshift/Scenes
   m_LastFoldersGridSize: 50
   m_LastProjectPath: C:\Users\Bryly\Documents\GitHub\Lightshift\Lightshift
   m_LockTracker:
     m_IsLocked: 0
   m_FolderTreeState:
-    scrollPos: {x: 0, y: 110}
-    m_SelectedIDs: 2c3c0000
-    m_LastClickedID: 15404
-    m_ExpandedIDs: 00000000003c0000023c0000043c0000063c00005e3c000000ca9a3b
+    scrollPos: {x: 0, y: 230}
+    m_SelectedIDs: a4590000
+    m_LastClickedID: 22948
+    m_ExpandedIDs: 0000000036590000385900003a5900004a59000000ca9a3b
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 
@@ -828,7 +828,7 @@ MonoBehaviour:
     scrollPos: {x: 0, y: 0}
     m_SelectedIDs: 
     m_LastClickedID: 0
-    m_ExpandedIDs: 00000000003c0000023c0000043c0000
+    m_ExpandedIDs: 0000000036590000385900003a590000
     m_RenameOverlay:
       m_UserAcceptedRename: 0
       m_Name: 

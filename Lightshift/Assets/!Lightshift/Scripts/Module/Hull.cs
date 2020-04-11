@@ -8,19 +8,16 @@ using UnityEngine;
 
 public class Hull : NetworkBehaviour 
 {
-    [SyncVar]
-    public float healthRegen;
-    [SyncVar(hook = nameof(SetUIHealthMax))]
-    public float maxHealth;
-    [SyncVar(hook = nameof(SetUIHealth))]
-    public float health;
+    [SyncVar(hook = nameof(UpdateMass))]
+    public float weight;
 
-
+    private Rigidbody2D _rigidbody2D;
     private SpriteRenderer _hull;
     private Entity _entity;
     private EntityUI _ui;
     private void Awake()
     {
+        _rigidbody2D = GetComponent<Rigidbody2D>();
         _ui = GetComponent<EntityUI>();
         _hull = Instantiate(PrefabManager.Instance.hullPrefab, transform).GetComponent<SpriteRenderer>();
         _entity = GetComponent<Entity>();
@@ -55,26 +52,8 @@ public class Hull : NetworkBehaviour
         else Debug.LogError("Hull not assigned.");
     }
 
-    public void Update()
+    private void UpdateMass(float oldValue, float newValue)
     {
-        if (isServer)
-        {
-            health += healthRegen * Time.deltaTime;
-
-            if (health >= maxHealth)
-                health = maxHealth;
-        }
+        _rigidbody2D.mass = newValue;
     }
-
-    private void SetUIHealthMax(float old, float newValue)
-    {
-        _ui.SetHealth(health, newValue);
-    }
-
-    private void SetUIHealth(float old, float newValue)
-    {
-        _ui.SetHealth(newValue, maxHealth);
-    }
-
-    
 }

@@ -21,6 +21,7 @@ public class SettingsMenu : MonoBehaviour
     [SerializeField] private Button _saveButton;
 
     private bool _saved = false;
+    private bool _fullScreen;
     void Start()
     {
         _saveButton.onClick.AddListener(delegate
@@ -28,8 +29,11 @@ public class SettingsMenu : MonoBehaviour
             Save();
         });
         Settings.Instance.KeysLocked = true;
-        CreateDivider("Screen");
+        _fullScreen = Settings.Instance.IsFullscreen;
+
+        CreateDivider("Utility");
         CreateToggleItem("Use fullscreen", "isFullscreen");
+        CreateToggleItem("Show Debug Stats", "showDebugStats");
         CreateDivider("Background");
         CreateToggleItem("Show Skybox", "showSkybox");
         CreateToggleItem("Background Objects", "showBackgroundElements");
@@ -139,6 +143,9 @@ public class SettingsMenu : MonoBehaviour
         PlayerPrefs.Save();
 
         Settings.Instance.RefreshControls();
+
+        if (Settings.Instance.IsFullscreen != _fullScreen)
+            Settings.Instance.RefreshScreen();
 
         _saved = true;
         Exit();

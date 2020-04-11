@@ -28,7 +28,7 @@ public class Server : MonoBehaviour
 
         Database = new DatabaseConnection();
 
-        NetworkManager.singleton.StartServer();
+        NetworkServer.SpawnObjects();
     }
 
     public void InitMessageHandlers() 

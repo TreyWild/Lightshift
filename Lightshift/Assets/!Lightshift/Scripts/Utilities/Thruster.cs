@@ -18,7 +18,7 @@ public class Thruster : MonoBehaviour
     //    }
     //}
 
-    private void Start()
+    private void Awake()
     {
         _trailRenderer.sortingOrder = SortingOrders.ENGINE;
         _particleSystem.GetComponent<Renderer>().sortingOrder = SortingOrders.ENGINE;

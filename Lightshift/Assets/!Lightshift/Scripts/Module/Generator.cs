@@ -9,33 +9,36 @@ using UnityEngine;
 public class Generator : NetworkBehaviour 
 {
     [SyncVar(hook = nameof(SetUIPowerMax))]
-    public float maxPower;
+    public float maxPower = 150;
     [SyncVar(hook = nameof(SetUIPower))]
-    public float power;
+    public float power = 150;
     [SyncVar]
-    public float powerRegen;
+    public float powerRegen = 20;
 
     private EntityUI _ui;
 
-    private void Start()
+    private void Awake()
     {
         _ui = GetComponent<EntityUI>();
     }
 
     private void SetUIPowerMax(float old, float newValue)
     {
-        _ui.SetShield(power, newValue);
+        _ui.SetPower(power, newValue);
     }
 
     private void SetUIPower(float old, float newValue)
     {
-        _ui.SetShield(newValue, maxPower);
+        _ui.SetPower(newValue, maxPower);
     }
 
     private void Update()
     {
         if (isServer)
         {
+            if (power >= maxPower)
+                return;
+
             power += powerRegen * Time.deltaTime;
 
             if (power >= maxPower)

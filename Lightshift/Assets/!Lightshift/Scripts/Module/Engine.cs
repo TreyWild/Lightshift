@@ -12,17 +12,15 @@ public class Engine : NetworkBehaviour
     [SyncVar]
     public float acceleration;
     [SyncVar]
-    public float weight;
+    public float brakeForce = 4;
     [SyncVar]
-    public float brakeForce;
+    public float overDrivePowerCost = 30;
     [SyncVar]
-    public float overDrivePowerCost;
-    [SyncVar]
-    public float overDriveMultiplier;
+    public float overDriveMultiplier = 2;
 
     private Thruster _thruster;
     private Rigidbody2D _rigidBody;
-    private void Start()
+    private void Awake()
     {
         _rigidBody = GetComponent<Rigidbody2D>();
         _thruster = Instantiate(PrefabManager.Instance.enginePrefab, transform).GetComponent<Thruster>();
@@ -30,9 +28,9 @@ public class Engine : NetworkBehaviour
 
     public void Move(int axis, bool overDrive)
     {
-        _thruster.RunEngine(axis == -1, overDrive);
+        _thruster.RunEngine(axis == 1, overDrive);
 
-        if (isServer)
+        if (isLocalPlayer)
         {
             var maxSpeed = this.maxSpeed;
             var acceleration = this.acceleration;
@@ -47,15 +45,13 @@ public class Engine : NetworkBehaviour
             if (axis > 0)
             {
                 if (_rigidBody.velocity.magnitude < maxSpeed * 1000.0f)
-                    _rigidBody.AddForce(transform.forward * axis * 1000.0f * acceleration * Time.deltaTime);
-
-                _rigidBody.drag = weight;
+                    _rigidBody.AddForce(transform.up * axis * 1000.0f * acceleration * Time.deltaTime);
             }
             else if (axis < 0)
             {
-                _rigidBody.drag += (weight + brakeForce) * Time.deltaTime;
+                if (_rigidBody.velocity.magnitude > 0f)
+                    _rigidBody.AddForce((-transform.up * -axis * -1000.0f * -brakeForce * -Time.deltaTime));
             }
-            else _rigidBody.drag += weight * Time.deltaTime;
         }
     }
 }

@@ -46,6 +46,7 @@ namespace Lightshift
         public bool IsFullscreen = false;
         public bool ShowSkybox = true;
         public bool ShowBackgroundElements;
+        public bool ShowDebugStats;
         private void Awake()
         {
             if (Instance != null)
@@ -54,6 +55,8 @@ namespace Lightshift
                 return;
             }
             else Instance = this;
+
+            DontDestroyOnLoad(gameObject);
         }
 
         void Start()
@@ -92,7 +95,11 @@ namespace Lightshift
             if (!PlayerPrefs.HasKey("showBackgroundElements"))
                 PlayerPrefs.SetString("showBackgroundElements", "True");
 
+            if (!PlayerPrefs.HasKey("showDebugStats"))
+                PlayerPrefs.SetString("showDebugStats", "False");
+
             RefreshControls();
+            RefreshScreen();
         }
 
         private void AddDefaultKey(string key, KeyCode keyCode)
@@ -133,6 +140,10 @@ namespace Lightshift
             IsFullscreen = bool.Parse(PlayerPrefs.GetString("isFullscreen", "True"));
             ShowSkybox = bool.Parse(PlayerPrefs.GetString("showSkybox", "True"));
             ShowBackgroundElements = bool.Parse(PlayerPrefs.GetString("showBackgroundElements", "True"));
+            ShowDebugStats = bool.Parse(PlayerPrefs.GetString("showDebugStats", "False"));
+
+            if (GameUIManager.Instance != null)
+                GameUIManager.Instance.ShowScreenStats(ShowDebugStats);
 
             if (SoundManager.Instance != null)
             {
@@ -145,6 +156,11 @@ namespace Lightshift
                 ParallaxManager.Instance.ShowBackgroundObjects(ShowBackgroundElements);
                 ParallaxManager.Instance.ShowSkybox(ShowSkybox);
             }
+        }
+
+        public void RefreshScreen() 
+        {
+            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
             if (!Application.isEditor)
                 Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, IsFullscreen);
         }

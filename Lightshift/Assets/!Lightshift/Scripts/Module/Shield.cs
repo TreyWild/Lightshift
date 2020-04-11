@@ -9,17 +9,17 @@ using UnityEngine;
 public class Shield : NetworkBehaviour 
 {
     [SyncVar(hook = nameof(SetUIShieldMax))]
-    public float maxShield;
+    public float maxShield = 300;
     [SyncVar(hook = nameof(SetUIShield))]
-    public float shield;
+    public float shield = 200;
     [SyncVar]
-    public float shieldRegen;
+    public float shieldRegen = 20;
     [SyncVar]
     public float shieldSize = 1;
 
     private GameObject _visualShield;
     private EntityUI _ui;
-    private void Start()
+    private void Awake()
     {
         _ui = GetComponent<EntityUI>();
         _visualShield = Instantiate(PrefabManager.Instance.shieldPrefab, transform);
@@ -41,14 +41,37 @@ public class Shield : NetworkBehaviour
     {
         _ui.SetShield(shield, newValue);
     }
+
+    public void SetShield(float value) 
+    {
+        if (!isServer)
+            return;
+        SetUIShield(shield, value);
+        shield = value;
+    }
+
+    public void SetMaxShield(float value) 
+    {
+        if (!isServer)
+            return;
+        SetUIShieldMax(maxShield, value);
+        maxShield = value;
+    }
+
     public void Update()
     {
         if (isServer)
         {
+            var shield = this.shield;
+            if (shield >= maxShield)
+                return;
+
             shield += shieldRegen * Time.deltaTime;
 
             if (shield >= maxShield)
                 shield = maxShield;
+
+            SetShield(shield);
         }
 
         if (shield <= 0)

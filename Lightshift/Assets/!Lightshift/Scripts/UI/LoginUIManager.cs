@@ -4,6 +4,7 @@ using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 using System;
+using Mirror;
 
 public class LoginUIManager : MonoBehaviour
 {
@@ -39,6 +40,9 @@ public class LoginUIManager : MonoBehaviour
     [SerializeField] private TMP_InputField _usernameInput;
     [SerializeField] private GameObject _usernameForm;
 
+    [Header("Settings")]
+    [SerializeField] private GameObject _settingsMenuPrefab;
+
     public Action<string, string> onLogin;
     public Action<string, string> onRegister;
     public Action<string> onRecover;
@@ -60,6 +64,8 @@ public class LoginUIManager : MonoBehaviour
         _camera = Camera.main;
 
         NetworkManagerPrefab = Instantiate(NetworkManagerPrefab);
+        if (Application.isEditor)
+            NetworkManager.singleton.networkAddress = "localhost";
     }
     private void Start()
     {
@@ -316,5 +322,14 @@ public class LoginUIManager : MonoBehaviour
             _errorText.CrossFadeAlpha(1, 0, false);
             _errorText.text = "Loading...";
         }
+    }
+
+    private GameObject _settingsMenu;
+    public void ShowSettings() 
+    {
+        if (_settingsMenu != null)
+            Destroy(_settingsMenu);
+
+        _settingsMenu = Instantiate(_settingsMenuPrefab);
     }
 }

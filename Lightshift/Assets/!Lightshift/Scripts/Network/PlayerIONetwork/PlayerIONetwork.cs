@@ -72,7 +72,7 @@ public class PlayerIONetwork : MonoBehaviour{
 
     public void Authenticate(string email, string password)
     {
-        loginUI.ShowMessage("Authenting...");
+        loginUI.ShowMessage("Verifying Account...");
         PlayerIO.QuickConnect.SimpleConnect(gameId, email, password, null, delegate (Client client)
         {
             Client = client;
@@ -80,6 +80,8 @@ public class PlayerIONetwork : MonoBehaviour{
 
             //Initialize new service connection
             ServiceConnection = new ServiceConnection();
+
+            loginUI.ShowMessage("Connecting to Game Server...");
 
         }, delegate (PlayerIOError error)
         {
@@ -91,10 +93,13 @@ public class PlayerIONetwork : MonoBehaviour{
 
     public void Register(string email, string password)
     {
+        loginUI.ShowMessage("Creating Account...");
         PlayerIO.QuickConnect.SimpleRegister(gameId, Guid.NewGuid().ToString(), password, email, null, null, null, null, null, delegate (Client client)
         {
             Client = client;
             loginUI.SetLoginPrefs(email, password);
+
+            loginUI.ShowMessage("Connecting to Game Server...");
 
             //Initialize new service connection
             ServiceConnection = new ServiceConnection();
@@ -109,7 +114,7 @@ public class PlayerIONetwork : MonoBehaviour{
 
     public void ForgotPassword(string email)
     {
-        loginUI.ShowMessage("Processing...");
+        loginUI.ShowMessage("Surfing the waves...");
         PlayerIO.QuickConnect.SimpleRecoverPassword(gameId, email, delegate
         {
             loginUI.Loading = false;

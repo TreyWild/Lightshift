@@ -54,8 +54,10 @@ public class ServiceConnection : BaseConnection
         //Show Loading Status for login menu if we're
         // still on the login scene.
         if (PlayerIONetwork.Instance.loginUI)
+        {
             PlayerIONetwork.Instance.loginUI.Loading = true;
-
+            PlayerIONetwork.Instance.loginUI.ShowMessage("Waiting for Server...");
+        }
         PlayerIONetwork.Instance.JoinServer(message.GetString(0));
         
     }

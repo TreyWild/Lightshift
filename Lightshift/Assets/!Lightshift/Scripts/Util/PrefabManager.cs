@@ -12,6 +12,7 @@ public class PrefabManager : MonoBehaviour
     public GameObject enginePrefab;
     public GameObject wingPrefab;
     public GameObject hullPrefab;
+    public GameObject forceFieldPrefab;
 
     public static PrefabManager Instance;
 

@@ -38,6 +38,7 @@ public class LightshiftNetworkManager : NetworkManager
     public override void OnClientDisconnect(NetworkConnection conn)
     {
         Destroy(gameObject);
+        SceneManager.LoadScene("_AUTHENTICATION_");
     }
 
     public static void Authenticate(string connectUserId, string authKey) 

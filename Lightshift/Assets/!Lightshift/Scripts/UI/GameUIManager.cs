@@ -1,4 +1,5 @@
 ﻿using Lightshift;
+using Mirror;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] GameObject _playerListPrefab;
     [SerializeField] GameObject _devCreatorMenuPrefab;
     [SerializeField] GameObject _devListPrefab;
+    [SerializeField] GameObject _performanceStatsPrefab;
 
     private GameObject _settingsMenu { get; set; }
     private GameObject _respawnScreen { get; set; }
@@ -34,7 +36,12 @@ public class GameUIManager : MonoBehaviour
     private GameObject _weaponCreatorMenu { get; set; }
     private GameObject _shipCreatorMenu { get; set; }
 
+    private GameObject _performanceStats { get; set; }
+
+
     public ShipInterface ShipInterface;
+
+    private TextMeshProUGUI _statsText;
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -50,7 +57,23 @@ public class GameUIManager : MonoBehaviour
     {
         if (Server.Instance != null)
             ToggleAllUI(false);
+
+        if (Settings.Instance != null)
+            ShowScreenStats(Settings.Instance.ShowDebugStats);
     }
+
+    public void ShowScreenStats(bool active) 
+    {
+        if (active && _performanceStats == null)
+            _performanceStats = Instantiate(_performanceStatsPrefab);
+        else if (_performanceStats != null)
+        {
+            _performanceStats.SetActive(active);
+
+            _statsText = _performanceStats.GetComponentInChildren<TextMeshProUGUI>();
+        }
+    }
+
     public void ToggleSettingsMenu()
     {
         if (_settingsMenu == null) 
@@ -81,8 +104,17 @@ public class GameUIManager : MonoBehaviour
         text.text = message;
     }
 
+    private float _timeSinceLastStatUpdate;
     void Update()
     {
+        _timeSinceLastStatUpdate += Time.deltaTime;
+        if (_timeSinceLastStatUpdate > .5f)
+        if (_statsText != null) 
+        {
+            _statsText.text = $"ping: {(int)((NetworkTime.rtt / 2) * 1000)}, fps: {(int)(1f / Time.unscaledDeltaTime)}";
+                _timeSinceLastStatUpdate = 0;
+        }
+
         if (!Settings.Instance.KeysLocked) {
             if (Input.GetKeyDown(Settings.Instance.SettingsMenuKey))
                 ToggleSettingsMenu();

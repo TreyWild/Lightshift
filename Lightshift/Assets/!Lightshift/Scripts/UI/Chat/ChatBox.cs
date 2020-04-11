@@ -81,7 +81,11 @@ public class ChatBox : MonoBehaviour
 
     IEnumerator ScrollToValue(float value)
     {
-        yield return new WaitForEndOfFrame();
-        ChatBoxTextbox.verticalScrollbar.value = value;
+        WaitForFixedUpdate wait = new WaitForFixedUpdate();
+        while (true) 
+        {
+            ChatBoxTextbox.verticalScrollbar.value = value;
+            yield return wait;
+        }
     }
 }

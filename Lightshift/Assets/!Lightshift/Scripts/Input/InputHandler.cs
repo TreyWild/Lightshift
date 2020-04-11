@@ -7,38 +7,42 @@ using UnityEngine;
 
 public class InputHandler : NetworkBehaviour
 {
-    [SyncVar(hook = nameof(LightLanceUpdated))]
+    [SyncVar]
     public bool LightLance;
-    [SyncVar(hook = nameof(OverDriveUpdated))]
+    [SyncVar]
     public bool OverDrive;
-    [SyncVar(hook = nameof(VerticalInputUpdated))]
+    [SyncVar]
     public bool Down;
-    [SyncVar(hook = nameof(VerticalInputUpdated))]
+    [SyncVar]
     public bool Up;
-    [SyncVar(hook = nameof(HorizontalInputUpdated))]
+    [SyncVar]
     public bool Left;
-    [SyncVar(hook = nameof(HorizontalInputUpdated))]
+    [SyncVar]
     public bool Right;
-    [SyncVar(hook = nameof(WeaponUpdated))]
+    [SyncVar]
     public bool Weapon;
-    [SyncVar(hook = nameof(WeaponSlotUpdated))]
+    [SyncVar]
     public int WeaponSlot;
-    public int VerticalAxis => GetAxis(Down, Up);
-    public int HorizontalAxis => GetAxis(Right, Left);
+    public int VerticalAxis => GetAxis(Up, Down);
+    public int HorizontalAxis => GetAxis(Left, Right);
 
-    public event Action<bool> OnLightLanceInputChanged;
-    public event Action<bool> OnOverDriveInputChanged;
-    public event Action<int> OnHorizontalInputChanged;
-    public event Action<int> OnVerticalInputChanged;
-    public event Action<bool> OnWeaponInputChanged;
-    public event Action<int> OnWeaponSlotInputChanged;
+    public bool LocalLightLance;
+    public bool LocalOverDrive;
+    public bool LocalDown;
+    public bool LocalUp;
+    public bool LocalLeft;
+    public bool LocalRight;
+    public bool LocalWeapon;
+    public int LocalWeaponSlot;
+    public int LocalVerticalAxis => GetAxis(LocalUp, LocalDown);
+    public int LocalHorizontalAxis => GetAxis(LocalLeft, LocalRight);
 
     private int GetAxis(bool x, bool y) 
     {
         if (y)
-            return 1;
-        else if (x)
             return -1;
+        else if (x)
+            return 1;
         else return 0;
     }
 
@@ -47,29 +51,73 @@ public class InputHandler : NetworkBehaviour
         if (!isLocalPlayer)
             return;
 
+        if (Input.GetKey(Settings.Instance.Weapon1))
+            if (WeaponSlot != 0)
+                CmdUpdateWeaponSlot(0);
+        if (Input.GetKey(Settings.Instance.Weapon2))
+            if (WeaponSlot != 1)
+                CmdUpdateWeaponSlot(1);
+        if (Input.GetKey(Settings.Instance.Weapon3))
+            if (WeaponSlot != 2)
+                CmdUpdateWeaponSlot(2);
+        if (Input.GetKey(Settings.Instance.Weapon4))
+            if (WeaponSlot != 3)
+                CmdUpdateWeaponSlot(3);
+        if (Input.GetKey(Settings.Instance.Weapon5))
+            if (WeaponSlot != 4)
+                CmdUpdateWeaponSlot(4);
+
         var down = Input.GetKey(Settings.Instance.DownKey);
         if (down != Down)
+        {
             CmdUpdateDown(down);
+            LocalDown = down;
+        }
 
         var up = Input.GetKey(Settings.Instance.UpKey);
         if (up != Up)
+        {
             CmdUpdateUp(up);
+            LocalUp = up;
+        }
+        
 
         var left = Input.GetKey(Settings.Instance.LeftKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == -1;
         if (left != Left)
+        {
             CmdUpdateLeft(left);
+            LocalLeft = left;
+        }
 
-        var right = Right = Input.GetKey(Settings.Instance.RightKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == 1;
+        var right = Input.GetKey(Settings.Instance.RightKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == 1;
         if (right != Right)
+        {
             CmdUpdateRight(right);
+            LocalRight = right;
+        }
+
+        if (Settings.Instance.UseMouseAim && GetMouseAimInput() == 0)
+        {
+            LocalRight = false;
+            LocalLeft = false;
+            CmdUpdateRight(false);
+            CmdUpdateLeft(false);
+        }
+
 
         var overDrive = Input.GetKey(Settings.Instance.OverdriveKey);
         if (overDrive != OverDrive)
+        {
             CmdUpdateOverDrive(overDrive);
+            LocalOverDrive = overDrive;
+        }
 
         var lightLance = Input.GetKey(Settings.Instance.LightLanceKey);
         if (lightLance != LightLance)
+        {
             CmdUpdateLightLance(lightLance);
+            LocalLightLance = lightLance;
+        }
 
         var weapon = Input.GetKey(Settings.Instance.FireKey) || (Settings.Instance.FireWithWeaponHotkeys && (
             Input.GetKey(Settings.Instance.Weapon1) ||
@@ -79,7 +127,10 @@ public class InputHandler : NetworkBehaviour
             Input.GetKey(Settings.Instance.Weapon5)));
 
         if (weapon != Weapon)
+        {
             CmdUpdateWeapon(weapon);
+            LocalWeapon = weapon;
+        }
     }
 
     public int GetMouseAimInput()
@@ -97,9 +148,9 @@ public class InputHandler : NetworkBehaviour
         }
 
 
-        if (angleDiff > 5)
+        if (angleDiff > 10)
             return 1;
-        else if (angleDiff < -5)
+        else if (angleDiff < -10)
             return -1;
         else
         {
@@ -153,35 +204,5 @@ public class InputHandler : NetworkBehaviour
     public void CmdUpdateWeaponSlot(short value)
     {
         WeaponSlot = value;
-    }
-
-    private void LightLanceUpdated(bool value, bool newValue) 
-    {
-        OnLightLanceInputChanged?.Invoke(newValue);
-    }
-
-    private void OverDriveUpdated(bool value, bool newValue)
-    {
-        OnOverDriveInputChanged?.Invoke(newValue);
-    }
-
-    private void HorizontalInputUpdated(bool value, bool newValue)
-    {
-        OnVerticalInputChanged?.Invoke(GetAxis(Right, Left));
-    }
-
-    private void VerticalInputUpdated(bool value, bool newValue)
-    {
-        OnVerticalInputChanged?.Invoke(GetAxis(Down, Up));
-    }
-
-    private void WeaponUpdated(bool value, bool newValue)
-    {
-        OnWeaponInputChanged?.Invoke(newValue);
-    }
-
-    private void WeaponSlotUpdated(int value, int newValue)
-    {
-        OnWeaponSlotInputChanged?.Invoke(newValue);
     }
 }

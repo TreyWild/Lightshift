@@ -17,17 +17,17 @@ public class Wing : NetworkBehaviour
     private void Awake()
     {
         _rigidBody = GetComponent<Rigidbody2D>();
+
         var wings = Instantiate(PrefabManager.Instance.wingPrefab, transform);
         _wings = wings.GetComponentsInChildren<SpriteRenderer>();
         _entity = GetComponent<Entity>();
 
         SetImage(0);
     }
-
     public void Turn(int axis)
     {
-        if (isServer)
-            _rigidBody.rotation += -axis * agility * Time.deltaTime;
+        if (hasAuthority)
+            _rigidBody.rotation += axis * agility * Time.deltaTime;
     }
 
     public void SetImage(int id, Color color = default)

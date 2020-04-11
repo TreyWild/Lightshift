@@ -222,16 +222,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3182f80f05caf54fb092b20732d30f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _displayBars:
-  - type: 11
-    _label: {fileID: 8739203771049802311}
-    _slider: {fileID: 4332834188811203904}
-  - type: 10
-    _label: {fileID: 1396797507166940232}
-    _slider: {fileID: 4050344583776616337}
-  - type: 9
+  _healthBar:
     _label: {fileID: 524335072411792002}
     _slider: {fileID: 5423101781286391092}
+  _shieldBar:
+    _label: {fileID: 1396797507166940232}
+    _slider: {fileID: 4050344583776616337}
+  _powerBar:
+    _label: {fileID: 8739203771049802311}
+    _slider: {fileID: 4332834188811203904}
   _panicIndicator: {fileID: 6022781491234099640}
 --- !u!1 &1096175237647466893
 GameObject:

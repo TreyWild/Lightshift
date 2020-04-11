@@ -8,6 +8,8 @@ using UnityEngine;
 
 public class Entity : NetworkBehaviour
 {
+    public float TargetCheckSpeed = 0.5f;
+
     [SyncVar(hook = nameof(SetDisplayName))]
     public string username; 
     [SyncVar(hook = nameof(UpdateCollision))]
@@ -23,46 +25,13 @@ public class Entity : NetworkBehaviour
     public Entity targetEntity;
 
     private EntityUI _ui;
+    private float _timeSinceLastTargetUpdate = 0;
     public void Awake()
     {
         //weaponSystem = gameObject.AddComponent<WeaponSystem>();
         rigidBody = gameObject.GetComponent<Rigidbody2D>();
-        smoothSync = gameObject.GetComponent<SmoothSyncMirror>();
-
-        StartCoroutine(DoUpdateTargets());
 
         _ui = GetComponent<EntityUI>();
-    }
-
-    public override void OnStartServer()
-    {
-        smoothSync.validateStateMethod += OnCheatingDetected;
-
-        SetupStats(shipData);
-    }
-
-    private bool OnCheatingDetected(StateMirror receivedState, StateMirror latestVerifiedState)
-    {
-        if (Vector3.Distance(receivedState.position, latestVerifiedState.position) > 9000.0f && (receivedState.ownerTimestamp - latestVerifiedState.receivedOnServerTimestamp < .5f))
-        {
-            // Return false and refuse to accept the State. The State will not be added locally
-            // on the server or sent out to other clients.
-            return false;
-        }
-        else
-        {
-            // Return true to accept the State. The State will be added locally on the server and sent out 
-            // to other clients.
-            return true;
-        }
-    }
-
-    public override void OnStartLocalPlayer()
-    {
-        base.OnStartLocalPlayer();
-
-        //Attach Camera
-        CameraFollow.Instance.Target = gameObject;
     }
 
     public void SetupStats(ModuleData moduleData) 
@@ -213,6 +182,16 @@ public class Entity : NetworkBehaviour
     //    _damageQueue.Clear();
     //}
     #endregion
+    private void FixedUpdate()
+    {
+        _timeSinceLastTargetUpdate += Time.fixedDeltaTime;
+        if (_timeSinceLastTargetUpdate > 0.2f) 
+        {
+            UpdateTargets();
+            _timeSinceLastTargetUpdate = 0;
+        }
+    }
+
 
     #region Safezone
     private void UpdateCollision(bool oldValue, bool value)
@@ -265,12 +244,14 @@ public class Entity : NetworkBehaviour
 
 
 
-    public void SetDisplayName(string oldValue, string newValue)
+    public void SetDisplayName(string oldValue = "", string displayName = "")
     {
         if (isLocalPlayer)
             return;
 
-        _ui.SetName(newValue);
+        username = displayName;
+
+        _ui.SetName(displayName);
     }
 
 
@@ -337,13 +318,6 @@ public class Entity : NetworkBehaviour
     //#endregion Collision
 
 
-    public IEnumerator DoUpdateTargets() 
-    {
-        UpdateTargets();
-        yield return new WaitForSeconds(1f);
-        StartCoroutine(DoUpdateTargets());
-    }
-
     private float _trackingRange = 100;
     public void UpdateTargets()
     {
@@ -351,31 +325,28 @@ public class Entity : NetworkBehaviour
         Entity closestNuetralEntity = null;
 
         var entities = GetNearbyEntities();
-        var smallestDistance = _trackingRange;
+        var smallestDistance = Mathf.Infinity;
 
         for (int i = 0; i < entities.Count; i++)
         {
-            var nearbyEntity = entities[i];
 
-            if (nearbyEntity == null)
+            if (entities[i] == null)
                 continue;
 
-
-            var distance = Vector2.Distance(transform.position, nearbyEntity.transform.position);
-
-            //Don't let an entity target itself..
-            if (nearbyEntity == this)
+            if (entities[i] == this)
                 continue;
+
+            var distance = (transform.position - entities[i].transform.position).sqrMagnitude;
 
             if (distance < smallestDistance)
             {
                 smallestDistance = distance;
 
-                if (teamId != nearbyEntity.teamId)
+                if (teamId != entities[i].teamId)
                 {
-                    closestNuetralEntity = nearbyEntity;
+                    closestNuetralEntity = entities[i];
                 }
-                closestEntity = nearbyEntity;
+                closestEntity = entities[i];
             }
 
 
@@ -387,37 +358,19 @@ public class Entity : NetworkBehaviour
 
     private List<Entity> GetNearbyEntities()
     {
-        // Get entities from entity manager
-        var entities = EntityManager.GetAllEntities();
         var nearbyEntities = new List<Entity>();
 
-        for (int i = 0; i < entities.Count; i++)
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, _trackingRange);
+        for (int i = 0; i < colliders.Length; i++)
         {
-            var nearbyEntity = entities[i];
+            var nearbyEntity = colliders[i].transform.root.GetComponent<Entity>();
 
             if (nearbyEntity == null)
-                continue;
-
-            // Compare distance
-            var distance = Vector2.Distance(transform.position, nearbyEntity.rigidBody.position);
-
-            // Continue if distance is greater than player view range
-            if (distance > _trackingRange)
                 continue;
 
             nearbyEntities.Add(nearbyEntity);
         }
 
         return nearbyEntities;
-    }
-
-    public void OnEnable()
-    {
-        EntityManager.RegisterEntity(this);
-    }
-
-    public void OnDisable() 
-    {
-        EntityManager.UnregisterEntity(this);
     }
 }
