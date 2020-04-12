@@ -19,11 +19,13 @@ public class Engine : NetworkBehaviour
     public float overDriveMultiplier = 2;
 
     private Thruster _thruster;
-    private Rigidbody2D _rigidBody;
+    private Kinematic _kinematic;
+    private PlayerController _input;
     private void Awake()
     {
-        _rigidBody = GetComponent<Rigidbody2D>();
+        _kinematic = GetComponent<Kinematic>();
         _thruster = Instantiate(PrefabManager.Instance.enginePrefab, transform).GetComponent<Thruster>();
+        _input = GetComponent<PlayerController>();
     }
 
     public void Move(int axis, bool overDrive)
@@ -32,26 +34,43 @@ public class Engine : NetworkBehaviour
 
         if (isLocalPlayer)
         {
-            var maxSpeed = this.maxSpeed;
-            var acceleration = this.acceleration;
+            float shipRadDir = _kinematic.transform.eulerAngles.y * Mathf.Deg2Rad;
+            float engineStr = acceleration * Time.fixedDeltaTime;
 
-            if (overDrive)
+            if (_input.Up)
             {
-                maxSpeed *= ((0.01f) + overDriveMultiplier);
-                acceleration *= ((0.01f) + overDriveMultiplier);
+                if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed)
+                {
+                    float speed = _kinematic.velocity.magnitude;
+                    if (_input.OverDrive)
+                    {
+                        _kinematic.velocity *= (speed - engineStr) / speed;
+                        _kinematic.velocity += new Vector2(Mathf.Cos(shipRadDir), -Mathf.Sin(shipRadDir)) * engineStr * overDriveMultiplier;
+                    }
+                    else
+                    {
+                        _kinematic.velocity += new Vector2(Mathf.Cos(shipRadDir), -Mathf.Sin(shipRadDir)) * engineStr;
+                        _kinematic.velocity *= Mathf.Max(speed - engineStr * 2, maxSpeed) / speed;
+                    }
+
+                }
+                else
+                {
+                    _kinematic.velocity += new Vector2(Mathf.Cos(shipRadDir), -Mathf.Sin(shipRadDir)) * acceleration * Time.fixedDeltaTime * overDriveMultiplier;
+                }
+            }
+            if (_input.Down)
+            {
+                if (_kinematic.velocity.sqrMagnitude > acceleration * Time.fixedDeltaTime * acceleration * Time.fixedDeltaTime)
+                    _kinematic.velocity -= _kinematic.velocity.normalized * acceleration * Time.fixedDeltaTime;
+                else if (!_input.Up)
+                    _kinematic.velocity = Vector2.zero;
             }
 
-            /* Handle Movement */
-            if (axis > 0)
-            {
-                if (_rigidBody.velocity.magnitude < maxSpeed * 1000.0f)
-                    _rigidBody.AddForce(transform.up * axis * 1000.0f * acceleration * Time.deltaTime);
-            }
-            else if (axis < 0)
-            {
-                if (_rigidBody.velocity.magnitude > 0f)
-                    _rigidBody.AddForce((-transform.up * -axis * -1000.0f * -brakeForce * -Time.deltaTime));
-            }
+            if (!_input.OverDrive)
+                _kinematic.drag = 0.99f;
+            else
+                _kinematic.drag = 0.999f;
         }
     }
 }

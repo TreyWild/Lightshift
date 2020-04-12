@@ -11,13 +11,13 @@ public class Hull : NetworkBehaviour
     [SyncVar(hook = nameof(UpdateMass))]
     public float weight;
 
-    private Rigidbody2D _rigidbody2D;
+    private Kinematic _kinematic;
     private SpriteRenderer _hull;
     private Entity _entity;
     private EntityUI _ui;
     private void Awake()
     {
-        _rigidbody2D = GetComponent<Rigidbody2D>();
+        _kinematic = GetComponent<Kinematic>();
         _ui = GetComponent<EntityUI>();
         _hull = Instantiate(PrefabManager.Instance.hullPrefab, transform).GetComponent<SpriteRenderer>();
         _entity = GetComponent<Entity>();
@@ -54,6 +54,6 @@ public class Hull : NetworkBehaviour
 
     private void UpdateMass(float oldValue, float newValue)
     {
-        _rigidbody2D.mass = newValue;
+        _kinematic.mass = newValue;
     }
 }

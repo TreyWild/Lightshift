@@ -16,11 +16,11 @@ public class LightLance : NetworkBehaviour
     [SyncVar]
     public float powerCost = 30;
 
-    private Rigidbody2D _rigidBody;
+    private Kinematic _kinematic;
     private BeamToTarget _lightLance;
     private void Awake()
     {
-        _rigidBody = GetComponent<Rigidbody2D>();
+        _kinematic = GetComponent<Kinematic>();
         _lightLance = Instantiate(PrefabManager.Instance.lightLancePrefab, transform).GetComponent<BeamToTarget>();
         _lightLance.OnFocus += OnLightLanceFocus;
         _lightLance.CancelFocus();
@@ -43,7 +43,7 @@ public class LightLance : NetworkBehaviour
                 return;
 
             var force = (pullForce / distance) * 100;
-            _rigidBody.AddRelativeForce((target.position - transform.position)  * (force * Time.deltaTime));
+            _kinematic.AddForce((target.position - transform.position)  * (force * Time.deltaTime));
 
         }
     }

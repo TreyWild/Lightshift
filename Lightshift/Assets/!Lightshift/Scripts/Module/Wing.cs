@@ -8,15 +8,19 @@ using UnityEngine;
 
 public class Wing : NetworkBehaviour 
 {
-    private Rigidbody2D _rigidBody;
-    private SpriteRenderer[] _wings;
-    private Entity _entity;
-
     [SyncVar]
     public float agility;
+
+    private Kinematic _kinematic;
+    private SpriteRenderer[] _wings;
+    private Entity _entity;
+    private PlayerController _input;
+    private Engine _engine;
     private void Awake()
     {
-        _rigidBody = GetComponent<Rigidbody2D>();
+        _kinematic = GetComponent<Kinematic>();
+        _input = GetComponent<PlayerController>();
+        _engine = GetComponent<Engine>();
 
         var wings = Instantiate(PrefabManager.Instance.wingPrefab, transform);
         _wings = wings.GetComponentsInChildren<SpriteRenderer>();
@@ -27,7 +31,15 @@ public class Wing : NetworkBehaviour
     public void Turn(int axis)
     {
         if (hasAuthority)
-            _rigidBody.rotation += axis * agility * Time.deltaTime;
+        {
+            if (_input.Up)
+            {
+                float invSpeedPercent = Mathf.Max(1 - (_kinematic.velocity.magnitude / _engine.maxSpeed) * (1 - (agility / 1.5f)), 0);
+                _kinematic.SetDirection(_kinematic.transform.eulerAngles.y + agility * Time.fixedDeltaTime * invSpeedPercent);
+            }
+            else
+                _kinematic.SetDirection(_kinematic.transform.eulerAngles.y + agility * Time.fixedDeltaTime);
+        }
     }
 
     public void SetImage(int id, Color color = default)
