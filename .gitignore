@@ -9,6 +9,7 @@
 /Lightshift/[Bb]uilds/
 /Lightshift/[Ll]ogs/
 /Lightshift/[Mm]emoryCaptures/
+/Server/
 
 # Never ignore Asset meta data
 !/[Aa]ssets/**/*.meta

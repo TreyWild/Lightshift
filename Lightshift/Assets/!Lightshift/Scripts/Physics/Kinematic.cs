@@ -20,7 +20,7 @@ public class Kinematic : MonoBehaviour
     void Update()
     {
         if (velocity != Vector2.zero)
-            transform.position += new Vector3(velocity.x, 0, velocity.y) * Time.deltaTime;
+            transform.position += new Vector3(velocity.x, velocity.y, 0) * Time.deltaTime;
 
     }
     void FixedUpdate()
@@ -32,7 +32,7 @@ public class Kinematic : MonoBehaviour
     }
     public void SetDirection(float angle)
     {
-        transform.eulerAngles = new Vector3(transform.eulerAngles.x, angle, transform.eulerAngles.z);
+        transform.eulerAngles = new Vector3(transform.eulerAngles.x,transform.eulerAngles.y, angle);
     }
 
     public void AddForce(Vector2 force) 

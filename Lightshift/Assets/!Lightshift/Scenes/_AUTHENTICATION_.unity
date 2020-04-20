@@ -4052,6 +4052,7 @@ MonoBehaviour:
   IsFullscreen: 0
   ShowSkybox: 1
   ShowBackgroundElements: 0
+  ShowDebugStats: 0
 --- !u!1 &620968865
 GameObject:
   m_ObjectHideFlags: 0

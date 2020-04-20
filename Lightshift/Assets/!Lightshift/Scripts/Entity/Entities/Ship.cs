@@ -27,7 +27,7 @@ public class Ship : Entity
         _generator = GetComponent<Generator>();
 
         if (isServer || isLocalPlayer)
-            CameraFollow.Instance.SetTarget(gameObject);
+            CameraFollow.Instance.SetTarget(gameObject.transform);
 
         if (isServer)
         {
@@ -37,12 +37,12 @@ public class Ship : Entity
                 SetDisplayName(displayName: player.Username);
             else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
 
-            _engine.maxSpeed = 0.4f;
-            _engine.acceleration = 10f;
-            _engine.brakeForce = 5;
+            _engine.maxSpeed = 10f;
+            _engine.acceleration = 4f;
+            _engine.brakeForce = 1;
             _hull.weight = .5f;
 
-            _wing.agility = 160f;
+            _wing.agility = 60f;
 
             _heart.SetMaxHealth(1000);
             _heart.SetHealth(500);
@@ -72,7 +72,7 @@ public class Ship : Entity
         StartCoroutine(RandomizeShip());
     }
 
-    private void Update()
+    private void FixedUpdate()
     {
         //HandlePowerRegen();
         //HandleShieldRegen();

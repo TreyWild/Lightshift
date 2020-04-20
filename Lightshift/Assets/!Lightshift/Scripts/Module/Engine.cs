@@ -34,7 +34,6 @@ public class Engine : NetworkBehaviour
 
         if (isLocalPlayer)
         {
-            float shipRadDir = _kinematic.transform.eulerAngles.y * Mathf.Deg2Rad;
             float engineStr = acceleration * Time.fixedDeltaTime;
 
             if (_input.Up)
@@ -45,18 +44,18 @@ public class Engine : NetworkBehaviour
                     if (_input.OverDrive)
                     {
                         _kinematic.velocity *= (speed - engineStr) / speed;
-                        _kinematic.velocity += new Vector2(Mathf.Cos(shipRadDir), -Mathf.Sin(shipRadDir)) * engineStr * overDriveMultiplier;
+                        _kinematic.AddForce(transform.up * engineStr * overDriveMultiplier);
                     }
                     else
                     {
-                        _kinematic.velocity += new Vector2(Mathf.Cos(shipRadDir), -Mathf.Sin(shipRadDir)) * engineStr;
-                        _kinematic.velocity *= Mathf.Max(speed - engineStr * 2, maxSpeed) / speed;
+                        _kinematic.AddForce(transform.up * engineStr);
+                        _kinematic.velocity *= Mathf.Max(speed - engineStr * brakeForce, maxSpeed) / speed;
                     }
 
                 }
                 else
                 {
-                    _kinematic.velocity += new Vector2(Mathf.Cos(shipRadDir), -Mathf.Sin(shipRadDir)) * acceleration * Time.fixedDeltaTime * overDriveMultiplier;
+                    _kinematic.AddForce(transform.up * acceleration * Time.fixedDeltaTime * overDriveMultiplier);
                 }
             }
             if (_input.Down)

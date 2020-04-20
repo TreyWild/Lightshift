@@ -31,4 +31,31 @@ public class Player
         PlayerObject.Remove("authKey");
         PlayerObject.Save();
     }
+
+    public int InventoryMaxCargoCapacity
+    {
+        get => PlayerObject.GetInt("inventory.maxCargoCapacity", 40);
+        set 
+        {
+            PlayerObject.Set("inventory.maxCargoCapacity", value);
+        }
+    }
+
+    public int InventoryMaxStorageCapacity
+    {
+        get => PlayerObject.GetInt("inventory.maxStorageCapacity", 40);
+        set
+        {
+            PlayerObject.Set("inventory.maxStorageCapacity", value);
+        }
+    }
+
+    //public Inventory GetInventory(InventoryType type)
+    //{
+    //    Inventory inventory = null;
+
+    //    var items
+
+    //    return inventory;
+    //}
 }

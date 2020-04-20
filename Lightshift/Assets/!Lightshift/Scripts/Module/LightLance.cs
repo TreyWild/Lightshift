@@ -43,7 +43,7 @@ public class LightLance : NetworkBehaviour
                 return;
 
             var force = (pullForce / distance) * 100;
-            _kinematic.AddForce((target.position - transform.position)  * (force * Time.deltaTime));
+            _kinematic.AddForce((target.position - transform.position)  * (force * Time.fixedDeltaTime));
 
         }
     }

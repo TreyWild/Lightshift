@@ -34,11 +34,11 @@ public class Wing : NetworkBehaviour
         {
             if (_input.Up)
             {
-                float invSpeedPercent = Mathf.Max(1 - (_kinematic.velocity.magnitude / _engine.maxSpeed) * (1 - (agility / 1.5f)), 0);
-                _kinematic.SetDirection(_kinematic.transform.eulerAngles.y + agility * Time.fixedDeltaTime * invSpeedPercent);
+                float invSpeedPercent = Mathf.Max(1 - (_kinematic.velocity.magnitude / _engine.maxSpeed) * 0.25f, 0);
+                _kinematic.SetDirection(_kinematic.transform.eulerAngles.z + agility * axis * Time.fixedDeltaTime * invSpeedPercent);
             }
             else
-                _kinematic.SetDirection(_kinematic.transform.eulerAngles.y + agility * Time.fixedDeltaTime);
+                _kinematic.SetDirection(_kinematic.transform.eulerAngles.z + agility * axis * Time.fixedDeltaTime);
         }
     }
 
