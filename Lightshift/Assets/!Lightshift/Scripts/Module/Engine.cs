@@ -38,30 +38,27 @@ public class Engine : NetworkBehaviour
 
             if (_input.Up)
             {
-                if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed)
+                if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed * overDriveMultiplier * overDriveMultiplier && _input.OverDrive) //over max speed but boosting
                 {
-                    float speed = _kinematic.velocity.magnitude;
-                    if (_input.OverDrive)
-                    {
-                        _kinematic.velocity *= (speed - engineStr) / speed;
-                        _kinematic.AddForce(transform.up * engineStr * overDriveMultiplier);
-                    }
-                    else
-                    {
-                        _kinematic.AddForce(transform.up * engineStr);
-                        _kinematic.velocity *= Mathf.Max(speed - engineStr * brakeForce, maxSpeed) / speed;
-                    }
-
+                    engineStr *= overDriveMultiplier;
+                    _kinematic.AddForce(transform.up * engineStr/2);
+                    _kinematic.AddForce(transform.transformPoint(_kinematic.velocity.normalized * -engineStr/2)) // push opposite of the direction of velocity
                 }
-                else
+                else if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed) //over max speed, not boosting
                 {
-                    _kinematic.AddForce(transform.up * acceleration * Time.fixedDeltaTime * overDriveMultiplier);
+                    _kinematic.AddForce(transform.up * engineStr/2);
+                    _kinematic.AddForce(transform.transformPoint(_kinematic.velocity.normalized * -engineStr/2)) // push opposite of the direction of velocity
+                }
+                else //under max speed
+                {
+                    _kinematic.AddForce(transform.up * engineStr);
                 }
             }
             if (_input.Down)
             {
-                if (_kinematic.velocity.sqrMagnitude > acceleration * Time.fixedDeltaTime * acceleration * Time.fixedDeltaTime)
-                    _kinematic.velocity -= _kinematic.velocity.normalized * acceleration * Time.fixedDeltaTime;
+                engineStr *= brakeForce;
+                if (_kinematic.velocity.sqrMagnitude > engineStr * engineStr) //this won't always work because the AddForce uses mass, so it will make a more sudden stop for very heavy ships.
+                    _kinematic.AddForce(transform.up * -engineStr)
                 else if (!_input.Up)
                     _kinematic.velocity = Vector2.zero;
             }
