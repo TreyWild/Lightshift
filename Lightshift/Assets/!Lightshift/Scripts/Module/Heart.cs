@@ -9,11 +9,11 @@ using UnityEngine;
 public class Heart : NetworkBehaviour 
 {
     [SyncVar]
-    public float healthRegen = 50;
+    public float healthRegen;
     [SyncVar(hook = nameof(SetUIHealthMax))]
-    public float maxHealth = 2000;
+    public float maxHealth;
     [SyncVar(hook = nameof(SetUIHealth))]
-    public float health = 2000;
+    public float health;
 
     private Entity _entity;
     private EntityUI _ui;

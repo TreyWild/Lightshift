@@ -75,7 +75,7 @@ public class PlayerController : NetworkBehaviour
             Right = right;
         }
 
-        if (Settings.Instance.UseMouseAim && GetMouseAimInput() == 0)
+        if ((Settings.Instance.UseMouseAim && GetMouseAimInput() == 0) && (Left || Right))
         {
             Right = false;
             Left = false;

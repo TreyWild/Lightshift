@@ -14,7 +14,7 @@ public class ChatBox : MonoBehaviour
     public TMP_InputField ChatBoxTextbox;
     public GameObject ChatInputBox;
     public TMP_InputField ChatInput;
-
+    private List<string> _chatMessages = new List<string>();
     void Awake() 
     {
         if (Instance != null)
@@ -25,8 +25,20 @@ public class ChatBox : MonoBehaviour
     private void Start()
     {
         ChatBoxTextbox.verticalScrollbar.value = 1;
-        ChatBoxTextbox.text = "";
+        for (int i = 0; i < 20; i++) 
+        {
+            AddMessage(Environment.NewLine);
+        }
+
+        ChatBoxTextbox.verticalScrollbar.onValueChanged.AddListener(OnValueChanged);
     }
+
+    private void OnValueChanged(float newValue)
+    {
+        if (newValue == 0)
+            ChatBoxTextbox.verticalScrollbar.value = 1;
+    }
+
     void Update()
     {
 
@@ -74,19 +86,12 @@ public class ChatBox : MonoBehaviour
 
     public void AddMessage(string message)
     {
-        ChatBoxTextbox.text = (ChatBoxTextbox.text + Environment.NewLine + message);
-        ChatBoxTextbox.stringPosition = ChatBoxTextbox.text.Length;
-
-        StartCoroutine(ScrollToValue(ChatBoxTextbox.verticalScrollbar.value));
+        _chatMessages.Add(message);
+        if (_chatMessages.Count > 100)
+            _chatMessages.Remove(_chatMessages[0]);
+        ChatBoxTextbox.text = "";
+        foreach (var m in _chatMessages)
+            ChatBoxTextbox.text += $"{Environment.NewLine}{m}";
     }
 
-    IEnumerator ScrollToValue(float value)
-    {
-        WaitForFixedUpdate wait = new WaitForFixedUpdate();
-        while (true) 
-        {
-            ChatBoxTextbox.verticalScrollbar.value = value;
-            yield return wait;
-        }
-    }
 }

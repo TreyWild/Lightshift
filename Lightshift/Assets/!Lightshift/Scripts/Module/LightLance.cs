@@ -8,13 +8,13 @@ using UnityEngine;
 public class LightLance : NetworkBehaviour
 {
     [SyncVar]
-    public float pullForce = 10;
+    public float pullForce;
 
     [SyncVar(hook = nameof(SetMaxRange))]
-    public float maxRange = 15;
+    public float maxRange;
 
     [SyncVar]
-    public float powerCost = 30;
+    public float powerCost;
 
     private Kinematic _kinematic;
     private BeamToTarget _lightLance;

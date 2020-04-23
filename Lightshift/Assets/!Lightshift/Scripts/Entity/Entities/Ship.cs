@@ -142,10 +142,16 @@ public class Ship : Entity
         _wing.agility = stats.agility;
 
         _heart.SetMaxHealth(stats.maxHealth);
+        _heart.health = 1;
+        _heart.healthRegen = stats.healthRegen;
+
 
         _shield.SetMaxShield(stats.maxShield);
-
+        _shield.shield = 1;
+        _shield.shieldRegen = stats.shieldRegen;
         _generator.maxPower = stats.maxPower;
+        _generator.power = 1;
+        _generator.powerRegen = stats.powerRegen;
 
         _lightLance.SetRange(stats.lightLanceRange);
         _lightLance.pullForce = stats.lightLancePullForce;

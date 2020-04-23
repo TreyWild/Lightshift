@@ -12,11 +12,11 @@ public class Engine : NetworkBehaviour
     [SyncVar]
     public float acceleration;
     [SyncVar]
-    public float brakeForce = 4;
+    public float brakeForce;
     [SyncVar]
-    public float overDrivePowerCost = 30;
+    public float overDrivePowerCost;
     [SyncVar]
-    public float overDriveMultiplier = 2;
+    public float overDriveMultiplier;
 
     private Thruster _thruster;
     private Kinematic _kinematic;

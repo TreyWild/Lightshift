@@ -9,13 +9,13 @@ using UnityEngine;
 public class Shield : NetworkBehaviour 
 {
     [SyncVar(hook = nameof(SetUIShieldMax))]
-    public float maxShield = 300;
+    public float maxShield;
     [SyncVar(hook = nameof(SetUIShield))]
-    public float shield = 200;
+    public float shield;
     [SyncVar]
-    public float shieldRegen = 20;
+    public float shieldRegen;
     [SyncVar]
-    public float shieldSize = 1;
+    public float shieldSize;
 
     private GameObject _visualShield;
     private EntityUI _ui;

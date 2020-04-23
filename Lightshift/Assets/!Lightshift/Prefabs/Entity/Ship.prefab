@@ -138,9 +138,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  healthRegen: 50
-  maxHealth: 2000
-  health: 2000
+  healthRegen: 0
+  maxHealth: 0
+  health: 0
 --- !u!114 &8428157353850978006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -155,10 +155,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  maxShield: 300
-  shield: 200
-  shieldRegen: 20
-  shieldSize: 1
+  maxShield: 0
+  shield: 0
+  shieldRegen: 0
+  shieldSize: 0
 --- !u!114 &-3694009400966114701
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -172,12 +172,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
-  syncInterval: 2
+  syncInterval: 0.1
   maxSpeed: 0
   acceleration: 0
-  brakeForce: 4
-  overDrivePowerCost: 30
-  overDriveMultiplier: 2
+  brakeForce: 0
+  overDrivePowerCost: 0
+  overDriveMultiplier: 0
 --- !u!114 &1455556379631715000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -192,9 +192,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   syncMode: 0
   syncInterval: 0.1
-  maxPower: 150
-  power: 150
-  powerRegen: 20
+  maxPower: 0
+  power: 0
+  powerRegen: 0
 --- !u!114 &-6108855744573809978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -223,11 +223,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
-  syncInterval: 0.38
-  maxShield: 300
-  shield: 200
-  shieldRegen: 20
-  shieldSize: 1
+  syncInterval: 0.1
+  maxShield: 0
+  shield: 0
+  shieldRegen: 0
+  shieldSize: 0
 --- !u!114 &2373500243344142206
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,10 +256,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   syncMode: 0
-  syncInterval: 0.46
-  pullForce: 10
-  maxRange: 15
-  powerCost: 30
+  syncInterval: 0.1
+  pullForce: 0
+  maxRange: 0
+  powerCost: 0
 --- !u!114 &2849789116552935760
 MonoBehaviour:
   m_ObjectHideFlags: 0

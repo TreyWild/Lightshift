@@ -9,11 +9,11 @@ using UnityEngine;
 public class Generator : NetworkBehaviour 
 {
     [SyncVar(hook = nameof(SetUIPowerMax))]
-    public float maxPower = 150;
+    public float maxPower;
     [SyncVar(hook = nameof(SetUIPower))]
-    public float power = 150;
+    public float power;
     [SyncVar]
-    public float powerRegen = 20;
+    public float powerRegen;
 
     private EntityUI _ui;
 
