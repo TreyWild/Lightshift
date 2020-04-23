@@ -58,4 +58,9 @@ public class Player
 
     //    return inventory;
     //}
+
+    public Starship GetStarship() 
+    {
+        return ItemManager.GetStarship("default");
+    }
 }

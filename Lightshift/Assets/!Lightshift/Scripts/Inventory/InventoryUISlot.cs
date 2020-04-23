@@ -7,11 +7,10 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using static UnityEngine.EventSystems.PointerEventData;
 
-public class InventoryUISlot : MonoBehaviour, IPointerClickHandler
+public class InventoryUISlot : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
 {
     public int slotId;
     public InventoryType type;
-    public ItemType requiredItemType;
 
     public Item item;
 
@@ -21,6 +20,9 @@ public class InventoryUISlot : MonoBehaviour, IPointerClickHandler
     public event Action<InventoryUISlot> OnMouseLeftClick;
     public event Action<InventoryUISlot> OnMouseRightClick;
     public event Action<InventoryUISlot> OnMouseMiddleClick;
+    public event Action<InventoryUISlot> OnMouseOver;
+    public event Action<InventoryUISlot> OnMouseLeave;
+
     public void SetItem(Item item, int amount)
     {
         if (amount == 1 || amount == 0)
@@ -55,5 +57,15 @@ public class InventoryUISlot : MonoBehaviour, IPointerClickHandler
                 OnMouseMiddleClick.Invoke(this);
                 break;
         }
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        OnMouseOver?.Invoke(this);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        OnMouseLeave?.Invoke(this);
     }
 }

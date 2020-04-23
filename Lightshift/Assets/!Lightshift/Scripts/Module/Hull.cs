@@ -23,15 +23,11 @@ public class Hull : NetworkBehaviour
         _entity = GetComponent<Entity>();
     }
 
-    public void SetImage(int id, Color color = default)
+    public void SetImage(Sprite sprite, Color color = default)
     {
-        var hullSprite = PrefabManager.Instance.Hulls[id];
-        if (hullSprite == null)
-            return;
-
         if (_hull != null)
         {
-            _hull.sprite = hullSprite;
+            _hull.sprite = sprite;
             _hull.color = color;
 
             var collider = _hull.gameObject.GetComponent<PolygonCollider2D>();

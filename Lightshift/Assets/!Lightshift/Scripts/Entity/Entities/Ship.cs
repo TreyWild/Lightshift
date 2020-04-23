@@ -3,10 +3,13 @@ using Mirror;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class Ship : Entity
 {
+    private readonly SyncListEquip _equips = new SyncListEquip();
+
     private LightLance _lightLance;
     private Engine _engine;
     private Wing _wing;
@@ -15,8 +18,15 @@ public class Ship : Entity
     private Heart _heart;
     private Shield _shield;
     private Generator _generator;
-    private void Start()
+    private InventoryManager _inventoryManager;
+    private Starship _starship;
+
+    [SyncVar(hook = nameof(OnStarshipChanged))]
+    private string _starShipKey;
+
+    private void Awake()
     {
+        base.Awake();
         _lightLance = GetComponent<LightLance>();
         _engine = GetComponent<Engine>();
         _wing = GetComponent<Wing>();
@@ -25,51 +35,121 @@ public class Ship : Entity
         _shield = GetComponent<Shield>();
         _heart = GetComponent<Heart>();
         _generator = GetComponent<Generator>();
+        _inventoryManager = GetComponent<InventoryManager>();
+        _inventoryManager.equipChanged += OnEquipChanged;
+        _equips.Callback += OnEquipsChanged;
+    }
 
+    private void Start()
+    {
         if (isServer || isLocalPlayer)
             CameraFollow.Instance.SetTarget(gameObject.transform);
+    }
+    public override void OnStartServer()
+    {
+        var player = Server.GetPlayer(connectionToClient);
+
+        if (player != null)
+            SetDisplayName(displayName: player.Username);
+        else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
+
+        UpdateStarship(player.GetStarship().key);
+    }
+
+    private void OnStarshipChanged(string oldValue, string newValue)
+    {
+        UpdateStarship(newValue);
+    }
+    private void UpdateStarship(string key) 
+    {
+        _starship = ItemManager.GetStarship(key);
+        _hull.SetImage(_starship.Sprite, _starship.color);
+        _wing.SetImage(null, Color.white);
+
+        UpdateShipStats();
 
         if (isServer)
         {
-            var player = Server.GetPlayer(connectionToClient);
+            _starShipKey = key;
 
-            if (player != null)
-                SetDisplayName(displayName: player.Username);
-            else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
-
-            _engine.maxSpeed = 10f;
-            _engine.acceleration = 4f;
-            _engine.brakeForce = 1;
-            _hull.weight = .5f;
-
-            _wing.agility = 60f;
-
-            _heart.SetMaxHealth(1000);
-            _heart.SetHealth(500);
-
-            _shield.SetMaxShield(850);
-            _shield.SetShield(500);
-
-            _generator.maxPower = 100;
-            _generator.power = 100;
-
-            _lightLance.SetRange(16);
-            _lightLance.pullForce = 150;
-            _lightLance.powerCost = 50;
+            _equips.Clear();
+            var equips = _inventoryManager.GetAllEquips();
+            foreach (var equip in equips)
+                _equips.Add(equip);
         }
-
-        _hull.SetImage(18, Color.white);
-        _wing.SetImage(19, Color.white);
     }
 
-    IEnumerator RandomizeShip() 
+    private void OnEquipChanged(InventorySlot slot)
     {
-        _hull.SetImage(UnityEngine.Random.Range(0, PrefabManager.Instance.Hulls.Count-1), Color.white);
-        _wing.SetImage(UnityEngine.Random.Range(0, PrefabManager.Instance.Wings.Count - 1), Color.white);
+        var equip = _equips.FirstOrDefault(e => e.slot == slot.slotId);
+        if (equip != null && _equips.Contains(equip))
+            _equips.Remove(equip);
 
-        yield return new WaitForSeconds(1);
+        if (slot.item != null)
+            _equips.Add(Equip.GetEquipFromItemSlot(slot));
+    }
 
-        StartCoroutine(RandomizeShip());
+    private void OnEquipsChanged(SyncList<Equip>.Operation op, int itemIndex, Equip oldItem, Equip newItem)
+    {
+        if (oldItem != null)
+        {
+            _starship.data -= oldItem.data;
+            _wing.SetImage(null, Color.white);
+        }
+        else if (newItem != null && newItem.itemKey == null || newItem != null && newItem.itemKey == "") 
+        {
+            _wing.SetImage(null, Color.white);
+        }
+        else if (newItem != null)
+        {
+            _starship.data += newItem.data;
+
+            var item = ItemManager.GetItem(newItem.itemKey);
+            switch (item.type)
+            {
+                case ItemType.Engine:
+                    break;
+                case ItemType.Generator:
+                    break;
+                case ItemType.Wing:
+                    _wing.SetImage(item.Sprite, item.color);
+                    break;
+                case ItemType.Weapon:
+                    break;
+                case ItemType.Shield:
+                    break;
+                case ItemType.LightLance:
+                    break;
+                case ItemType.MiningDrill:
+                    break;
+            }
+        }
+        UpdateShipStats();
+    }
+
+    private void UpdateShipStats() 
+    {
+        var stats = _starship.data;
+
+        _engine.maxSpeed = stats.maxSpeed;
+        _engine.acceleration = stats.acceleration;
+        _engine.brakeForce = stats.brakeForce;
+        _engine.overDriveMultiplier = stats.overDriveBoostMultiplier;
+        _engine.overDrivePowerCost = stats.overDrivePowerCost;
+
+        _hull.weight = stats.weight;
+
+        _wing.agility = stats.agility;
+
+        _heart.SetMaxHealth(stats.maxHealth);
+
+        _shield.SetMaxShield(stats.maxShield);
+
+        _generator.maxPower = stats.maxPower;
+
+        _lightLance.SetRange(stats.lightLanceRange);
+        _lightLance.pullForce = stats.lightLancePullForce;
+        _lightLance.powerCost = stats.lightLancePowerCost;     
     }
 
     private void FixedUpdate()

@@ -6,7 +6,7 @@ using System.Linq;
 public class ItemManager : MonoBehaviour
 {
     private static ItemManager Instance;
-    [SerializeField] private List<Item> _items = new List<Item>();
+    private List<Item> _items = new List<Item>();
     private void Awake()
     {
         if (Instance == null)
@@ -15,7 +15,10 @@ public class ItemManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        _items = Resources.LoadAll<Item>("").ToList();
     }
 
     public static Item GetItem(string key) => Instance._items.FirstOrDefault(i => i.key == key);
+    public static Starship GetStarship(string key) => Instance._items.FirstOrDefault(i => i.key == key) as Starship;
 }

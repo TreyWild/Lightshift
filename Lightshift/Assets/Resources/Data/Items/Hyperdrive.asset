@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 31cde2f8f36f5ab4fb4d73ed802f2578, type: 3}
-  m_Name: TestItem
+  m_Name: Hyperdrive
   m_EditorClassIdentifier: 
-  key: 448d245f-0115-4517-8707-26655bcca092
-  displayName: Test
-  type: 0
+  key: 84ea1823-9649-4a14-a3e3-8dc23a08a4d8
+  displayName: Hyperdrive
+  lore: For travel between dimensions
+  type: 2
   data:
     maxShield: 0
     maxHealth: 0
@@ -22,8 +23,8 @@ MonoBehaviour:
     powerRegen: 0
     shieldRegen: 0
     healthRegen: 0
-    maxSpeed: 0
-    acceleration: 0
+    maxSpeed: 10
+    acceleration: 10
     agility: 0
     weight: 0
     brakeForce: 0
@@ -32,6 +33,7 @@ MonoBehaviour:
     lightLanceRange: 0
     overDrivePowerCost: 0
     overDriveBoostMultiplier: 0
-  Icon: {fileID: 21300000, guid: e52d1bbde40e8994d89a15463e594965, type: 3}
-  Sprite: {fileID: 21300000, guid: e52d1bbde40e8994d89a15463e594965, type: 3}
+  Icon: {fileID: 21300000, guid: 464f7bb7bd7092041bc944f0b517a6be, type: 3}
+  Sprite: {fileID: 21300000, guid: 464f7bb7bd7092041bc944f0b517a6be, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
+  maxStack: 1

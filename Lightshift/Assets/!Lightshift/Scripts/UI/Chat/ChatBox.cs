@@ -25,6 +25,7 @@ public class ChatBox : MonoBehaviour
     private void Start()
     {
         ChatBoxTextbox.verticalScrollbar.value = 1;
+        ChatBoxTextbox.text = "";
     }
     void Update()
     {

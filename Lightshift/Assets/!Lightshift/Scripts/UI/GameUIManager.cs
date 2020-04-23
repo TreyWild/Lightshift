@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameUIManager : MonoBehaviour
 {
@@ -65,7 +66,10 @@ public class GameUIManager : MonoBehaviour
     public void ShowScreenStats(bool active) 
     {
         if (active && _performanceStats == null)
+        {
             _performanceStats = Instantiate(_performanceStatsPrefab);
+            _statsText = _performanceStats.GetComponentInChildren<TextMeshProUGUI>();
+        }
         else if (_performanceStats != null)
         {
             _performanceStats.SetActive(active);
@@ -79,15 +83,6 @@ public class GameUIManager : MonoBehaviour
         if (_settingsMenu == null) 
             _settingsMenu = Instantiate(_settingsMenuPrefab);
         else Destroy(_settingsMenu);
-    }
-
-    public void ToggleInventory()
-    {
-        if (_inventoryCanvas.enabled) 
-            _inventoryCanvas.enabled = false;
-        else _inventoryCanvas.enabled = true;
-
-        Settings.Instance.KeysLocked = _inventoryCanvas.enabled;
     }
 
     public void ShowAnnouncementText(string message) 
@@ -120,7 +115,7 @@ public class GameUIManager : MonoBehaviour
                 ToggleSettingsMenu();
 
             if (Input.GetKeyDown(Settings.Instance.InventoryKey))
-                ToggleInventory();
+                ToggleInventoryUI(true);
 
             if (Input.GetKeyDown(Settings.Instance.PlayerMenuKey))
                 TogglePlayerMenu();
@@ -176,6 +171,9 @@ public class GameUIManager : MonoBehaviour
 
         if (_shipListMenu != null)
             _shipListMenu.SetActive(active);
+
+        if (_inventoryUI != null)
+            ToggleInventoryUI(active);
     }
 
     //public void ToggleWeaponMenu(WeaponSystem weaponSystem)
@@ -210,5 +208,23 @@ public class GameUIManager : MonoBehaviour
             var playerList = _playerMenu.GetComponent<PlayerList>();
             playerList.ShowOnlinePlayers();
         }
+    }
+
+    private InventoryUI _inventoryUI;
+    public void HookInventoryUI(InventoryUI inventory) 
+    {
+        if (_inventoryUI != null)
+            Destroy(_inventoryUI.gameObject);
+
+        _inventoryUI = inventory;
+    }
+
+    private void ToggleInventoryUI(bool toggle)
+    {
+        if (_inventoryUI == null)
+            return;
+
+        _inventoryUI?.gameObject.SetActive(toggle);
+        Settings.Instance.KeysLocked = toggle;
     }
 }

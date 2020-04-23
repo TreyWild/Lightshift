@@ -10,4 +10,5 @@ public class InventorySlot
     public int amount;
     public ItemType type;
     public InventoryType inventory;
+    public ItemType identifier;
 }

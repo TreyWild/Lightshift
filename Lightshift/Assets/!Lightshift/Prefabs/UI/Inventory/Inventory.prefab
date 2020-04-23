@@ -869,7 +869,7 @@ MonoBehaviour:
   m_ChildAlignment: 1
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 65, y: 65}
+  m_CellSize: {x: 85, y: 85}
   m_Spacing: {x: 5, y: 5}
   m_Constraint: 0
   m_ConstraintCount: 2
@@ -3502,6 +3502,8 @@ MonoBehaviour:
     type: 3}
   heldItemPrefab: {fileID: 561962907102472655, guid: 612af3bd5399b294a81f5f8a95541c0a,
     type: 3}
+  toolTipPrefab: {fileID: 3303413956491777854, guid: a170ca76b249b2940a1f0e2dfe108d17,
+    type: 3}
 --- !u!1 &1464883939131961339
 GameObject:
   m_ObjectHideFlags: 0
@@ -4866,7 +4868,7 @@ MonoBehaviour:
   m_ChildAlignment: 1
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 65, y: 65}
+  m_CellSize: {x: 85, y: 85}
   m_Spacing: {x: 5, y: 5}
   m_Constraint: 0
   m_ConstraintCount: 2

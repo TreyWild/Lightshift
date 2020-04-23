@@ -3,6 +3,7 @@ using System.Collections;
 using Mirror;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 public class InventoryManager : NetworkBehaviour
 {
@@ -71,11 +72,10 @@ public class InventoryManager : NetworkBehaviour
         {
             // Make sure stuff can't be put where it shouldn't be..
             if (itemSlot != null)
-                if (itemSlot.type != _heldSlot.item.type && itemSlot.type != ItemType.Any)
+                if (itemSlot.identifier != _heldSlot.item.type && itemSlot.type != ItemType.None)
                     return;
 
             itemSlot.amount = _heldSlot.amount;
-            itemSlot.type = _heldSlot.type;
             itemSlot.item = _heldSlot.item;
 
             UpdateSlot(itemSlot);
@@ -101,14 +101,7 @@ public class InventoryManager : NetworkBehaviour
         //} // PICKUP ITEM FROM SLOT
         else if (!itemSlotEmpty && !_holdingItem)
         {
-            SetHeldItem(new InventorySlot
-            {
-                amount = itemSlot.amount,
-                item = itemSlot.item,
-                inventory = inventoryType,
-                slotId = slot,
-                type = itemSlot.type
-            });
+            SetHeldItem(itemSlot);
             RemoveItem(itemSlot);
         }
     }
@@ -237,9 +230,24 @@ public class InventoryManager : NetworkBehaviour
 
     private void SetHeldItem(InventorySlot slot)
     {
-        _heldSlot = slot;
+        _heldSlot = CloneSlot(slot);
         _holdingItem = true;
         RpcSetHeldItemSlot(GetInventorySlotMessage(slot));
+    }
+
+    public InventorySlot CloneSlot(InventorySlot slot) 
+    {
+        var newSlot = new InventorySlot
+        {
+            amount = slot.amount,
+            identifier = slot.identifier,
+            inventory = slot.inventory,
+            item = slot.item,
+            slotId = slot.slotId,
+            type = slot.type,
+        };
+
+        return newSlot;
     }
 
     private void ClearHeldItem() 
@@ -249,7 +257,14 @@ public class InventoryManager : NetworkBehaviour
         RpcClearHeldItemSlot();
     }
 
-    private void UpdateSlot(InventorySlot slot) => RpcUpdateInventorySlot(GetInventorySlotMessage(slot));
+    public event Action<InventorySlot> equipChanged;
+    private void UpdateSlot(InventorySlot slot) 
+    {
+        if (slot.inventory == InventoryType.Ship)
+            equipChanged?.Invoke(slot);
+
+        RpcUpdateInventorySlot(GetInventorySlotMessage(slot));
+    }
 
     private void RemoveItem(InventorySlot slot) 
     {
@@ -296,7 +311,6 @@ public class InventoryManager : NetworkBehaviour
         if (!hasAuthority)
             return;
 
-        Debug.LogError($"{slot.slotId} {slot.amount} {slot.inventory}");
         _inventoryUI.UpdateSlot(slot);
     }
 
@@ -330,5 +344,26 @@ public class InventoryManager : NetworkBehaviour
             default:
                 return _storageInventory;
         }
+    }
+
+    public List<Equip> GetEquippedWeapons() 
+    {
+        var list = new List<Equip>();
+        foreach (var slot in _shipInventory.slots)
+            if (slot.item != null)
+                if (slot.identifier == ItemType.Weapon)
+                    list.Add(Equip.GetEquipFromItemSlot(slot));
+
+        return list;
+    }
+
+    public List<Equip> GetAllEquips()
+    {
+        var list = new List<Equip>();
+        foreach (var slot in _shipInventory.slots)
+            if (slot.item != null)
+                    list.Add(Equip.GetEquipFromItemSlot(slot));
+
+        return list;
     }
 }

@@ -1,8 +1,10 @@
-﻿using Mirror;
+﻿using Lightshift;
+using Mirror;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class InventoryUI : MonoBehaviour
@@ -15,7 +17,9 @@ public class InventoryUI : MonoBehaviour
     public GameObject storageInventoryPanel;
     public GameObject itemSlotPrefab;
     public GameObject heldItemPrefab;
+    public GameObject toolTipPrefab;
 
+    private GameObject _toolTipObject;
     private InventoryManager _manager;
     public void BuildInventory(InventoryManager manager, int maxCargo, int maxStorage)
     {
@@ -39,7 +43,12 @@ public class InventoryUI : MonoBehaviour
             slot.OnMouseLeftClick += OnMouseLeftClick;
             slot.OnMouseMiddleClick += OnMouseMiddleClick;
             slot.OnMouseRightClick += OnMouseRightClick;
+            slot.OnMouseLeave += OnMouseLeaveSlot;
+            slot.OnMouseOver += OnMouseOverSlot;
         }
+
+        gameObject.SetActive(false);
+        GameUIManager.Instance.HookInventoryUI(this);
     }
 
     private void GenerateCargoSlots(int maxCargoSlots = 40) 
@@ -92,7 +101,6 @@ public class InventoryUI : MonoBehaviour
         var itemSlot = slots.FirstOrDefault(s => s.slotId == slot.slotId);
         if (itemSlot == null)
         {
-            Debug.LogError($"Null Slot. {slot.slotId} {slot.inventory}");
             return;
         }
 
@@ -101,7 +109,6 @@ public class InventoryUI : MonoBehaviour
         var item = ItemManager.GetItem(slot.itemKey);
         if (item == null)
         {
-            Debug.LogError("Null Item");
             itemSlot.SetItem(null, 0);
         }
 
@@ -130,7 +137,6 @@ public class InventoryUI : MonoBehaviour
             return;
 
         _canClick = false;
-        Debug.LogError("Sent Right");
         _manager.CmdOnMouseRightClick(obj.slotId, obj.type);
     }
 
@@ -141,7 +147,6 @@ public class InventoryUI : MonoBehaviour
 
         _canClick = false;
 
-        Debug.LogError("Sent Middle");
         _manager.CmdOnMouseMiddleClick(obj.slotId, obj.type);
     }
 
@@ -151,13 +156,13 @@ public class InventoryUI : MonoBehaviour
             return;
 
         _canClick = false;
-        Debug.LogError("Sent Left");
         _manager.CmdOnMouseLeftClick(obj.slotId, obj.type);
     }
 
     public void Exit() 
     {
         gameObject.SetActive(false);
+        Settings.Instance.KeysLocked = false;
     }
 
     private GameObject _heldItem;
@@ -169,7 +174,7 @@ public class InventoryUI : MonoBehaviour
         var item = ItemManager.GetItem(slot.itemKey);
         if (item == null)
         {
-            Debug.LogError("Null Item");
+            //Debug.LogError("Null Item");
         }
 
         else
@@ -185,5 +190,31 @@ public class InventoryUI : MonoBehaviour
     {
         if (_heldItem != null)
             Destroy(_heldItem.gameObject);
+    }
+
+    private void OnMouseOverSlot(InventoryUISlot obj)
+    {
+        if (obj.item == null)
+            return;
+
+        if (_toolTipObject != null)
+            Destroy(_toolTipObject);
+
+        _toolTipObject = Instantiate(toolTipPrefab);
+        var tooltip = _toolTipObject.GetComponent<InventoryToolTip>();
+
+        tooltip.DisplayTooltip(obj.item);
+    }
+
+    private void OnMouseLeaveSlot(InventoryUISlot obj)
+    {
+        if (_toolTipObject != null)
+            Destroy(_toolTipObject);
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(Settings.Instance.InventoryKey))
+            Exit();
     }
 }

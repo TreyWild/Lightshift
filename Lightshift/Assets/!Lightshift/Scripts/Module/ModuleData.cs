@@ -1,23 +1,40 @@
 ﻿using System;
+using UnityEngine;
 
 [Serializable]
 public struct ModuleData
 {
+    [Range(0, 1000)]
     public float maxShield;
+    [Range(0, 1000)]
     public float maxHealth;
+    [Range(0, 1000)]
     public float maxPower;
+    [Range(0, 100)]
     public float powerRegen;
+    [Range(0, 1000)]
     public float shieldRegen;
+    [Range(0, 1000)]
     public float healthRegen;
+    [Range(0, 10)]
     public float maxSpeed;
+    [Range(0, 10)]
     public float acceleration;
+    [Range(0, 360)]
     public float agility;
+    [Range(0, 10)]
     public float weight;
+    [Range(0, 10.0f)]
     public float brakeForce;
+    [Range(0, 10)]
     public float lightLancePowerCost;
+    [Range(0, 10)]
     public float lightLancePullForce;
+    [Range(0, 10)]
     public float lightLanceRange;
+    [Range(0, 10)]
     public float overDrivePowerCost;
+    [Range(0, 10)]
     public float overDriveBoostMultiplier;
 
 

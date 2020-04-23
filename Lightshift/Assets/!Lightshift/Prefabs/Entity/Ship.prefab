@@ -402,58 +402,69 @@ MonoBehaviour:
     - slotId: 0
       item: {fileID: 0}
       amount: 0
-      type: 2
+      type: 3
       inventory: 0
+      identifier: 3
     - slotId: 1
       item: {fileID: 0}
       amount: 0
-      type: 4
+      type: 5
       inventory: 0
+      identifier: 5
     - slotId: 2
       item: {fileID: 0}
       amount: 0
-      type: 4
+      type: 5
       inventory: 0
+      identifier: 5
     - slotId: 3
       item: {fileID: 0}
       amount: 0
-      type: 4
+      type: 5
       inventory: 0
+      identifier: 5
     - slotId: 4
       item: {fileID: 0}
       amount: 0
       type: 4
       inventory: 0
+      identifier: 7
     - slotId: 5
-      item: {fileID: 0}
-      amount: 0
-      type: 4
-      inventory: 0
-    - slotId: 6
-      item: {fileID: 0}
-      amount: 0
-      type: 6
-      inventory: 0
-    - slotId: 7
       item: {fileID: 0}
       amount: 0
       type: 5
       inventory: 0
-    - slotId: 8
-      item: {fileID: 0}
-      amount: 0
-      type: 1
-      inventory: 0
-    - slotId: 9
-      item: {fileID: 0}
-      amount: 0
-      type: 8
-      inventory: 0
-    - slotId: 10
+      identifier: 5
+    - slotId: 6
       item: {fileID: 0}
       amount: 0
       type: 7
       inventory: 0
+      identifier: 7
+    - slotId: 7
+      item: {fileID: 0}
+      amount: 0
+      type: 6
+      inventory: 0
+      identifier: 6
+    - slotId: 8
+      item: {fileID: 0}
+      amount: 0
+      type: 2
+      inventory: 0
+      identifier: 2
+    - slotId: 9
+      item: {fileID: 0}
+      amount: 0
+      type: 9
+      inventory: 0
+      identifier: 9
+    - slotId: 10
+      item: {fileID: 0}
+      amount: 0
+      type: 8
+      inventory: 0
+      identifier: 8
   _storageInventory:
     type: 2
     slots: []
@@ -461,19 +472,22 @@ MonoBehaviour:
     type: 1
     slots:
     - slotId: 0
-      item: {fileID: 11400000, guid: b4b34e77bbb69ff46915db8344977e31, type: 2}
-      amount: 20
-      type: 0
-      inventory: 1
-    - slotId: 1
-      item: {fileID: 11400000, guid: b4b34e77bbb69ff46915db8344977e31, type: 2}
-      amount: 28
-      type: 0
-      inventory: 1
-    - slotId: 2
-      item: {fileID: 11400000, guid: b63f54d2aecefc9498eddbc9653af8aa, type: 2}
+      item: {fileID: 11400000, guid: e95fb87b58e920748b5eeeab05a88093, type: 2}
       amount: 1
       type: 0
       inventory: 1
+      identifier: 0
+    - slotId: 1
+      item: {fileID: 11400000, guid: b7f3d8a57ccab0743b4af08694c8e39f, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 2
+      item: {fileID: 11400000, guid: 6451db545ecd7d647a3f22f8cddcb0ed, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
   _inventoryPrefab: {fileID: 1464883939077083148, guid: 258d1933343cffc4493393f0e2f051d9,
     type: 3}

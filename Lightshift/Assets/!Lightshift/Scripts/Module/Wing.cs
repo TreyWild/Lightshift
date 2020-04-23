@@ -16,6 +16,8 @@ public class Wing : NetworkBehaviour
     private Entity _entity;
     private PlayerController _input;
     private Engine _engine;
+
+    private Sprite _baseImage;
     private void Awake()
     {
         _kinematic = GetComponent<Kinematic>();
@@ -26,7 +28,7 @@ public class Wing : NetworkBehaviour
         _wings = wings.GetComponentsInChildren<SpriteRenderer>();
         _entity = GetComponent<Entity>();
 
-        SetImage(0);
+        _baseImage = _wings[0].sprite;
     }
     public void Turn(int axis)
     {
@@ -42,8 +44,11 @@ public class Wing : NetworkBehaviour
         }
     }
 
-    public void SetImage(int id, Color color = default)
+    public void SetImage(Sprite sprite, Color color = default)
     {
+        if (sprite == null)
+            sprite = _baseImage;
+
         if (_wings == null)
             return;
 
@@ -53,11 +58,7 @@ public class Wing : NetworkBehaviour
             if (wing == null)
                 continue;
 
-            var wingSprite = PrefabManager.Instance.Wings[id];
-            if (wingSprite == null)
-                continue;
-
-            wing.sprite = wingSprite;
+            wing.sprite = sprite;
             wing.color = color;
 
             var collider = wing.gameObject.GetComponent<PolygonCollider2D>();
