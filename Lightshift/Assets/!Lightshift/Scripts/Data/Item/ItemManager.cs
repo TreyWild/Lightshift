@@ -21,4 +21,5 @@ public class ItemManager : MonoBehaviour
 
     public static Item GetItem(string key) => Instance._items.FirstOrDefault(i => i.key == key);
     public static Starship GetStarship(string key) => Instance._items.FirstOrDefault(i => i.key == key) as Starship;
+    public static Weapon GetWeapon(string key) => Instance._items.FirstOrDefault(i => i.key == key) as Weapon;
 }

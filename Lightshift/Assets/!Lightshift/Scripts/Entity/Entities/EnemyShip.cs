@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class EnemyShip : Entity 
+public class EnemyShip : Entity
 {
     public float moveSpeed = 5; //move speed
     public float rotationSpeed = 5; //speed of turning

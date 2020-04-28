@@ -11,8 +11,6 @@ public class PlayerList : MonoBehaviour {
     private List<GameObject> _playerListObjects = new List<GameObject>();
     public void Start()
     {
-        Settings.Instance.KeysLocked = true;
-
         ShowOnlinePlayers();
     }
 
@@ -27,25 +25,24 @@ public class PlayerList : MonoBehaviour {
 
         _playerListObjects.Clear();
 
-        foreach (Player player in players)
+        foreach (PlayerData player in players)
         {
             CreatePlayerItem(player);
         }
     }
 
-    public void CreatePlayerItem(Player player)
+    public void CreatePlayerItem(PlayerData player)
     {
         var item = Instantiate(playerItemPrefab, contentPanel.transform);
         var script = item.GetComponent<PlayerMenuItem>();
 
-        script.SetUsername(player.Username);
+        script.SetUsername(player.username);
 
         _playerListObjects.Add(item);
     }
 
     public void Exit()
     {
-        Settings.Instance.KeysLocked = false;
         Destroy(gameObject);
     }
 

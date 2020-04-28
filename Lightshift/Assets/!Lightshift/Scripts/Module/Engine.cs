@@ -35,33 +35,34 @@ public class Engine : NetworkBehaviour
         if (isLocalPlayer)
         {
             float engineStr = acceleration * Time.fixedDeltaTime;
+            if (overDrive)
+                engineStr *= overDriveMultiplier;
 
             if (_input.Up)
             {
-                if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed)
+                if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed * overDriveMultiplier * overDriveMultiplier && overDrive) //over max speed but boosting
                 {
                     float speed = _kinematic.velocity.magnitude;
-                    if (_input.OverDrive)
-                    {
-                        _kinematic.velocity *= (speed - engineStr) / speed;
-                        _kinematic.AddForce(transform.up * engineStr * overDriveMultiplier);
-                    }
-                    else
-                    {
-                        _kinematic.AddForce(transform.up * engineStr);
-                        _kinematic.velocity *= Mathf.Max(speed - engineStr * brakeForce, maxSpeed) / speed;
-                    }
-
+                    engineStr *= overDriveMultiplier;
+                    _kinematic.AddForce(transform.up * engineStr / 2);
+                    _kinematic.velocity *= Mathf.Max(speed - engineStr / _kinematic.mass / 2, 0) / speed;
                 }
-                else
+                else if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed) //over max speed, not boosting
                 {
-                    _kinematic.AddForce(transform.up * acceleration * Time.fixedDeltaTime * overDriveMultiplier);
+                    float speed = _kinematic.velocity.magnitude;
+                    _kinematic.AddForce(transform.up * engineStr / 2);
+                    _kinematic.velocity *= Mathf.Max(speed - engineStr / _kinematic.mass / 2, 0) / speed;
+                }
+                else //under max speed
+                {
+                    _kinematic.AddForce(transform.up * engineStr);
                 }
             }
             if (_input.Down)
             {
-                if (_kinematic.velocity.sqrMagnitude > acceleration * Time.fixedDeltaTime * acceleration * Time.fixedDeltaTime)
-                    _kinematic.velocity -= _kinematic.velocity.normalized * acceleration * Time.fixedDeltaTime;
+                engineStr *= brakeForce / _kinematic.mass; //this uses mass
+                if (_kinematic.velocity.sqrMagnitude > engineStr * engineStr)
+                    _kinematic.velocity -= engineStr * _kinematic.velocity.normalized;
                 else if (!_input.Up)
                     _kinematic.velocity = Vector2.zero;
             }

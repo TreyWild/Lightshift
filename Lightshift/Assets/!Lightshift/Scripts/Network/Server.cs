@@ -50,7 +50,8 @@ public class Server : MonoBehaviour
         if (player != null)
             Instance._players.Remove(player);
 
-        NetworkServer.DestroyPlayerForConnection(player.connection);
+        if (player.connection != null)
+            NetworkServer.DestroyPlayerForConnection(player.connection);
     }
 
     public static Player GetPlayer(NetworkConnection connection)
@@ -61,5 +62,14 @@ public class Server : MonoBehaviour
     {
         if (!Instance._players.Contains(player))
             Instance._players.Add(player);
+    }
+
+    public static void SendChatBroadcast(string message) 
+    {
+        NetworkServer.SendToAll(new ChatMessage
+        {
+            message = message,
+            username = "* SYSTEM"
+        });
     }
 }

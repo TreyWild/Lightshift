@@ -26,6 +26,7 @@ GameObject:
   - component: {fileID: 8921403012929570751}
   - component: {fileID: 6898487194530294851}
   - component: {fileID: 6126881407495994609}
+  - component: {fileID: -7590786752629244720}
   m_Layer: 8
   m_Name: Ship
   m_TagString: Player
@@ -62,7 +63,7 @@ MonoBehaviour:
   syncMode: 0
   syncInterval: 0.1
   TargetCheckSpeed: 0.15
-  username: 
+  displayName: 
   hasCollision: 1
   teamId: 
   colliders: []
@@ -402,9 +403,9 @@ MonoBehaviour:
     - slotId: 0
       item: {fileID: 0}
       amount: 0
-      type: 3
+      type: 5
       inventory: 0
-      identifier: 3
+      identifier: 5
     - slotId: 1
       item: {fileID: 0}
       amount: 0
@@ -426,15 +427,15 @@ MonoBehaviour:
     - slotId: 4
       item: {fileID: 0}
       amount: 0
-      type: 4
-      inventory: 0
-      identifier: 7
-    - slotId: 5
-      item: {fileID: 0}
-      amount: 0
       type: 5
       inventory: 0
       identifier: 5
+    - slotId: 5
+      item: {fileID: 0}
+      amount: 0
+      type: 3
+      inventory: 0
+      identifier: 3
     - slotId: 6
       item: {fileID: 0}
       amount: 0
@@ -489,5 +490,31 @@ MonoBehaviour:
       type: 0
       inventory: 1
       identifier: 0
+    - slotId: 3
+      item: {fileID: 11400000, guid: 4c84fa4849ebd57488eabc6a146a4cc6, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
   _inventoryPrefab: {fileID: 1464883939077083148, guid: 258d1933343cffc4493393f0e2f051d9,
     type: 3}
+--- !u!114 &-7590786752629244720
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2893782170727032538}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3798d4ae21ed5db4686ea76939c5b54d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weapons:
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  - {fileID: 0}
+  activeWeapon: {fileID: 0}
+  activeWeaponSlot: 0

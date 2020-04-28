@@ -49,4 +49,9 @@ public class LightshiftNetworkManager : NetworkManager
 
         singleton.StartClient();
     }
+
+    public override void OnServerDisconnect(NetworkConnection conn)
+    {
+        Server.RemovePlayer(Server.GetPlayer(conn));
+    }
 }

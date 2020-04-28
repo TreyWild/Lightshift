@@ -17,22 +17,22 @@ MonoBehaviour:
   lore: For travel between dimensions
   type: 2
   data:
-    maxShield: 0
-    maxHealth: 0
-    maxPower: 0
+    maxShield: 79
+    maxHealth: 116
+    maxPower: 42
     powerRegen: 0
     shieldRegen: 0
     healthRegen: 0
-    maxSpeed: 10
-    acceleration: 10
-    agility: 0
-    weight: 0
-    brakeForce: 0
+    maxSpeed: 14.9
+    acceleration: 10.4
+    agility: 17
+    weight: 0.18
+    brakeForce: 0.97
     lightLancePowerCost: 0
     lightLancePullForce: 0
     lightLanceRange: 0
     overDrivePowerCost: 0
-    overDriveBoostMultiplier: 0
+    overDriveBoostMultiplier: 2.06
   Icon: {fileID: 21300000, guid: 464f7bb7bd7092041bc944f0b517a6be, type: 3}
   Sprite: {fileID: 21300000, guid: 464f7bb7bd7092041bc944f0b517a6be, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}

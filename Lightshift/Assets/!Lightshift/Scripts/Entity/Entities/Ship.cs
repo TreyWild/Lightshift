@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class Ship : Entity
@@ -20,6 +21,10 @@ public class Ship : Entity
     private Generator _generator;
     private InventoryManager _inventoryManager;
     private Starship _starship;
+    private WeaponSystem _weaponSystem;
+
+    [SyncVar(hook = nameof(InitPlayer))]
+    private PlayerData _playerData;
 
     [SyncVar(hook = nameof(OnStarshipChanged))]
     private string _starShipKey;
@@ -38,6 +43,7 @@ public class Ship : Entity
         _inventoryManager = GetComponent<InventoryManager>();
         _inventoryManager.equipChanged += OnEquipChanged;
         _equips.Callback += OnEquipsChanged;
+        _weaponSystem = GetComponent<WeaponSystem>();
     }
 
     private void Start()
@@ -54,13 +60,19 @@ public class Ship : Entity
         else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
 
         UpdateStarship(player.GetStarship().key);
+
+        _playerData = new PlayerData
+        {
+            userId = player.connectUserId,
+            username = player.Username,
+        };
     }
 
     private void OnStarshipChanged(string oldValue, string newValue)
     {
         UpdateStarship(newValue);
     }
-    private void UpdateStarship(string key) 
+    private void UpdateStarship(string key)
     {
         _starship = ItemManager.GetStarship(key);
         _hull.SetImage(_starship.Sprite, _starship.color);
@@ -70,9 +82,9 @@ public class Ship : Entity
 
         if (isServer)
         {
+            _equips.Clear();
             _starShipKey = key;
 
-            _equips.Clear();
             var equips = _inventoryManager.GetAllEquips();
             foreach (var equip in equips)
                 _equips.Add(equip);
@@ -81,9 +93,18 @@ public class Ship : Entity
 
     private void OnEquipChanged(InventorySlot slot)
     {
-        var equip = _equips.FirstOrDefault(e => e.slot == slot.slotId);
-        if (equip != null && _equips.Contains(equip))
-            _equips.Remove(equip);
+        for (int i = 0; i < _equips.Count; i++) 
+        {
+            if (_equips[i].slot == slot.slotId)
+            {
+                //if (_starship != null)
+                //    //Remove stats for this equip
+                //    _starship.data -= _equips[i].data;
+
+                _equips.Remove(_equips[i]);
+                break;
+            }
+        }
 
         if (slot.item != null)
             _equips.Add(Equip.GetEquipFromItemSlot(slot));
@@ -94,7 +115,27 @@ public class Ship : Entity
         if (oldItem != null)
         {
             _starship.data -= oldItem.data;
-            _wing.SetImage(null, Color.white);
+
+            var item = ItemManager.GetItem(oldItem.itemKey);
+            switch (item.type)
+            {
+                case ItemType.Engine:
+                    break;
+                case ItemType.Generator:
+                    break;
+                case ItemType.Wing:
+                    _wing.SetImage(null, Color.white);
+                    break;
+                case ItemType.Weapon:
+                    _weaponSystem.RemoveWeapon(oldItem.slot);
+                    break;
+                case ItemType.Shield:
+                    break;
+                case ItemType.LightLance:
+                    break;
+                case ItemType.MiningDrill:
+                    break;
+            }
         }
         else if (newItem != null && newItem.itemKey == null || newItem != null && newItem.itemKey == "") 
         {
@@ -115,6 +156,7 @@ public class Ship : Entity
                     _wing.SetImage(item.Sprite, item.color);
                     break;
                 case ItemType.Weapon:
+                    _weaponSystem.AddWeapon(item as Weapon, newItem.slot);
                     break;
                 case ItemType.Shield:
                     break;
@@ -172,5 +214,24 @@ public class Ship : Entity
         _wing.Turn(_input.HorizontalAxis);
 
         HandleSafeZone();
+
+        if (_input.Weapon)
+            _weaponSystem.TryFireWeapon(_input.WeaponSlot);
+
+
+    }
+
+    private void InitPlayer(PlayerData oldData, PlayerData newData)
+    {
+        if (oldData.userId != null && oldData.userId != "")
+            PlayerManager.Instance.RemovePlayer(oldData);
+        if (newData.userId != null && newData.userId != "")
+            PlayerManager.Instance.AddPlayer(newData);
+    }
+
+
+    private void OnDestroy()
+    {
+        PlayerManager.Instance.RemovePlayer(_playerData);
     }
 }

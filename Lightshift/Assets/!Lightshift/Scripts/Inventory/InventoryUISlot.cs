@@ -33,7 +33,7 @@ public class InventoryUISlot : MonoBehaviour, IPointerClickHandler, IPointerEnte
 
         if (item != null)
         {
-            _icon.sprite = item.Sprite;
+            _icon.sprite = item.Icon;
             _icon.color = item.color;
         }
         else

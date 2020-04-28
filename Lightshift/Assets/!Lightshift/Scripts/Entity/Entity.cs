@@ -11,7 +11,7 @@ public class Entity : NetworkBehaviour
     public float TargetCheckSpeed = 0.5f;
 
     [SyncVar(hook = nameof(SetDisplayName))]
-    public string username; 
+    public string displayName; 
     [SyncVar(hook = nameof(UpdateCollision))]
     public bool hasCollision;
     [SyncVar]
@@ -33,155 +33,6 @@ public class Entity : NetworkBehaviour
 
         _ui = GetComponent<EntityUI>();
     }
-
-    public void SetupStats(ModuleData moduleData) 
-    {
-        //maxHealth = moduleData.maxHealth;
-        //maxPower = moduleData.maxPower;
-        //maxShield = moduleData.maxShield;
-        //maxSpeed = moduleData.maxSpeed;
-        //acceleration = moduleData.acceleration;
-        //agility = moduleData.agility;
-        //weight = moduleData.weight;
-        //brakeForce = moduleData.brakeForce;
-        //shieldRegen = moduleData.shieldRegen;
-        //healthRegen = moduleData.healthRegen;
-        //powerRegen = moduleData.powerRegen;
-        //overDriveMultiplier = moduleData.overDriveBoostMultiplier;
-        //overDrivePowerCost = moduleData.overDrivePowerCost;
-        //lightLancePowerCost = moduleData.lightLancePowerCost;
-        //lightLanceRange = moduleData.lightLanceRange;
-        //lightLancePullForce = moduleData.lightLancePullForce;
-
-        //health = maxHealth;
-        //power = maxPower;
-        //shield = maxShield;
-    }
-
-    #region Damage Handler
-    //private List<DamageObject> _damageQueue = new List<DamageObject>();
-    //private float _lastDamageTick;
-    //public void HandleDamageQueue()
-    //{
-    //    _lastDamageTick -= Time.deltaTime * 1.0f;
-
-    //    for (int i = 0; i < _damageQueue.Count; i++)
-    //    {
-    //        var dmgObj = _damageQueue[i];
-
-    //        dmgObj.effectDuration -= Time.deltaTime * 1.0f;
-    //        dmgObj.startTime += Time.deltaTime * 1.0f;
-
-    //        var damage = CalculateDamage(dmgObj);
-
-    //        if (dmgObj.IsDot)
-    //            damage = damage / dmgObj.totalEffectDuration * Time.deltaTime;
-    //        if (dmgObj.IsBurn)
-    //            damage = damage / dmgObj.totalEffectDuration * 2 * (dmgObj.effectDuration / dmgObj.totalEffectDuration) * Time.deltaTime;
-
-    //        DamageEntity(damage, dmgObj);
-
-    //        if (dmgObj.effectDuration < 0)
-    //            _damageQueue.Remove(dmgObj);
-    //    }
-    //}
-    ////public void HitEntity(Entity attacker, WeaponConfig weapon, PropertiesObject weaponProperties, ModifierObject weaponModifiers) 
-    ////{
-    ////    var damageObject = _damageQueue.FirstOrDefault(d => d.entityId == attacker.uniqueId && weapon.uniqueId == d.weaponId);
-
-    ////    if (damageObject == null)
-    ////    {
-    ////        //New Damage Object
-    ////        damageObject = new DamageObject
-    ////        {
-    ////            corrosiveDamage = weaponModifiers.Get(Modifiers.CorrosiveDamage),
-    ////            energyDamage = weaponModifiers.Get(Modifiers.EnergyDamage),
-    ////            kineticDamage = weaponModifiers.Get(Modifiers.KineticDamage),
-    ////            IsBurn = weaponProperties.GetBool(Properties.IsBurn),
-    ////            IsDot = weaponProperties.GetBool(Properties.IsDot),
-    ////            IsStacking = weaponProperties.GetBool(Properties.IsStacking),
-    ////            effectDuration = weaponModifiers.Get(Modifiers.EffectDuration),
-    ////            totalEffectDuration = weaponModifiers.Get(Modifiers.EffectDuration),
-    ////            entityId = attacker.uniqueId,
-    ////            weaponId = weapon.uniqueId
-    ////        };
-
-    ////        //Apply damage
-    ////        DamageEntity(CalculateDamage(damageObject), damageObject);
-
-    ////        //If dot or burn, store to be handled.
-    ////        if (damageObject.IsBurn || damageObject.IsDot)
-    ////        {
-    ////            damageObject.corrosiveDamage = weaponModifiers.Get(Modifiers.CorrosiveDamageOverTime);
-    ////            damageObject.energyDamage = weaponModifiers.Get(Modifiers.EnergyDamageOverTime);
-    ////            damageObject.kineticDamage = weaponModifiers.Get(Modifiers.KineticDamageOverTime);
-    ////            _damageQueue.Add(damageObject);
-
-    ////        }
-    ////    }
-    ////    else
-    ////    {
-    ////        //Update Existing Damage Object
-    ////        if (damageObject.IsStacking) {
-    ////            damageObject.effectDuration = weaponModifiers.Get(Modifiers.EffectDuration);
-    ////            damageObject.corrosiveDamage += weaponModifiers.Get(Modifiers.CorrosiveDamage);
-    ////            damageObject.energyDamage += weaponModifiers.Get(Modifiers.EnergyDamage);
-    ////            damageObject.kineticDamage += weaponModifiers.Get(Modifiers.KineticDamage);
-    ////        }
-    ////    }
-    ////}
-
-    //private float CalculateDamage(DamageObject damageObject) 
-    //{
-    //    float damage = 0;
-
-    //    if (IsShielded)
-    //    {
-    //        if (damageObject.corrosiveDamage > 0)
-    //            damage = (1 - dataObject.corrosiveResistance) * damageObject.corrosiveDamage;
-    //        if (damageObject.kineticDamage > 0)
-    //            damage = (1 - dataObject.kineticResistance) * damageObject.kineticDamage;
-    //        if (damageObject.energyDamage > 0)
-    //            damage = (1 - dataObject.energyResistance) * damageObject.energyDamage;
-    //    }
-    //    else damage = Mathf.Max((damageObject.kineticDamage + damageObject.energyDamage + damageObject.corrosiveDamage) - dataObject.armor, damage * 0.15f);
-
-    //    return damage;
-    //}
-
-    //private void DamageEntity(float damage, DamageObject damageObject) 
-    //{
-    //    var difference = dataObject.shield - damage;
-
-    //    if (difference <= 0)
-    //    {
-    //        dataObject.health += difference;
-    //        dataObject.shield = 0;
-
-    //        if (_visualShield != null && _visualShield.activeInHierarchy)
-    //            _visualShield.SetActive(false);
-    //    }
-    //    else
-    //    {
-    //        dataObject.shield = difference;
-    //        if (_visualShield != null && !_visualShield.activeInHierarchy)
-    //            _visualShield.SetActive(true);
-    //    }
-
-    //    _lastHitTime = DateTime.Now;
-
-    //    if (dataObject.health <= 0)
-    //        SendDeath(damageObject);
-    //}
-
-    //private DateTime _lastHitTime;
-
-    //public void ClearDamageObjects() 
-    //{
-    //    //Clear damage objects
-    //    _damageQueue.Clear();
-    //}
-    #endregion
     private void FixedUpdate()
     {
         _timeSinceLastTargetUpdate += Time.fixedDeltaTime;
@@ -249,7 +100,7 @@ public class Entity : NetworkBehaviour
         if (isLocalPlayer)
             return;
 
-        username = displayName;
+        displayName = displayName;
 
         _ui.SetName(displayName);
     }

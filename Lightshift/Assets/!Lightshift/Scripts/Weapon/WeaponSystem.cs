@@ -1,138 +1,73 @@
-﻿using System;
+﻿using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
+using Boo.Lang;
 
 public class WeaponSystem : MonoBehaviour
 {
-    public bool WeaponSystemDisabled = false;
-
-    private Entity _entity;
-    private Weapon[] _weapons = new Weapon[5];
-    public Action<int> onWeaponSlotChanged;
-
-    //Handles weapon order
+    public Weapon[] weapons = new Weapon[5];
+    public Weapon activeWeapon;
     public int activeWeaponSlot;
+    private Kinematic _kinematic;
+    private Entity _entity;
     private void Awake()
     {
+        _kinematic = GetComponent<Kinematic>();
         _entity = GetComponent<Entity>();
     }
-
-    public void SetWeaponOrder(string[] weaponKeyList)
+    public void AddWeapon(Weapon weapon, int slot) 
     {
-        for (int i = 0; i < weaponKeyList.Count(); i++)
-        {
-            var key = weaponKeyList[i];
-            var slot = i;
-            //if (key != null)
-            //    DataManager.Instance.GetWeaponDataObject(key, delegate (DataObject dataObject)
-            //    {
-            //        AddOrReplaceWeapon(slot, dataObject);
-            //    });
-        }
+        Debug.LogError("Weapon Added");
+        if (slot < weapons.Length)
+            weapons[slot] = weapon;
+        else
+            weapons = weapons.Append(weapon);
     }
 
-    public void SetWeapons(Weapon[] weapons) => _weapons = weapons;
-
-    public void AddOrReplaceWeapon(int slot, WeaponData dataObject)
+    public void RemoveWeapon(int slot)
     {
-        for (int i = 0; i < _weapons.Count(); i++)
-        {
-            var weapon = _weapons[i];
-            if (weapon == null)
-                continue;
-
-            if (slot == i)
-            {
-                _weapons[i] = null;
-                return;
-            }
-        }
-
-        //switch (dataObject.weaponType)
-        //{
-        //    case WeaponType.Projectile:
-        _weapons[slot] = new ProjectileWeapon { entity = _entity, weaponData = dataObject, weaponKey = dataObject.key };
-        //        break;
-        //}
-
+        Debug.LogError("Weapon Removed");
+        if (weapons[slot] != null)
+            weapons[slot] = null;
     }
-    public void ChangeWeapon(int weaponSlot)
+
+    private void FixedUpdate()
     {
-        if (activeWeaponSlot == weaponSlot)
+        if (activeWeapon == null)
             return;
 
-        var weapon = _weapons[weaponSlot];
-        if (weapon == null)
-            return;
-
-        activeWeaponSlot = weaponSlot;
+        activeWeapon.timeSinceLastShot += Time.fixedDeltaTime;
     }
-    public void TryFireWeapon()
+
+    public void TryFireWeapon(int weapon) 
     {
-        var weapon = _weapons[activeWeaponSlot];
-
-        if (weapon != null)
-            weapon.Fire();
+        activeWeaponSlot = weapon;
+        activeWeapon = weapons[weapon];
+        if (activeWeapon != null &&  activeWeapon.timeSinceLastShot > activeWeapon.weaponData.refire)
+            FireWeapon(activeWeapon);
     }
-    //public void ActivateWeapon(int turretId)
-    //{
-    //    if (!_activeWeapons.Contains(turretId))
-    //        if (_weapons[turretId] != null)
-    //        {
-    //            _activeWeapons.Add(turretId);
-    //            onTurretChanged?.Invoke(turretId, true);
-    //        }
 
-    //}
-
-    //public void DeactivateWeapon(int turretId)
-    //{
-    //    if (_activeWeapons.Contains(turretId))
-    //    {
-    //        _activeWeapons.Remove(turretId);
-    //        onTurretChanged?.Invoke(turretId, false);
-    //    }
-    //}
-
-    //public void ForceSingleActiveWeapon(int turretId) 
-    //{
-    //    if (_activeWeapons.Count == 1 && _activeWeapons.Contains(turretId))
-    //        return;
-
-    //    _activeWeapons.Clear();
-    //    ActivateWeapon(turretId);
-    //}
-
-    //public void TryFireWeapons()
-    //{
-    //    for (int i = 0; i < _activeWeapons.Count; i++) 
-    //    {
-    //        var weaponId = _activeWeapons[i];
-
-    //        var weapon = _weapons[weaponId];
-    //        if (weapon == null)
-    //        {
-    //            _activeWeapons.Remove(weaponId);
-    //            continue;
-    //        }
-
-    //        weapon.Fire();
-    //    }
-    //}
-
-    private void Update()
+    private void FireWeapon(Weapon weapon) 
     {
-        for (int i = 0; i < _weapons.Length; i++)
-        {
-            var weapon = _weapons[i];
-            if (weapon == null)
-                continue;
+        float arc = 0;
+        if (weapon.weaponData.spreadArc > 0)
+            arc = Random.Range(-weapon.weaponData.spreadArc * 0.5f, weapon.weaponData.spreadArc * 0.5f);
 
-            weapon.Update();
-        }
+        Vector2 gunPoint = transform.position;
+
+        float x = Mathf.Cos((_kinematic.transform.eulerAngles.x - gunPoint.y + arc) * Mathf.Deg2Rad);
+        float y = -Mathf.Sin((_kinematic.transform.eulerAngles.x - gunPoint.y + arc) * Mathf.Deg2Rad);
+
+        Vector3 pos = _kinematic.transform.position + new Vector3(gunPoint.x * x - gunPoint.y * y, 0, gunPoint.y * x + gunPoint.x * y);
+
+        Projectile bullet = LSObjectPool.GetUsableProjectile();
+
+
+        bullet.transform.eulerAngles = new Vector3(bullet.transform.eulerAngles.x, bullet.transform.eulerAngles.y, (bullet.transform.eulerAngles.z + arc) - transform.eulerAngles.z);
+
+        var velocity = new Vector2(x, y) * weapon.weaponData.bulletData.speed;
+
+        bullet.owner = _entity;
+
+        bullet.Initialize(velocity, gunPoint, weapon.weaponData.bulletData, weapon.Sprite, weapon.color);
     }
-
-    public Weapon[] GetWeapons() => _weapons;
 }

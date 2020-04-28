@@ -27,7 +27,7 @@ public class PlayerController : NetworkBehaviour
 
     private void Update()
     {
-        if (!isLocalPlayer)
+        if (!isLocalPlayer || Settings.Instance.KeysLocked)
             return;
 
         if (Input.GetKey(Settings.Instance.Weapon1))
