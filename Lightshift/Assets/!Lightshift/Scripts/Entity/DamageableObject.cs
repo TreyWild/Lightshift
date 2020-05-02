@@ -1,7 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
-using Mirror;
-using UnityEditor.Rendering;
+﻿using Mirror;
 
 public class DamageableObject : NetworkBehaviour
 {

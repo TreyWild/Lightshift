@@ -51,7 +51,7 @@ public class InventoryUI : MonoBehaviour
         GameUIManager.Instance.HookInventoryUI(this);
     }
 
-    private void GenerateCargoSlots(int maxCargoSlots = 40) 
+    private void GenerateCargoSlots(int maxCargoSlots = 40)
     {
         for (int i = 0; i < maxCargoSlots; i++)
         {
@@ -106,7 +106,10 @@ public class InventoryUI : MonoBehaviour
 
         itemSlot.type = slot.inventory;
 
-        var item = ItemManager.GetItem(slot.itemKey);
+        ItemObj item = null;
+        var itemObj = ItemManager.GetItem(slot.itemKey);
+        if (itemObj != null)
+            item = itemObj.GetItemObj();
         if (item == null)
         {
             itemSlot.SetItem(null, 0);
@@ -114,7 +117,10 @@ public class InventoryUI : MonoBehaviour
 
         else
         {
-            item.data = slot.data;
+            item.data = slot.moduleData;
+            if (item.type == ItemType.Weapon)
+                item.weaponData = slot.weaponData;
+
             itemSlot.SetItem(item, slot.amount);
         }
     }
@@ -159,34 +165,39 @@ public class InventoryUI : MonoBehaviour
         _manager.CmdOnMouseLeftClick(obj.slotId, obj.type);
     }
 
-    public void Exit() 
+    public void Exit()
     {
         gameObject.SetActive(false);
         Settings.Instance.KeysLocked = false;
     }
 
     private GameObject _heldItem;
-    public void SetHeldItem(InventoryItemSlotMessage slot) 
+    public void SetHeldItem(InventoryItemSlotMessage slot)
     {
         ClearHeldItem();
         _heldItem = Instantiate(heldItemPrefab);
 
-        var item = ItemManager.GetItem(slot.itemKey);
+        ItemObj item = null;
+        var itemObj = ItemManager.GetItem(slot.itemKey);
+        if (itemObj != null)
+            item = itemObj.GetItemObj();
         if (item == null)
+
         {
             //Debug.LogError("Null Item");
         }
 
         else
         {
-            item.data = slot.data;
-
+            item.data = slot.moduleData;
+            if (item.type == ItemType.Weapon)
+                item.weaponData = slot.weaponData;
             var itemSlot = _heldItem.GetComponentInChildren<InventoryUISlot>();
             itemSlot.SetItem(item, slot.amount);
         }
     }
 
-    public void ClearHeldItem() 
+    public void ClearHeldItem()
     {
         if (_heldItem != null)
             Destroy(_heldItem.gameObject);

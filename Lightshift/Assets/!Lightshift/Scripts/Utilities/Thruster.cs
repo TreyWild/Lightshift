@@ -32,6 +32,7 @@ public class Thruster : MonoBehaviour
     public void SetColor(Color color) 
     {
         _trailRenderer.startColor = color;
+        _overdriveTrailRenderer.endColor = color;
     }
 
     public void RunEngine(bool run, bool overDrive) 

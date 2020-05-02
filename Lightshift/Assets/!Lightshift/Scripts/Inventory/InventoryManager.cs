@@ -299,7 +299,10 @@ public class InventoryManager : NetworkBehaviour
         if (slot.item != null)
         {
             message.itemKey = slot.item.key;
-            message.data = slot.item.data;
+            message.moduleData = slot.item.data;
+
+            if (slot.item.type == ItemType.Weapon)
+                message.weaponData = (slot.item as Weapon).weaponData;
         }
 
         return message;

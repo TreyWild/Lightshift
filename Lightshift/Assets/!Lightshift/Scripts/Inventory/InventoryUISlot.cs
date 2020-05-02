@@ -12,7 +12,7 @@ public class InventoryUISlot : MonoBehaviour, IPointerClickHandler, IPointerEnte
     public int slotId;
     public InventoryType type;
 
-    public Item item;
+    public ItemObj item;
 
     [SerializeField] private Image _icon;
     [SerializeField] private TextMeshProUGUI _amountText;
@@ -23,7 +23,7 @@ public class InventoryUISlot : MonoBehaviour, IPointerClickHandler, IPointerEnte
     public event Action<InventoryUISlot> OnMouseOver;
     public event Action<InventoryUISlot> OnMouseLeave;
 
-    public void SetItem(Item item, int amount)
+    public void SetItem(ItemObj item, int amount)
     {
         if (amount == 1 || amount == 0)
             _amountText.text = "";

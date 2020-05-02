@@ -8,9 +8,12 @@ public struct WeaponData
     public float powerCost;
     public float refire;
     public bool inheritVelocity;
-    public float spreadArc;
+    public float spread;
+    public float spacing;
     public float trailLength;
-
+    public int projectileCount;
+    public Vector2 gunPoint;
+    public Vector2 scale;
     public BulletData bulletData;
 }
 

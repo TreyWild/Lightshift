@@ -39,4 +39,6 @@ public class Kinematic : MonoBehaviour
     {
         velocity += force / mass;
     }
+
+    public float rotation => transform.eulerAngles.z;
 }

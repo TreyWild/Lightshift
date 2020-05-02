@@ -28,15 +28,26 @@ public class Engine : NetworkBehaviour
         _input = GetComponent<PlayerController>();
     }
 
+
+    public void SetColor(Color color) 
+    {
+        _thruster.SetColor(color);
+    }
+
     public void Move(int axis, bool overDrive)
     {
-        _thruster.RunEngine(axis == 1, overDrive);
+        if (overDriveMultiplier != 0)
+            _thruster.RunEngine(axis == 1, overDrive);
 
         if (isLocalPlayer)
         {
             float engineStr = acceleration * Time.fixedDeltaTime;
             if (overDrive)
                 engineStr *= overDriveMultiplier;
+
+            var maxSpeed = this.maxSpeed;
+            if (overDrive)
+                maxSpeed *= overDriveMultiplier;
 
             if (_input.Up)
             {

@@ -33,7 +33,7 @@ public class Entity : NetworkBehaviour
 
         _ui = GetComponent<EntityUI>();
     }
-    private void FixedUpdate()
+    public void FixedUpdate()
     {
         _timeSinceLastTargetUpdate += Time.fixedDeltaTime;
         if (_timeSinceLastTargetUpdate > 0.2f) 
@@ -97,12 +97,12 @@ public class Entity : NetworkBehaviour
 
     public void SetDisplayName(string oldValue = "", string displayName = "")
     {
+        _ui.SetName(displayName);
+
         if (isLocalPlayer)
             return;
 
-        displayName = displayName;
-
-        _ui.SetName(displayName);
+        this.displayName = displayName;
     }
 
 

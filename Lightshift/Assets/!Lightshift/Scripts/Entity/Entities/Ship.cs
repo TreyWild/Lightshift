@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -20,14 +21,14 @@ public class Ship : Entity
     private Shield _shield;
     private Generator _generator;
     private InventoryManager _inventoryManager;
-    private Starship _starship;
+    private ModuleData _starshipData;
     private WeaponSystem _weaponSystem;
 
     [SyncVar(hook = nameof(InitPlayer))]
     private PlayerData _playerData;
 
     [SyncVar(hook = nameof(OnStarshipChanged))]
-    private string _starShipKey;
+    private string _starshipDataKey;
 
     private void Awake()
     {
@@ -74,16 +75,18 @@ public class Ship : Entity
     }
     private void UpdateStarship(string key)
     {
-        _starship = ItemManager.GetStarship(key);
-        _hull.SetImage(_starship.Sprite, _starship.color);
+        var starship = ItemManager.GetStarship(key);
+        _hull.SetImage(starship.Sprite, starship.color);
         _wing.SetImage(null, Color.white);
+
+        _starshipData = starship.data;
 
         UpdateShipStats();
 
         if (isServer)
         {
             _equips.Clear();
-            _starShipKey = key;
+            _starshipDataKey = key;
 
             var equips = _inventoryManager.GetAllEquips();
             foreach (var equip in equips)
@@ -97,9 +100,9 @@ public class Ship : Entity
         {
             if (_equips[i].slot == slot.slotId)
             {
-                //if (_starship != null)
+                //if (_starshipData != null)
                 //    //Remove stats for this equip
-                //    _starship.data -= _equips[i].data;
+                //    _starshipData.data -= _equips[i].data;
 
                 _equips.Remove(_equips[i]);
                 break;
@@ -112,14 +115,16 @@ public class Ship : Entity
 
     private void OnEquipsChanged(SyncList<Equip>.Operation op, int itemIndex, Equip oldItem, Equip newItem)
     {
+        /* REMOVE ITEM */
         if (oldItem != null)
         {
-            _starship.data -= oldItem.data;
+            _starshipData -= oldItem.data;
 
             var item = ItemManager.GetItem(oldItem.itemKey);
             switch (item.type)
             {
                 case ItemType.Engine:
+                    _engine.SetColor(Color.white);
                     break;
                 case ItemType.Generator:
                     break;
@@ -132,6 +137,7 @@ public class Ship : Entity
                 case ItemType.Shield:
                     break;
                 case ItemType.LightLance:
+                    _lightLance.SetColor(default);
                     break;
                 case ItemType.MiningDrill:
                     break;
@@ -141,14 +147,16 @@ public class Ship : Entity
         {
             _wing.SetImage(null, Color.white);
         }
+        /* ADD ITEM */
         else if (newItem != null)
         {
-            _starship.data += newItem.data;
+            _starshipData += newItem.data;
 
             var item = ItemManager.GetItem(newItem.itemKey);
             switch (item.type)
             {
                 case ItemType.Engine:
+                    _engine.SetColor(item.color);
                     break;
                 case ItemType.Generator:
                     break;
@@ -161,6 +169,7 @@ public class Ship : Entity
                 case ItemType.Shield:
                     break;
                 case ItemType.LightLance:
+                    _lightLance.SetColor(item.color);
                     break;
                 case ItemType.MiningDrill:
                     break;
@@ -171,7 +180,7 @@ public class Ship : Entity
 
     private void UpdateShipStats() 
     {
-        var stats = _starship.data;
+        var stats = _starshipData;
 
         _engine.maxSpeed = stats.maxSpeed;
         _engine.acceleration = stats.acceleration;
@@ -184,15 +193,12 @@ public class Ship : Entity
         _wing.agility = stats.agility;
 
         _heart.SetMaxHealth(stats.maxHealth);
-        _heart.health = 1;
         _heart.healthRegen = stats.healthRegen;
 
 
         _shield.SetMaxShield(stats.maxShield);
-        _shield.shield = 1;
         _shield.shieldRegen = stats.shieldRegen;
         _generator.maxPower = stats.maxPower;
-        _generator.power = 1;
         _generator.powerRegen = stats.powerRegen;
 
         _lightLance.SetRange(stats.lightLanceRange);
@@ -202,6 +208,8 @@ public class Ship : Entity
 
     private void FixedUpdate()
     {
+        base.FixedUpdate();
+
         //HandlePowerRegen();
         //HandleShieldRegen();
         //HandleWeapons();
@@ -209,7 +217,7 @@ public class Ship : Entity
         //HandleTargetting();
 
         _engine.Move(_input.VerticalAxis, _input.OverDrive);
-        if (targetEntity != null)
+        if (targetEntity != null && _starshipData.lightLanceRange != 0)
             _lightLance.HandleLightLance(_input.LightLance, targetEntity.transform);
         _wing.Turn(_input.HorizontalAxis);
 
@@ -227,6 +235,8 @@ public class Ship : Entity
             PlayerManager.Instance.RemovePlayer(oldData);
         if (newData.userId != null && newData.userId != "")
             PlayerManager.Instance.AddPlayer(newData);
+
+        SetDisplayName(displayName: newData.username);
     }
 
 

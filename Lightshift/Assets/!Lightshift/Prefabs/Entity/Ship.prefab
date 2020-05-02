@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 2893782170727032454}
   - component: {fileID: 2893782170727032337}
-  - component: {fileID: 3220067590492270338}
   - component: {fileID: 1101665110100554076}
   - component: {fileID: -7020051470365060121}
   - component: {fileID: 8428157353850978006}
@@ -89,27 +88,6 @@ MonoBehaviour:
   targetNeutral: {fileID: 0}
   targetEntity: {fileID: 0}
   IsInSafezone: 0
---- !u!50 &3220067590492270338
-Rigidbody2D:
-  serializedVersion: 4
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2893782170727032538}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 1
-  m_UseAutoMass: 1
-  m_Mass: 1
-  m_LinearDrag: 3
-  m_AngularDrag: 10
-  m_GravityScale: 0
-  m_Material: {fileID: 6200000, guid: 841d104ecfbbe3b4789702e5731fd913, type: 2}
-  m_Interpolate: 1
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
 --- !u!114 &1101665110100554076
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -466,6 +444,12 @@ MonoBehaviour:
       type: 8
       inventory: 0
       identifier: 8
+    - slotId: 11
+      item: {fileID: 0}
+      amount: 0
+      type: 4
+      inventory: 0
+      identifier: 4
   _storageInventory:
     type: 2
     slots: []
@@ -492,6 +476,42 @@ MonoBehaviour:
       identifier: 0
     - slotId: 3
       item: {fileID: 11400000, guid: 4c84fa4849ebd57488eabc6a146a4cc6, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 4
+      item: {fileID: 11400000, guid: f275b4c20a10bb749a240f18065ea6a4, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 5
+      item: {fileID: 11400000, guid: b9f99ed1763b1744a80fb1fa2c05746f, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 6
+      item: {fileID: 11400000, guid: 01c3fbb977b57d14ea1e6cfa04536256, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 7
+      item: {fileID: 11400000, guid: 050bf84d35f42e247b593426e6e5e0b4, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 8
+      item: {fileID: 11400000, guid: bcff13a6f451dff43a2bd3d21db2852b, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 9
+      item: {fileID: 11400000, guid: ec1d3b68f419d214b993d5b29c16ee66, type: 2}
       amount: 1
       type: 0
       inventory: 1

@@ -10,9 +10,7 @@ public class Projectile : MonoBehaviour
 
     private Kinematic _kinematic;
     private float _lifeTime;
-    private float _magnitude;
     private float _remainingHits;
-    private Vector2 _oldVelocity;
     private RaycastHit _raycast;
     private TrailRenderer _trailRenderer;
     private SpriteRenderer _renderer;
@@ -21,14 +19,14 @@ public class Projectile : MonoBehaviour
     {
         _kinematic = gameObject.AddComponent<Kinematic>();
         _trailRenderer = GetComponent<TrailRenderer>();
+        _renderer = GetComponent<SpriteRenderer>();
         _trailRenderer.Clear();
     }
 
-    public void Initialize(Vector2 velocity, Vector2 position, BulletData data, Sprite sprite, Color color) 
+    public void Initialize(Vector2 velocity, BulletData data, Sprite sprite, Color color) 
     {
         this.data = data;
         _kinematic.velocity = velocity;
-        transform.position = position;
         _remainingHits = data.hitCount;
         _lifeTime = data.range;
 
@@ -36,7 +34,9 @@ public class Projectile : MonoBehaviour
 
         _renderer.sprite = sprite;
         _renderer.color = color;
+        _trailRenderer.Clear();
         _trailRenderer.enabled = true;
+        _trailRenderer.emitting = true;
         _trailRenderer.material.color = color;
     }
 
@@ -46,25 +46,16 @@ public class Projectile : MonoBehaviour
         if (!isAlive)
             return;
 
-        //Reset local magnitude
-        _magnitude = 0;
-
         if (isAlive)
         {
             _lifeTime -= Time.fixedDeltaTime;
 
-            if (_oldVelocity != _kinematic.velocity)
-            {
-                _magnitude = _kinematic.velocity.magnitude;
-                _oldVelocity = _kinematic.velocity;
-                transform.eulerAngles = new Vector3(transform.eulerAngles.x, Mathf.Atan2(-_kinematic.velocity.y, _kinematic.velocity.x) * Mathf.Rad2Deg, transform.eulerAngles.z);
-            }
-
-            transform.position += new Vector3(_kinematic.velocity.x, 0, _kinematic.velocity.y) * Time.fixedDeltaTime;
+            Move();
 
             //Check for collision
-            if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.right), out _raycast, Time.fixedDeltaTime * _magnitude * 2))
+            if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out _raycast, Time.fixedDeltaTime * _kinematic.velocity.magnitude * 2))
             {
+                Debug.LogError("hit");
                 DamageableObject damageableObject = _raycast.transform.GetComponentInParent<DamageableObject>();
 
                 if (damageableObject != null)
@@ -81,10 +72,17 @@ public class Projectile : MonoBehaviour
             SetAsDead();
     }
 
+
+    public void Move()
+    {
+        _kinematic.AddForce(transform.up * data.speed * Time.deltaTime);
+    }
+
     private void SetAsDead() 
     {
         _trailRenderer.Clear();
         _trailRenderer.enabled = false;
+        _trailRenderer.emitting = false;
         isAlive = false;
         gameObject.SetActive(false);
     }

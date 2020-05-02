@@ -3285,6 +3285,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d22f0b8a0b002544bbcd9427416a0705, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  UseTestServers: 0
   NetworkManagerPrefab: {fileID: 5524512745480542275, guid: 9607b1b07190bc54e936896ddf7b69d7,
     type: 3}
   RainbowColors: 0

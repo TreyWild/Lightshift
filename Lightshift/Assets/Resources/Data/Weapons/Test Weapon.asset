@@ -33,20 +33,24 @@ MonoBehaviour:
     lightLanceRange: 0
     overDrivePowerCost: 0
     overDriveBoostMultiplier: 0
-  Icon: {fileID: 21300000, guid: 598885b0a2f7ba543a8167427d3427bb, type: 3}
-  Sprite: {fileID: 21300026, guid: f68941927ff4e60418e5a79ea6dac27a, type: 3}
+  Icon: {fileID: 21300000, guid: 2bf45cf00d91c544badb9dcdc96f6c05, type: 3}
+  Sprite: {fileID: 21300036, guid: f68941927ff4e60418e5a79ea6dac27a, type: 3}
   color: {r: 1, g: 1, b: 1, a: 1}
   maxStack: 1
   weaponData:
     powerCost: 0
     refire: 0.2
     inheritVelocity: 0
-    spreadArc: 0
+    spread: 0.3
+    spacing: 3.69
     trailLength: 0
+    projectileCount: 5
+    gunPoint: {x: 0.17, y: 0}
+    scale: {x: 0, y: 0}
     bulletData:
-      speed: 10
+      speed: 1000
       speedVariance: 0
       damage: 10
       hitCount: 10
       range: 5
-  timeSinceLastShot: 53.421032
+  timeSinceLastShot: 2.5999982

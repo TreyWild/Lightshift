@@ -28,18 +28,12 @@ public class SoundManager : MonoBehaviour
     // Initialize the singleton instance.
     private void Awake()
     {
-        // If there is not already an instance of SoundManager, set it to this.
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        //If an instance already exists, destroy whatever this object is to enforce the singleton.
-        else if (Instance != this)
-        {
-            Destroy(gameObject);
-        }
+        if (Instance != null)
+            Destroy(Instance.gameObject);
+        else Instance = this;
 
         //Set SoundManager to DontDestroyOnLoad so that it won't be destroyed when reloading our scene.
+        DontDestroyOnLoad(gameObject);
 
         MusicSource.ignoreListenerVolume = true;
         EffectsSource.ignoreListenerVolume = true;
@@ -51,6 +45,9 @@ public class SoundManager : MonoBehaviour
             audioObject.transform.parent = audioPool.transform;
             audioObject.AddComponent<AudioSource>();
         }
+
+        MusicSource.volume = Settings.Instance.musicVolume;
+        EffectsSource.volume = Settings.Instance.soundEffectVolume;
     }
 
     // Play a single clip through the sound effects source.

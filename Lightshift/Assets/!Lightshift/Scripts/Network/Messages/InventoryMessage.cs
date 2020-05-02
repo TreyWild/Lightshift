@@ -8,7 +8,8 @@ public class InventoryItemSlotMessage : MessageBase
     public int amount;
 
     public string itemKey;
-    public ModuleData data;
+    public ModuleData moduleData;
+    public WeaponData weaponData;
 
     public InventoryType inventory;
 }

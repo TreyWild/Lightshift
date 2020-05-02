@@ -61,6 +61,6 @@ public class Player
 
     public Starship GetStarship() 
     {
-        return ItemManager.GetStarship("default");
+        return ItemManager.GetStarship("960b64a8-dd85-4cc0-a7c3-bf3c9a2ffa04");
     }
 }

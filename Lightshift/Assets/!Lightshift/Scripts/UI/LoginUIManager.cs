@@ -8,8 +8,9 @@ using Mirror;
 
 public class LoginUIManager : MonoBehaviour
 {
-    public GameObject NetworkManagerPrefab;
+    public bool UseTestServers;
 
+    public GameObject NetworkManagerPrefab;
     [Header("Background")]
     public bool RainbowColors = true;
     public float BackgroundSpeed = 0.01f;
@@ -64,8 +65,12 @@ public class LoginUIManager : MonoBehaviour
         _camera = Camera.main;
 
         NetworkManagerPrefab = Instantiate(NetworkManagerPrefab);
-        if (Application.isEditor)
+        if (Application.isEditor || UseTestServers)
+        {
+            NetworkManagerPrefab.AddComponent<NetworkManagerHUD>();
             NetworkManager.singleton.networkAddress = "localhost";
+        }
+        else NetworkManager.singleton.networkAddress = "167.99.149.84";
     }
     private void Start()
     {

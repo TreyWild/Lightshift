@@ -258,9 +258,6 @@ public class PlayerController : NetworkBehaviour
     [ClientRpc]
     public void RpcUpdateWeaponSlot(short value) 
     {
-        if (hasAuthority)
-            return;
-
         WeaponSlot = value;
     }
 }

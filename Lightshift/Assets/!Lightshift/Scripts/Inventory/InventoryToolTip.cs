@@ -2,23 +2,34 @@
 using System.Collections;
 using TMPro;
 using System.Runtime.Versioning;
+using System.ComponentModel.Design;
 
 public class InventoryToolTip : MonoBehaviour
 {
     [SerializeField] private GameObject _toolTipContent;
     [SerializeField] private TextMeshProUGUI _title;
-    [SerializeField] private TextMeshProUGUI _lore;
     [SerializeField] private TextMeshProUGUI _type;
     [SerializeField] private TextMeshProUGUI _toolTipItemPrefab;
     public Vector3 offset;
-    public void DisplayTooltip(Item item)
+    public void DisplayTooltip(ItemObj item)
     {
         _title.color = item.color;
         _title.text = item.displayName;
-        _lore.color = _title.color;
-        _lore.text = item.lore;
         _type.text = item.type.ToString();
+        if (item.lore == null || item.lore == "")
+            AddLine(item.lore, "#b53855");
 
+        if (item.type == ItemType.Weapon) 
+        {
+            if (item.weaponData.refire != 0)
+                AddWeaponLine("Attack Speed", item.weaponData.refire, "#b98ad1");
+            if (item.weaponData.bulletData.damage != 0)
+                AddWeaponLine("Damage", item.weaponData.bulletData.damage, "#b98ad1");
+            if (item.weaponData.bulletData.speed != 0)
+                AddWeaponLine("Speed", item.weaponData.bulletData.speed, "#b98ad1");
+            if (item.weaponData.bulletData.range != 0)
+                AddWeaponLine("Range", item.weaponData.bulletData.range, "#b98ad1");
+        }
         if (item.data.acceleration != 0)
             AddModLine("Acceleration", item.data.acceleration);
         if (item.data.agility != 0)
@@ -53,13 +64,29 @@ public class InventoryToolTip : MonoBehaviour
             AddModLine("Overdrive Powercost", item.data.overDrivePowerCost);
     }
 
-    private void AddModLine(string line, float value) 
+    private void AddLine(string line, string color = "#b87698")
+    {
+        var item = Instantiate(_toolTipItemPrefab, _toolTipContent.transform).GetComponent<TextMeshProUGUI>();
+        item.text = $"<color={color}>{line}</color>";
+    }
+
+    private void AddModLine(string line, float value, string color = "#b87698")
     {
         var item = Instantiate(_toolTipItemPrefab, _toolTipContent.transform).GetComponent<TextMeshProUGUI>();
 
-        item.text = $"{value} {line}";
+        if (value > 0)
+            item.text = $"<color={color}>+{value} {line}</color>";
+        else item.text = $"<color={color}>{value} {line}</color>";
     }
 
+    private void AddWeaponLine(string line, float value, string color = "#b87698")
+    {
+        var item = Instantiate(_toolTipItemPrefab, _toolTipContent.transform).GetComponent<TextMeshProUGUI>();
+
+        if (value > 0)
+            item.text = $"<color={color}>{value} {line}</color>";
+        else item.text = $"<color={color}>{value} {line}</color>";
+    }
     void Update()
     {
         _toolTipContent.transform.position = new Vector2(offset.x + Input.mousePosition.x, offset.y + Input.mousePosition.y);

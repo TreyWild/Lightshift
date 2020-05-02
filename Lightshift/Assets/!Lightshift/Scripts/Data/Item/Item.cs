@@ -21,6 +21,37 @@ public class Item : ScriptableObject
     public Color color = Color.white;
 
     public int maxStack = 999;
+
+    public ItemObj GetItemObj() => new ItemObj 
+    {
+        color = color,
+        data = data,
+        displayName = displayName,
+        Icon = Icon,
+        key = key,
+        lore = lore,
+        maxStack = maxStack,
+        Sprite = Sprite,
+        type = type
+    };
+}
+
+public class ItemObj
+{
+    public string key = Guid.NewGuid().ToString();
+    public string displayName;
+    public string lore;
+    public ItemType type;
+
+    public ModuleData data;
+    public WeaponData weaponData;
+
+    public Sprite Icon;
+    public Sprite Sprite;
+
+    public Color color = Color.white;
+
+    public int maxStack = 999;
 }
 
 public class Equip
@@ -53,10 +84,11 @@ public enum ItemType
     Scrap,
     Engine,
     Wing,
-    Hull,
+    Armor,
     Weapon,
     Generator,
     LightLance,
     Shield,
     MiningDrill,
+    Starship
 }

@@ -11,7 +11,7 @@ public class BeamToTarget : MonoBehaviour
 
     public bool active = false;
 
-    public float maxDistance = 100;
+    public float maxDistance;
 
     public Action<Transform, float> OnFocus;
     private void Awake()
@@ -57,5 +57,12 @@ public class BeamToTarget : MonoBehaviour
     {
         _lineRenderer.enabled = true;
         _lineRenderer.SetPositions(new Vector3[2] { transform.position, _target.position });
+    }
+
+    public void SetColor(Color color) 
+    {
+        _lineRenderer.material.color = color;
+        _lineRenderer.startColor = color;
+        _lineRenderer.endColor = color;
     }
 }

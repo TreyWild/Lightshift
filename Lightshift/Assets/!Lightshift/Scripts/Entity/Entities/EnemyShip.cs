@@ -5,10 +5,10 @@ public class EnemyShip : Entity
     public float moveSpeed = 5; //move speed
     public float rotationSpeed = 5; //speed of turning
 
-    private void Update()
-    {
-        FollowTarget();
-    }
+    //private void Update()
+    //{
+    //    FollowTarget();
+    //}
 
     public void FollowTarget()
     {

@@ -24,8 +24,8 @@ MonoBehaviour:
     shieldRegen: 0
     healthRegen: 0
     maxSpeed: 14.9
-    acceleration: 10.4
-    agility: 17
+    acceleration: 11.9
+    agility: 37
     weight: 0.18
     brakeForce: 0.97
     lightLancePowerCost: 0

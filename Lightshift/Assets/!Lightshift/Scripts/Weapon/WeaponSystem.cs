@@ -1,10 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
-using Boo.Lang;
+using System.Runtime.InteropServices;
 
 public class WeaponSystem : MonoBehaviour
 {
     public Weapon[] weapons = new Weapon[5];
+
     public Weapon activeWeapon;
     public int activeWeaponSlot;
     private Kinematic _kinematic;
@@ -41,33 +42,45 @@ public class WeaponSystem : MonoBehaviour
     public void TryFireWeapon(int weapon) 
     {
         activeWeaponSlot = weapon;
-        activeWeapon = weapons[weapon];
+        if (activeWeapon != weapons[weapon])
+            activeWeapon = weapons[weapon];
         if (activeWeapon != null &&  activeWeapon.timeSinceLastShot > activeWeapon.weaponData.refire)
             FireWeapon(activeWeapon);
     }
 
-    private void FireWeapon(Weapon weapon) 
+    private void FireWeapon(Weapon weapon)
     {
-        float arc = 0;
-        if (weapon.weaponData.spreadArc > 0)
-            arc = Random.Range(-weapon.weaponData.spreadArc * 0.5f, weapon.weaponData.spreadArc * 0.5f);
+        for (int i = 0; i < weapon.weaponData.projectileCount; i++)
+        {
+            var rotation = _kinematic.rotation; 
+            if (weapon.weaponData.spread != 0)
+                rotation+=-(-(weapon.weaponData.spread / 2) + (i * (weapon.weaponData.spread / weapon.weaponData.projectileCount)));
 
-        Vector2 gunPoint = transform.position;
+            Vector2 gunPoint = weapon.weaponData.gunPoint;
 
-        float x = Mathf.Cos((_kinematic.transform.eulerAngles.x - gunPoint.y + arc) * Mathf.Deg2Rad);
-        float y = -Mathf.Sin((_kinematic.transform.eulerAngles.x - gunPoint.y + arc) * Mathf.Deg2Rad);
+            if (weapon.weaponData.spacing != 0)
+            {
+                float offset = i + 0.5f;
+                /* Position */
+                Vector2 shift = new Vector2(Mathf.Cos((_kinematic.rotation) * Mathf.Deg2Rad), Mathf.Sin((_kinematic.rotation) * Mathf.Deg2Rad));
+                float inc = weapon.weaponData.spacing / weapon.weaponData.projectileCount;
+                Vector2 startingPos = new Vector2(weapon.weaponData.spacing * shift.x * .5f, weapon.weaponData.spacing * shift.y * .5f);
+                gunPoint = new Vector3(transform.position.x + shift.x * offset * inc - startingPos.x + gunPoint.x, transform.position.y + shift.y * offset * inc - startingPos.y + gunPoint.y, 0);
+            }
+            else
+                gunPoint += (Vector2)transform.position;
 
-        Vector3 pos = _kinematic.transform.position + new Vector3(gunPoint.x * x - gunPoint.y * y, 0, gunPoint.y * x + gunPoint.x * y);
-
-        Projectile bullet = LSObjectPool.GetUsableProjectile();
+            Projectile bullet = LSObjectPool.GetUsableProjectile();
 
 
-        bullet.transform.eulerAngles = new Vector3(bullet.transform.eulerAngles.x, bullet.transform.eulerAngles.y, (bullet.transform.eulerAngles.z + arc) - transform.eulerAngles.z);
+            bullet.transform.eulerAngles = new Vector3(0,0, rotation);
+            bullet.transform.position = gunPoint;
+            if (weapon.weaponData.scale != Vector2.zero)
+                bullet.transform.localScale = weapon.weaponData.scale;
+            bullet.owner = _entity;
 
-        var velocity = new Vector2(x, y) * weapon.weaponData.bulletData.speed;
-
-        bullet.owner = _entity;
-
-        bullet.Initialize(velocity, gunPoint, weapon.weaponData.bulletData, weapon.Sprite, weapon.color);
+            bullet.Initialize(_kinematic.velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color);
+        }
+        activeWeapon.timeSinceLastShot = 0;
     }
 }
