@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using Lightshift;
+using Mirror;
 using Smooth;
 using System;
 using System.Collections;
@@ -8,21 +9,24 @@ using UnityEngine;
 
 public class Entity : NetworkBehaviour
 {
+    [SyncVar]
+    public string Id;
+
     public float TargetCheckSpeed = 0.5f;
 
     [SyncVar(hook = nameof(SetDisplayName))]
     public string displayName; 
-    [SyncVar(hook = nameof(UpdateCollision))]
-    public bool hasCollision;
     [SyncVar]
     public string teamId;
+    [SyncVar(hook = nameof(UpdateDeathOrRespawn))]
+    public bool isDead;
 
-    public List<Collider2D> colliders;
     public SmoothSyncMirror smoothSync;
     public Rigidbody2D rigidBody;
     public ModuleData shipData;
     public Entity targetNeutral;
     public Entity targetEntity;
+
 
     private EntityUI _ui;
     private float _timeSinceLastTargetUpdate = 0;
@@ -33,6 +37,18 @@ public class Entity : NetworkBehaviour
 
         _ui = GetComponent<EntityUI>();
     }
+
+    public void Start()
+    {
+        Instantiate(PrefabManager.Instance.spawnEffectPrefab, transform);
+        EntityManager.AddEntity(this);
+    }
+
+    public void OnDestroy()
+    {
+        EntityManager.RemoveEntity(this);
+    }
+
     public void FixedUpdate()
     {
         _timeSinceLastTargetUpdate += Time.fixedDeltaTime;
@@ -45,14 +61,6 @@ public class Entity : NetworkBehaviour
 
 
     #region Safezone
-    private void UpdateCollision(bool oldValue, bool value)
-    {
-        foreach (var collider in colliders)
-            collider.isTrigger = value;
-
-        if (isServer)
-            hasCollision = value;
-    }
 
     public bool IsInSafezone;
 
@@ -61,24 +69,11 @@ public class Entity : NetworkBehaviour
         if (!IsInSafezone)
             return;
 
-        //if (shield < maxShield)
-        //{
-        //    shield += (maxShield / 10) * Time.deltaTime;
-        //    if (shield > maxShield)
-        //        shield = maxShield;
-        //}
-        //if (health < maxHealth)
-        //{
-        //    health += (maxHealth / 10) * Time.deltaTime;
-        //    if (health > maxHealth)
-        //        health = maxHealth;
-        //}
     }
     public void OnEnterSafezone()
     {
         //ClearDamageObjects();
         IsInSafezone = true;
-        //weaponSystem.WeaponSystemDisabled = true;
 
         if (isLocalPlayer)
             GameUIManager.Instance.ShowScreenText("Entering Safezone, Weapons Disabled");
@@ -105,56 +100,26 @@ public class Entity : NetworkBehaviour
         this.displayName = displayName;
     }
 
+    private void SetAsDead()
+    {
+        gameObject.SetActive(false);
+    }
 
-    //#region Death & Respawn
-
-    //public void SendDeath(DamageObject damageObject) 
-    //{
-    //    if (IsMe)
-    //        ClientManager.Instance.Send("g", "death", damageObject.entityId, damageObject.weaponId);
-    //}
-    //public virtual void OnDeath(int entityId, string weaponId) 
-    //{
-    //    if (dataObject.isDead)
-    //        return;
-
-    //    var entity = EntityManager.Instance.GetEntity(entityId);
-    //    if (IsMe)
-    //    {
-    //        if (entity != null)
-    //        {
-    //            CameraFollow.Instance.Target = entity.gameObject;
-    //            GameUIManager.Instance.HandleRespawnScreen(showRespawn: true, dataObject.displayName);
-    //        }
-    //    }
-    //    else if (entity.IsMe)
-    //        GameUIManager.Instance.ShowAnnouncementText($"You killed {dataObject.displayName}!");
-
-
-    //    var deathEffect = LSObjectPoolManager.Instance.GetUsableEffect(3/*Death Effect Id*/);
-    //    deathEffect.transform.position = transform.position;
-    //    deathEffect.SetActive(true);
-
-    //    SetAsDead();
-    //}
-
-    //private void SetAsDead() 
-    //{
-    //    _damageQueue.Clear();
-    //    gameObject.SetActive(false);
-    //}
-
-    //public void Respawn()
-    //{
-    //    dataObject.Reinitialize();
-
-    //    if (IsMe)
-    //    {
-    //        GameUIManager.Instance.HandleRespawnScreen(showRespawn: false);
-    //        CameraFollow.Instance.Target = gameObject;
-    //    }
-    //}
-    //#endregion
+    public void UpdateDeathOrRespawn(bool oldValue, bool dead)
+    {
+        if (hasAuthority && dead)
+        {
+            GameUIManager.Instance.HandleRespawnScreen(showRespawn: false);
+            CameraFollow.Instance.SetTarget(transform);
+            Settings.Instance.KeysLocked = false;
+            transform.position = new Vector3(0, 0, -5000);
+        }
+        else if (hasAuthority && !dead)
+        {
+            Settings.Instance.KeysLocked = false;
+            transform.position = new Vector3();
+        }
+    }
 
     //#region Collision
     //private void OnCollisionEnter2D(Collision2D collision)

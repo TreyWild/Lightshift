@@ -31,15 +31,10 @@ public class Hull : NetworkBehaviour
             _hull.color = color;
 
             var collider = _hull.gameObject.GetComponent<PolygonCollider2D>();
-            if (collider != null)
-            {
-                if (_entity.colliders.Contains(collider))
-                    _entity.colliders.Remove(collider);
+            if (collider != null)       
                 Destroy(collider);
-            }
             collider = _hull.gameObject.AddComponent<PolygonCollider2D>();
-
-            _entity.colliders.Add(collider);
+            collider.isTrigger = true;
 
             if (hasAuthority)
                 _hull.sortingOrder = SortingOrders.SHIP_HULL + 1;

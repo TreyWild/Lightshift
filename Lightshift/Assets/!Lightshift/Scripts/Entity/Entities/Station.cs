@@ -24,8 +24,6 @@ public class Station : Entity
         _renderer.sortingOrder = SortingOrders.STATION;
 
         _forceField = GetComponent<ForceField>();
-        _forceField.OnTriggerEnter += ForceField_OnTriggerEnter;
-        _forceField.OnTriggerLeave += ForceField_OnTriggerLeave;
     }
 
     private float _nextBlinkTime = 0;
@@ -44,12 +42,12 @@ public class Station : Entity
         }
     }
 
-    private void ForceField_OnTriggerEnter(GameObject obj)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
         if (!HasSafeZone)
             return;
 
-        var ship = obj.GetComponent<Ship>();
+        var ship = collision.GetComponentInParent<Ship>();
         if (ship)
         {
             if (!_safeZonedShips.Contains(ship))
@@ -59,12 +57,12 @@ public class Station : Entity
             }
         }
     }
-    private void ForceField_OnTriggerLeave(GameObject obj)
+    private void OnTriggerExit2D(Collider2D collision)
     {
         if (!HasSafeZone)
             return;
 
-        var ship = obj.GetComponent<Ship>();
+        var ship = collision.GetComponentInParent<Ship>();
         if (ship)
         {
             if (_safeZonedShips.Contains(ship))
@@ -74,6 +72,7 @@ public class Station : Entity
             }
         }
     }
+
 
 
 }

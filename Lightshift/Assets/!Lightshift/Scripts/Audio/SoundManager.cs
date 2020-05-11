@@ -1,22 +1,22 @@
 ﻿
 using Lightshift;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SoundManager : MonoBehaviour
 {
+    [SerializeField] private AudioClip _explosionSoundEffect;
 
-    public int soundEffectCount => _soundEffects.Count;
     [SerializeField] private List<AudioClip> _musicClips;
-    [SerializeField] private List<AudioClip> _soundEffects;
 
-    public List<GameObject> _pooledAudioSources;
+    [SerializeField] private AudioClip _titleScreenMusic;
 
-    // Audio players components.
-    public AudioSource EffectsSource;
-    public AudioSource MusicSource;
+    private List<AudioObject> _audioObjects = new List<AudioObject>();
 
-    public GameObject audioPool;
+    private AudioSource _musicSource;
 
     // Random pitch adjustment range.
     public float LowPitchRange = .95f;
@@ -28,97 +28,93 @@ public class SoundManager : MonoBehaviour
     // Initialize the singleton instance.
     private void Awake()
     {
-        if (Instance != null)
-            Destroy(Instance.gameObject);
-        else Instance = this;
+        if (Instance == null)
+            Instance = this;
+        else 
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         //Set SoundManager to DontDestroyOnLoad so that it won't be destroyed when reloading our scene.
         DontDestroyOnLoad(gameObject);
 
-        MusicSource.ignoreListenerVolume = true;
-        EffectsSource.ignoreListenerVolume = true;
+        _musicSource = gameObject.AddComponent<AudioSource>();
 
-        audioPool = new GameObject("Audio Pool");
-        for (int i = 0; i < 75; i++)
-        {
-            var audioObject = new GameObject("AudioSource");
-            audioObject.transform.parent = audioPool.transform;
-            audioObject.AddComponent<AudioSource>();
-        }
+        _musicSource.ignoreListenerVolume = true;
 
-        MusicSource.volume = Settings.Instance.musicVolume;
-        EffectsSource.volume = Settings.Instance.soundEffectVolume;
+        UpdateVolume();
     }
 
     // Play a single clip through the sound effects source.
-    public void Play(AudioClip clip, Vector2 position, bool isBullet = false)
+    public static void Play(AudioClip clip, Vector2 position)
     {
-        float randomPitch = Random.Range(LowPitchRange, HighPitchRange);
-
-        //EffectsSource.pitch = randomPitch;
-        //EffectsSource.clip = clip;
-        //EffectsSource.Play();
-
-        AudioSource audioSource = null;
-        var pooledSources = audioPool.GetComponentsInChildren<AudioSource>();
-
-        foreach (var item in pooledSources)
-        {
-            if (item.isPlaying)
-                continue;
-
-            audioSource = item;
-            break;
-        }
-
-        if (audioSource == null)
-            audioSource = audioPool.AddComponent<AudioSource>();
-
-        if (isBullet)
-            audioSource.volume = Settings.Instance.soundEffectVolume / 3;
-        else audioSource.volume = Settings.Instance.soundEffectVolume;
-
-        audioSource.transform.position = position;
-        audioSource.pitch = randomPitch;
-        audioSource.clip = clip;
-        audioSource.Play();
+        var obj = Instance.GetUsableAudio();
+        obj.gameObject.SetActive(true);
+        obj.transform.position = position;
+        obj.PlayClip(clip);
     }
 
-    public void Play(int id, Vector2 position, bool isBullet = false)
+    public static void PlayExplosion(Vector2 position)
     {
-        var soundEffect = _soundEffects[id];
-        if (soundEffect != null)
-            Play(soundEffect, position, isBullet);
+        Play(Instance._explosionSoundEffect, position);
+    }
+
+    private AudioObject GetUsableAudio()
+    {
+        var obj = _audioObjects.FirstOrDefault(a => !a.gameObject.activeInHierarchy);
+        if (obj == null)
+        {
+            var gameObj = new GameObject("Audio Source");
+            gameObj.transform.parent = transform;
+            obj = gameObj.AddComponent<AudioObject>();
+            _audioObjects.Add(obj);
+        }
+        return obj;
     }
 
     // Play a single clip through the music source.
     public void PlayMusic(AudioClip clip)
     {
-        MusicSource.clip = clip;
-        MusicSource.volume = Settings.Instance.musicVolume;
-        MusicSource.Play();
-    }
-
-    // Play a random clip from an array, and randomize the pitch slightly.
-    public void RandomSoundEffect(params AudioClip[] clips)
-    {
-        int randomIndex = Random.Range(0, clips.Length);
-        float randomPitch = Random.Range(LowPitchRange, HighPitchRange);
-
-        EffectsSource.pitch = randomPitch;
-        EffectsSource.clip = clips[randomIndex];
-        EffectsSource.Play();
+        _musicSource.clip = clip;
+        UpdateVolume();
+        _musicSource.Play();
     }
 
     private void Update()
     {
-        if (!MusicSource.isPlaying)
-            PlayRandomMusic();
+        if (!_musicSource.isPlaying)
+        {
+            if (SceneManager.GetActiveScene().buildIndex == 0)
+                PlayMusic(_titleScreenMusic);
+            else
+                PlayRandomMusic();
+        }
     }
     public void PlayRandomMusic()
     {
-        var clip = _musicClips[Random.Range(0, _musicClips.Count)];
+        var clip = _musicClips[UnityEngine.Random.Range(0, _musicClips.Count)];
         PlayMusic(clip);
     }
 
+    public void UpdateVolume()
+    {
+        if (Settings.Instance.soundEffectVolume > 0.05f)
+            _musicSource.mute = false;
+        else _musicSource.mute = true;
+
+        _musicSource.volume = Settings.Instance.musicVolume;
+
+        Debug.Log(_musicSource.volume);
+
+        foreach (var audio in _audioObjects)
+            audio.UpdateVolume();
+    }
+
+    private void OnLevelWasLoaded(int level)
+    {
+        if (level > 0)
+            PlayRandomMusic();
+        else PlayMusic(_titleScreenMusic);
+    }
 }

@@ -37,7 +37,9 @@ public class Engine : NetworkBehaviour
     public void Move(int axis, bool overDrive)
     {
         if (overDriveMultiplier != 0)
-            _thruster.RunEngine(axis == 1, overDrive);
+            if (axis == 1)
+                _thruster.StartThruster(overDrive);
+            else _thruster.StopThruster();
 
         if (isLocalPlayer)
         {

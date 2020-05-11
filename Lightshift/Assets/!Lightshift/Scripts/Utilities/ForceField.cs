@@ -13,19 +13,12 @@ public class ForceField : MonoBehaviour
     [Range(0.1f, 30)]
     public float fieldSize = 15;
     public Vector3 reflectionSpeed;
-    public bool solidForceField = false;
-
-    private CircleCollider2D _collider;
     private RotateGameObject _rotationObject;
 
-    public event Action<GameObject> OnTriggerEnter;
-    public event Action<GameObject> OnTriggerLeave;
     private void Start()
     {
         _forceField = Instantiate(PrefabManager.Instance.forceFieldPrefab, transform);
         _forceField.layer = gameObject.layer;
-        _collider = _forceField.AddComponent<CircleCollider2D>();
-        _collider.isTrigger = !solidForceField;
 
         _rotationObject = _forceField.GetComponent<RotateGameObject>();
     }
@@ -40,17 +33,16 @@ public class ForceField : MonoBehaviour
         }
 
         _rotationObject.Speed = reflectionSpeed;
-        _collider.isTrigger = !solidForceField;
         _forceField.transform.localScale = new Vector3(fieldSize, fieldSize, fieldSize / 1.5f);
     }
 
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        OnTriggerEnter?.Invoke(collision.gameObject);
-    }
+    //private void OnTriggerExit2D(Collider2D collision)
+    //{
+    //    OnTriggerEnter?.Invoke(collision.gameObject);
+    //}
 
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        OnTriggerLeave?.Invoke(collision.gameObject);
-    }
+    //private void OnTriggerEnter2D(Collider2D collision)
+    //{
+    //    OnTriggerLeave?.Invoke(collision.gameObject);
+    //}
 }

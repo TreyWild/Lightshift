@@ -5,16 +5,16 @@ using TMPro;
 public class Projectile : MonoBehaviour
 {
     public bool isAlive;
-    public Entity owner;
+    public string entityId;
     public BulletData data;
-
+    public Weapon weapon;
     private Kinematic _kinematic;
     private float _lifeTime;
     private float _remainingHits;
     private RaycastHit _raycast;
     private TrailRenderer _trailRenderer;
     private SpriteRenderer _renderer;
-
+    private CircleCollider2D _collider;
     private void Awake()
     {
         _kinematic = gameObject.AddComponent<Kinematic>();
@@ -25,6 +25,11 @@ public class Projectile : MonoBehaviour
 
     public void Initialize(Vector2 velocity, BulletData data, Sprite sprite, Color color) 
     {
+        if (_collider == null)
+            _collider = gameObject.AddComponent<CircleCollider2D>();
+
+        _collider.isTrigger = true;
+        //_collider.radius = (transform.localScale.x) / 2;
         this.data = data;
         _kinematic.velocity = velocity;
         _remainingHits = data.hitCount;
@@ -51,21 +56,6 @@ public class Projectile : MonoBehaviour
             _lifeTime -= Time.fixedDeltaTime;
 
             Move();
-
-            //Check for collision
-            if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out _raycast, Time.fixedDeltaTime * _kinematic.velocity.magnitude * 2))
-            {
-                Debug.LogError("hit");
-                DamageableObject damageableObject = _raycast.transform.GetComponentInParent<DamageableObject>();
-
-                if (damageableObject != null)
-                    damageableObject.DoHit(this);
-
-                if (_remainingHits == 0)
-                    SetAsDead();
-                else
-                    _remainingHits -= 1;
-            }
         }
 
         if (_lifeTime < 0)
@@ -85,5 +75,22 @@ public class Projectile : MonoBehaviour
         _trailRenderer.emitting = false;
         isAlive = false;
         gameObject.SetActive(false);
+    }
+
+    public void OnTriggerEnter2D(Collider2D collision)
+    {
+        var damageable = collision.GetComponentInParent<DamageableObject>();
+        if (damageable != null && damageable.HitObject(this))
+        {
+            //Play sound Effect
+            if (weapon.HitSound != null)
+                SoundManager.Play(weapon.HitSound, transform.position);
+
+            if (weapon.hitEffectPrefab != null)
+                Instantiate(weapon.hitEffectPrefab, transform.position, transform.rotation);
+
+            if (--_remainingHits == 0)
+                SetAsDead();
+        }
     }
 }

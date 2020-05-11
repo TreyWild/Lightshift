@@ -133,7 +133,7 @@ public class GameUIManager : MonoBehaviour
 
             Settings.Instance.KeysLocked = true;
             //On Respawn
-            //respawnUI.onRespawn += () => ClientManager.Instance.Send("g", "respawn");
+            respawnUI.onRespawn += () => NetworkClient.Send(new RespawnMessage());
         }
         else 
         {

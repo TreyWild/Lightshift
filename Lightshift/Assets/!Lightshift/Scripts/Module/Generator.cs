@@ -16,10 +16,12 @@ public class Generator : NetworkBehaviour
     public float powerRegen;
 
     private EntityUI _ui;
+    private Entity _entity;
 
     private void Awake()
     {
         _ui = GetComponent<EntityUI>();
+        _entity = GetComponent<Entity>();
     }
 
     private void SetUIPowerMax(float old, float newValue)
@@ -37,9 +39,16 @@ public class Generator : NetworkBehaviour
         if (isServer)
         {
             if (power >= maxPower)
+            {
+                power = maxPower;
                 return;
+            }
 
-            power += powerRegen * Time.deltaTime;
+            if (_entity.IsInSafezone)
+                power += maxPower / 10 * Time.deltaTime;
+            else
+                power += powerRegen * Time.deltaTime;
+
 
             if (power >= maxPower)
                 power = maxPower;

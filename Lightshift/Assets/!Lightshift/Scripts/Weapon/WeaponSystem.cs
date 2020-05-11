@@ -44,12 +44,19 @@ public class WeaponSystem : MonoBehaviour
         activeWeaponSlot = weapon;
         if (activeWeapon != weapons[weapon])
             activeWeapon = weapons[weapon];
+
+        if (_entity.IsInSafezone)
+            return;
+
         if (activeWeapon != null &&  activeWeapon.timeSinceLastShot > activeWeapon.weaponData.refire)
             FireWeapon(activeWeapon);
     }
 
     private void FireWeapon(Weapon weapon)
     {
+        if (weapon.ShootSound != null)
+            SoundManager.Play(weapon.ShootSound, transform.position);
+
         for (int i = 0; i < weapon.weaponData.projectileCount; i++)
         {
             var rotation = _kinematic.rotation; 
@@ -77,7 +84,10 @@ public class WeaponSystem : MonoBehaviour
             bullet.transform.position = gunPoint;
             if (weapon.weaponData.scale != Vector2.zero)
                 bullet.transform.localScale = weapon.weaponData.scale;
-            bullet.owner = _entity;
+
+            bullet.entityId = _entity.Id;
+
+            bullet.weapon = weapon;
 
             bullet.Initialize(_kinematic.velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color);
         }

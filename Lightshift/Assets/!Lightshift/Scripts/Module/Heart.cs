@@ -29,9 +29,14 @@ public class Heart : NetworkBehaviour
         {
             var health = this.health;
             if (health >= maxHealth)
+            {
+                health = maxHealth;
                 return;
+            }
 
-            health += healthRegen * Time.deltaTime;
+            if (_entity.IsInSafezone)
+                health += maxHealth / 10 * Time.deltaTime;
+            else health += healthRegen * Time.deltaTime;
 
             if (health >= maxHealth)
                 health = maxHealth;

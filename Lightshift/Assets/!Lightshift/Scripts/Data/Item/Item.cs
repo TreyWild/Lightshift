@@ -22,6 +22,8 @@ public class Item : ScriptableObject
 
     public int maxStack = 999;
 
+
+
     public ItemObj GetItemObj() => new ItemObj 
     {
         color = color,

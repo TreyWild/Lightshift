@@ -67,8 +67,9 @@ public class LoginUIManager : MonoBehaviour
         NetworkManagerPrefab = Instantiate(NetworkManagerPrefab);
         if (Application.isEditor || UseTestServers)
         {
-            NetworkManagerPrefab.AddComponent<NetworkManagerHUD>();
             NetworkManager.singleton.networkAddress = "localhost";
+            if (Application.isEditor)
+                NetworkManagerPrefab.AddComponent<NetworkManagerHUD>();
         }
         else NetworkManager.singleton.networkAddress = "167.99.149.84";
     }

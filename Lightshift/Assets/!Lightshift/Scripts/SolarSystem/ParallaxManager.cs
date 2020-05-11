@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Lightshift;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,6 +25,8 @@ public class ParallaxManager : MonoBehaviour
             _renderers.Add(renderer);
 
         Initialize(Color.white);
+
+        Settings.Instance.RefreshBackgrounds();
     }
 
     public void Initialize(Color color)
@@ -48,7 +51,7 @@ public class ParallaxManager : MonoBehaviour
 
     public void ShowSkybox(bool show = true) 
     {
-        _parallax.SetActive(show);
+        _parallax?.SetActive(show);
         if (show)
             Camera.main.clearFlags = CameraClearFlags.Depth;
         else Camera.main.clearFlags = CameraClearFlags.SolidColor;

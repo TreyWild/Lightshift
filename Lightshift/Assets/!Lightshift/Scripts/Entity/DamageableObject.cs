@@ -1,4 +1,5 @@
 ﻿using Mirror;
+using System.Diagnostics;
 
 public class DamageableObject : NetworkBehaviour
 {
@@ -13,23 +14,43 @@ public class DamageableObject : NetworkBehaviour
         _entity = GetComponent<Entity>();
     }
 
-
-    public void DoHit(Projectile projectile) 
+    public bool HitObject(Projectile projectile) 
     {
-        var effect = LSObjectPool.GetUsableGlowEffect();
-        effect.transform.position = transform.position;
+        if (projectile.entityId == _entity.Id || _entity.IsInSafezone)
+            return false;
 
+        // TO DO : Show particle effect
         if (isServer)
         {
             var isDead = ApplyDamage(projectile.data.damage);
 
             if (isDead) 
             {
-                var attacker = projectile.owner;
-                
+                var attacker = EntityManager.GetEntity(projectile.entityId);
+                attacker.connectionToClient.Send(new YouKilledEntityMessage
+                {
+                    username = _entity.displayName
+                });
+
+                _entity.connectionToClient.Send(new YouWereKilledMessage
+                {
+                    killerEntityId = attacker.Id,
+                    killerName = attacker.displayName
+                });
+
                 Server.SendChatBroadcast($"{_entity.displayName} was killed by {attacker.displayName}!");
+
+
+                Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
+                SoundManager.PlayExplosion(transform.position);
+
+                // TO DO : Handle Drops
+                NetworkServer.Destroy(_entity.gameObject);
             }
         }
+
+
+        return true;
     }
 
     private bool ApplyDamage(float damage) 

@@ -16,6 +16,8 @@ public class LightLance : NetworkBehaviour
     [SyncVar]
     public float powerCost;
 
+    private float minimumDistance = 8;
+
     private Kinematic _kinematic;
     private BeamToTarget _lightLance;
     private void Awake()
@@ -44,27 +46,7 @@ public class LightLance : NetworkBehaviour
             if (transform.position == targetTransform.position)
                 return;
 
-            //var target = targetTransform.GetComponent<Kinematic>();
-
-            //Vector2 diffVel = target.velocity - _kinematic.velocity;
-            //Vector3 diffPos = target.transform.position - _kinematic.transform.position;
-            //float dist = diffPos.magnitude;
-            //Vector3 diffPosN = diffPos / dist;
-
-            //float c = diffPosN.x;
-            //float s = -diffPosN.z;
-
-            //float xn = c * diffVel.x - s * diffVel.y; //force toward/away between target/origin
-            //float yn = s * diffVel.x + c * diffVel.y; //force side/side: maybe do something with this?
-            //Vector2 radialDV = new Vector2(xn, yn);
-
-            ////now radialDV.x = force in/out, and radialDV.y = force side/side
-            //Vector2 tempVelShift = new Vector2(diffPosN.x, diffPosN.z) * radialDV.x / (target.mass + _kinematic.mass); //replace radialDV.x with xn or Mathf.Max(maxforce, xn) if you want a max force
-
-            //target.velocity -= tempVelShift * _kinematic.mass; //mass crossover: one gets the other's mass
-            //_kinematic.velocity += tempVelShift * target.mass; //multiply both by 0.25 or 0.1 for some "flexibility"
-
-            var force = (distance/pullForce) * Time.fixedDeltaTime;
+            var force = (pullForce/distance) * Time.fixedDeltaTime;
             _kinematic.AddForce((targetTransform.position + (transform.forward * force) - transform.position) * (force));
         }
     }

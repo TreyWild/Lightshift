@@ -1,12 +1,17 @@
-﻿using System.Collections;
+﻿using Lightshift;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Thruster : MonoBehaviour
 {
-    [SerializeField] private TrailRenderer _trailRenderer;
-    [SerializeField] private TrailRenderer _overdriveTrailRenderer;
+    [SerializeField] private ParticleSystem _overDriveParticles;
     [SerializeField] private ParticleSystem _particleSystem;
+
+    private AudioSource _audioSource;
+    private Light _cacheLight;
+    private bool _isActive;
+    private bool _overDriveActive;
     //public bool Overdrive;
     //{
     //    get => _overdrive;
@@ -20,40 +25,100 @@ public class Thruster : MonoBehaviour
 
     private void Awake()
     {
-        _trailRenderer.sortingOrder = SortingOrders.ENGINE;
         _particleSystem.GetComponent<Renderer>().sortingOrder = SortingOrders.ENGINE;
-        _overdriveTrailRenderer.sortingOrder = SortingOrders.OVERDRIVE_ENGINE;
-        _trailRenderer.Clear();
-        _trailRenderer.emitting = false;
-        _overdriveTrailRenderer.Clear();
-        _overdriveTrailRenderer.emitting = false;
+        _overDriveParticles.GetComponent<Renderer>().sortingOrder = SortingOrders.OVERDRIVE_ENGINE;
+    }
+
+    private void Start()
+    {
+        _audioSource = GetComponentInChildren<AudioSource>();
+
+        _audioSource.loop = true;
+        _audioSource.volume = Settings.Instance.soundEffectVolume;
+        _audioSource.mute = true;
+        _audioSource.Play();
+
+        _cacheLight = transform.GetComponentInChildren<Light>().GetComponent<Light>();
+    }
+
+    public void StartThruster(bool overDrive)
+    {
+        _isActive = true;
+        _overDriveActive = overDrive;
+    }
+
+    public void StopThruster()
+    {
+        _isActive = false;
+    }
+
+    private void Update()
+    {
+        if (_cacheLight != null)
+        {
+            // Set the intensity based on the number of particles
+            var divider = 30;
+            if (_overDriveActive)
+                divider = 10;
+
+            _cacheLight.intensity = _particleSystem.particleCount / divider;
+        }
+
+        if (_isActive)
+        {
+
+            // ...and if audio is muted...
+            if (_audioSource.mute)
+            {
+                // Unmute the audio
+                _audioSource.mute = false;
+            }
+            // If the audio volume is lower than the sound effect volume...
+            var volume = Settings.Instance.soundEffectVolume;
+            if (!_overDriveActive)
+                volume /= 2;
+            if (_audioSource.volume < volume)
+            {
+                // ...fade in the sound (to avoid clicks if just played straight away)
+                _audioSource.volume += 1f * Time.deltaTime;
+            }
+            else _audioSource.volume = volume;
+
+            // If the particle system is intact...
+            if (_particleSystem != null)
+            {
+                _particleSystem.Play();
+
+                if (_overDriveActive)
+                    _overDriveParticles.Play();
+                else _overDriveParticles.Stop();
+            }
+        }
+        else 
+        {
+
+            if (_audioSource.volume > 0.01f)
+            {
+                // ...fade out volume
+                _audioSource.volume -= 5f * Time.deltaTime;
+            }
+            else
+            {
+                // ...and mute it when it has faded out
+                _audioSource.mute = true;
+            }
+
+            // If the particle system is intact...
+            if (_particleSystem != null)
+            {
+                _particleSystem.Stop();
+                _overDriveParticles.Stop();
+            }
+        }
     }
 
     public void SetColor(Color color) 
     {
-        _trailRenderer.startColor = color;
-        _overdriveTrailRenderer.endColor = color;
-    }
-
-    public void RunEngine(bool run, bool overDrive) 
-    {
-        _trailRenderer.emitting = run;
-        _overdriveTrailRenderer.emitting = overDrive;
-
-        if (!_particleSystem.isPlaying && run)
-            _particleSystem.Play();
-        else if (_particleSystem.isPlaying && !run) _particleSystem.Stop();
-    }
-
-    public void SetTrailLength(float length) 
-    {
-        _overdriveTrailRenderer.time = length;
-        _trailRenderer.time = length;
-    }
-
-    public void SetTrailColor(Color color) 
-    {
-        _trailRenderer.startColor = color;
-        _overdriveTrailRenderer.endColor = color;
+        _cacheLight.color = color;
     }
 }

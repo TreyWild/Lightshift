@@ -1,8 +1,5 @@
 ﻿using UnityEngine;
-using UnityEngine.SceneManagement;
 using Mirror;
-using System.Collections;
-using System;
 
 public class Game : MonoBehaviour
 {
@@ -25,6 +22,27 @@ public class Game : MonoBehaviour
     {
         NetworkClient.RegisterHandler<AlertMessage>(OnAlert);
         NetworkClient.RegisterHandler<ChatMessage>(OnChatMessage);
+        NetworkClient.RegisterHandler<YouWereKilledMessage>(OnDeathMessage);
+        NetworkClient.RegisterHandler<YouKilledEntityMessage>(OnKillEntity);
+        NetworkServer.RegisterHandler<RespawnMessage>(OnPlayerRespawn);
+    }
+
+    private void OnPlayerRespawn(NetworkConnection client, RespawnMessage m)
+    {
+        GameUIManager.Instance.HandleRespawnScreen(false);
+    }
+
+    private void OnKillEntity(NetworkConnection arg1, YouKilledEntityMessage message)
+    {
+        GameUIManager.Instance.ShowAnnouncementText($"You killed {message.username}!");
+    }
+
+    private void OnDeathMessage(NetworkConnection arg1, YouWereKilledMessage message)
+    {
+        GameUIManager.Instance.HandleRespawnScreen(showRespawn: true, message.killerName);
+        var entity = EntityManager.GetEntity(message.killerEntityId);
+        if (entity != null)
+            CameraFollow.Instance.SetTarget(entity.transform);
     }
 
     private void OnAlert(NetworkConnection connection, AlertMessage message)

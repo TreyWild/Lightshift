@@ -49,6 +49,8 @@ public class Ship : Entity
 
     private void Start()
     {
+        base.Start();
+
         if (isServer || isLocalPlayer)
             CameraFollow.Instance.SetTarget(gameObject.transform);
     }
@@ -81,7 +83,7 @@ public class Ship : Entity
 
         _starshipData = starship.data;
 
-        UpdateShipStats();
+        UpdateShipStats(true);
 
         if (isServer)
         {
@@ -96,7 +98,7 @@ public class Ship : Entity
 
     private void OnEquipChanged(InventorySlot slot)
     {
-        for (int i = 0; i < _equips.Count; i++) 
+        for (int i = 0; i < _equips.Count; i++)
         {
             if (_equips[i].slot == slot.slotId)
             {
@@ -143,7 +145,7 @@ public class Ship : Entity
                     break;
             }
         }
-        else if (newItem != null && newItem.itemKey == null || newItem != null && newItem.itemKey == "") 
+        else if (newItem != null && newItem.itemKey == null || newItem != null && newItem.itemKey == "")
         {
             _wing.SetImage(null, Color.white);
         }
@@ -178,7 +180,7 @@ public class Ship : Entity
         UpdateShipStats();
     }
 
-    private void UpdateShipStats() 
+    private void UpdateShipStats(bool refill = false)
     {
         var stats = _starshipData;
 
@@ -195,15 +197,22 @@ public class Ship : Entity
         _heart.SetMaxHealth(stats.maxHealth);
         _heart.healthRegen = stats.healthRegen;
 
-
         _shield.SetMaxShield(stats.maxShield);
         _shield.shieldRegen = stats.shieldRegen;
+
         _generator.maxPower = stats.maxPower;
         _generator.powerRegen = stats.powerRegen;
 
         _lightLance.SetRange(stats.lightLanceRange);
         _lightLance.pullForce = stats.lightLancePullForce;
-        _lightLance.powerCost = stats.lightLancePowerCost;     
+        _lightLance.powerCost = stats.lightLancePowerCost;
+
+        if (refill)
+        {
+            _heart.health = stats.maxHealth;
+            _shield.shield = stats.maxShield;
+            _generator.power = stats.maxPower;
+        }
     }
 
     private void FixedUpdate()
@@ -242,6 +251,8 @@ public class Ship : Entity
 
     private void OnDestroy()
     {
+        base.OnDestroy();
         PlayerManager.Instance.RemovePlayer(_playerData);
     }
 }
+

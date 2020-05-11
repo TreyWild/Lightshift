@@ -34,6 +34,15 @@ public class Server : MonoBehaviour
     public void InitMessageHandlers() 
     {
         NetworkServer.RegisterHandler<ChatMessage>(OnChatMessageRecieved, true);
+        NetworkServer.RegisterHandler<RespawnMessage>(OnPlayerRespawn, true);
+    }
+
+    private void OnPlayerRespawn(NetworkConnection client, RespawnMessage m)
+    {
+        // Tell the client to put away the respawn UI
+        client.Send(new RespawnMessage());
+
+        NetworkServer.Spawn(NetworkManager.singleton.playerPrefab);
     }
 
     private void OnChatMessageRecieved(NetworkConnection connection, ChatMessage chatMessage)

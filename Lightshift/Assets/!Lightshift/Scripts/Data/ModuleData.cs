@@ -26,13 +26,13 @@ public struct ModuleData
     public float weight;
     [Range(0, 10.0f)]
     public float brakeForce;
-    [Range(0, 10)]
+    [Range(0.02f, 3)]
     public float lightLancePowerCost;
     [Range(0, 10)]
     public float lightLancePullForce;
-    [Range(0, 10)]
+    [Range(5, 30)]
     public float lightLanceRange;
-    [Range(0, 10)]
+    [Range(0, 100)]
     public float overDrivePowerCost;
     [Range(0, 10)]
     public float overDriveBoostMultiplier;

@@ -19,17 +19,20 @@ public class Shield : NetworkBehaviour
 
     private GameObject _visualShield;
     private EntityUI _ui;
+    private Entity _entity;
     private void Awake()
     {
         _ui = GetComponent<EntityUI>();
-        _visualShield = Instantiate(PrefabManager.Instance.shieldPrefab, transform);
-        _visualShield.transform.localScale = new Vector3(shieldSize, shieldSize, 1);
-        var shieldImages = _visualShield.GetComponentsInChildren<SpriteRenderer>();
-        foreach (var shield in shieldImages)
-            shield.sortingOrder = SortingOrders.SHIELD;
+        //_visualShield = Instantiate(PrefabManager.Instance.shieldPrefab, transform);
+        //_visualShield.transform.localScale = new Vector3(shieldSize, shieldSize, 1);
+        //var shieldImages = _visualShield.GetComponentsInChildren<SpriteRenderer>();
+        //foreach (var shield in shieldImages)
+        //    shield.sortingOrder = SortingOrders.SHIELD;
 
-        if (shield <= 0)
-            _visualShield.SetActive(false);
+        //if (shield <= 0)
+        //    _visualShield.SetActive(false);
+
+        _entity = GetComponent<Entity>();
     }
 
     private void SetUIShield(float old, float newValue)
@@ -64,8 +67,13 @@ public class Shield : NetworkBehaviour
         {
             var shield = this.shield;
             if (shield >= maxShield)
+            {
+                shield = maxShield;
                 return;
+            }
 
+            if (_entity.IsInSafezone)
+                shield += maxShield / 10 * Time.deltaTime;
             shield += shieldRegen * Time.deltaTime;
 
             if (shield >= maxShield)
@@ -74,9 +82,9 @@ public class Shield : NetworkBehaviour
             SetShield(shield);
         }
 
-        if (shield <= 0)
-            _visualShield.SetActive(false);
-        else if (!_visualShield.activeInHierarchy) _visualShield.SetActive(true);
+        //if (shield <= 0)
+        //    _visualShield.SetActive(false);
+        //else if (!_visualShield.activeInHierarchy) _visualShield.SetActive(true);
     }
 
     // TO DO : Consume power to use EXTRA shield

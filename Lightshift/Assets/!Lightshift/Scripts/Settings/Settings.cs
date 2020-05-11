@@ -47,6 +47,8 @@ namespace Lightshift
         public bool ShowSkybox = true;
         public bool ShowBackgroundElements;
         public bool ShowDebugStats;
+        public FullScreenMode fullScreenMode;
+        public Vector2 resolution;
         private void Awake()
         {
             if (Instance != null)
@@ -124,7 +126,7 @@ namespace Lightshift
             InventoryKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("inventoryKey", InventoryKey.ToString()));
             TargetKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("targetKey", TargetKey.ToString()));
             soundEffectVolume = float.Parse(PlayerPrefs.GetString("soundEffectVolume", "50")) * .01f;
-            musicVolume = float.Parse(PlayerPrefs.GetString("musicVolume", "50")) * .01f;
+            musicVolume = float.Parse(PlayerPrefs.GetString("musicVolume", "30")) * .01f;
             ZoomOutKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("zoomOutKey", "LeftControl"));
             RespawnKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("respawnKey", "Space"));
             Weapon1 = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weapon1Key", KeyCode.Alpha1.ToString()));
@@ -137,7 +139,6 @@ namespace Lightshift
             UseMouseAim = bool.Parse(PlayerPrefs.GetString("useMouseAim", "False"));
             AutoTarget = bool.Parse(PlayerPrefs.GetString("useAutoTarget", "False"));
             ShowTargetMarker = bool.Parse(PlayerPrefs.GetString("useTargetMarker", "True"));
-            IsFullscreen = bool.Parse(PlayerPrefs.GetString("isFullscreen", "True"));
             ShowSkybox = bool.Parse(PlayerPrefs.GetString("showSkybox", "True"));
             ShowBackgroundElements = bool.Parse(PlayerPrefs.GetString("showBackgroundElements", "True"));
             ShowDebugStats = bool.Parse(PlayerPrefs.GetString("showDebugStats", "False"));
@@ -145,24 +146,66 @@ namespace Lightshift
             if (GameUIManager.Instance != null)
                 GameUIManager.Instance.ShowScreenStats(ShowDebugStats);
 
+
             if (SoundManager.Instance != null)
             {
-                SoundManager.Instance.MusicSource.volume = musicVolume;
-                SoundManager.Instance.EffectsSource.volume = soundEffectVolume;
+                SoundManager.Instance.UpdateVolume();
             }
 
-            if (ParallaxManager.Instance != null)
-            {
-                ParallaxManager.Instance.ShowBackgroundObjects(ShowBackgroundElements);
-                ParallaxManager.Instance.ShowSkybox(ShowSkybox);
-            }
         }
 
         public void RefreshScreen() 
         {
-            Screen.fullScreenMode = FullScreenMode.FullScreenWindow;
-            if (!Application.isEditor)
-                Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, IsFullscreen);
+            var oldFs = IsFullscreen;
+            var oldRes = resolution;
+            var oldFsM = fullScreenMode;
+
+            if (oldFs != IsFullscreen)
+                IsFullscreen = bool.Parse(PlayerPrefs.GetString("isFullscreen", "True"));
+
+            for (int i = 0; i < QualitySettings.names.Length; i++)
+            {
+                var name = QualitySettings.names[i];
+                var quality = PlayerPrefs.GetString("gameQuality", "Fantastic");
+                if (name.ToLower() == quality.ToLower())
+                {
+                    QualitySettings.SetQualityLevel(i);
+                    break;
+                }
+
+            }
+
+            fullScreenMode = (FullScreenMode)Enum.Parse(typeof(FullScreenMode), PlayerPrefs.GetString("fullscreenMode", "ExclusiveFullScreen"));
+            if (oldFsM != fullScreenMode)
+                Screen.fullScreenMode = fullScreenMode;
+
+            string[] split = PlayerPrefs.GetString("gameResulotion", $"{1280}:{720}").Split(':');
+            int width = int.Parse(split[0]);
+            int height = int.Parse(split[1]);
+
+            resolution = new Vector2(width, height);
+
+            if (oldRes != resolution)
+                if (!Application.isEditor)
+                    Screen.SetResolution((int)resolution.x, (int)resolution.y, IsFullscreen);
+        }
+
+        public void RefreshBackgrounds() 
+        {
+            if (ParallaxManager.Instance == null)
+                return;
+
+            ParallaxManager.Instance.ShowBackgroundObjects(ShowBackgroundElements);
+            ParallaxManager.Instance.ShowSkybox(ShowSkybox);
+        }
+
+        public void RefreshCameraMode()
+        {
+            if (CameraFollow.Instance != null) 
+            {
+                var immersive = bool.Parse(PlayerPrefs.GetString("immersiveCamera", "False"));
+                CameraFollow.Instance.SetCameraMode(immersive);
+            }
         }
     }
 }

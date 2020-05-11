@@ -62,15 +62,12 @@ public class Wing : NetworkBehaviour
             wing.color = color;
 
             var collider = wing.gameObject.GetComponent<PolygonCollider2D>();
-            if (collider != null)
-            {
-                if (_entity.colliders.Contains(collider))
-                    _entity.colliders.Remove(collider);
-                Destroy(collider);
-            }
-            collider = wing.gameObject.AddComponent<PolygonCollider2D>();
 
-            _entity.colliders.Add(collider);
+            if (collider != null)
+                Destroy(collider);
+            
+            collider = wing.gameObject.AddComponent<PolygonCollider2D>();
+            collider.isTrigger = true;
 
             if (hasAuthority)
                 wing.sortingOrder = SortingOrders.SHIP_WING + 1;
