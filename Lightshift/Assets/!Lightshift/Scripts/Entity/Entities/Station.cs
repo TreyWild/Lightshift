@@ -16,7 +16,7 @@ public class Station : Entity
 
     public StationType stationType;
     private SpriteRenderer _renderer;
-    private List<Ship> _safeZonedShips = new List<Ship>();
+    private List<PlayerShip> _safeZonedShips = new List<PlayerShip>();
     private ForceField _forceField;
     private void Start()
     {
@@ -47,13 +47,13 @@ public class Station : Entity
         if (!HasSafeZone)
             return;
 
-        var ship = collision.GetComponentInParent<Ship>();
+        var ship = collision.GetComponentInParent<PlayerShip>();
         if (ship)
         {
             if (!_safeZonedShips.Contains(ship))
             {
                 _safeZonedShips.Add(ship);
-                ship.OnEnterSafezone();
+                ship.OnEnterSafezone(this);
             }
         }
     }
@@ -62,13 +62,13 @@ public class Station : Entity
         if (!HasSafeZone)
             return;
 
-        var ship = collision.GetComponentInParent<Ship>();
+        var ship = collision.GetComponentInParent<PlayerShip>();
         if (ship)
         {
             if (_safeZonedShips.Contains(ship))
             {
                 _safeZonedShips.Remove(ship);
-                ship.OnLeaveSafezone();
+                ship.OnLeaveSafezone(this);
             }
         }
     }

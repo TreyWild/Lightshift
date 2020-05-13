@@ -23,23 +23,15 @@ public class Game : MonoBehaviour
         NetworkClient.RegisterHandler<AlertMessage>(OnAlert);
         NetworkClient.RegisterHandler<ChatMessage>(OnChatMessage);
         NetworkClient.RegisterHandler<YouWereKilledMessage>(OnDeathMessage);
-        NetworkClient.RegisterHandler<YouKilledEntityMessage>(OnKillEntity);
-        NetworkServer.RegisterHandler<RespawnMessage>(OnPlayerRespawn);
+
+        NetworkServer.RegisterHandler(delegate (YouKilledEntityMessage message)
+        {
+            GameUIManager.Instance.ShowAnnouncementText($"You killed {message.username}!");
+        });
     }
 
-    private void OnPlayerRespawn(NetworkConnection client, RespawnMessage m)
+    private void OnDeathMessage(NetworkConnection client, YouWereKilledMessage message)
     {
-        GameUIManager.Instance.HandleRespawnScreen(false);
-    }
-
-    private void OnKillEntity(NetworkConnection arg1, YouKilledEntityMessage message)
-    {
-        GameUIManager.Instance.ShowAnnouncementText($"You killed {message.username}!");
-    }
-
-    private void OnDeathMessage(NetworkConnection arg1, YouWereKilledMessage message)
-    {
-        GameUIManager.Instance.HandleRespawnScreen(showRespawn: true, message.killerName);
         var entity = EntityManager.GetEntity(message.killerEntityId);
         if (entity != null)
             CameraFollow.Instance.SetTarget(entity.transform);

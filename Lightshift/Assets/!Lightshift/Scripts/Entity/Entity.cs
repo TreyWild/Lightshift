@@ -18,8 +18,6 @@ public class Entity : NetworkBehaviour
     public string displayName; 
     [SyncVar]
     public string teamId;
-    [SyncVar(hook = nameof(UpdateDeathOrRespawn))]
-    public bool isDead;
 
     public SmoothSyncMirror smoothSync;
     public Rigidbody2D rigidBody;
@@ -70,7 +68,7 @@ public class Entity : NetworkBehaviour
             return;
 
     }
-    public void OnEnterSafezone()
+    public virtual void OnEnterSafezone(Entity entity)
     {
         //ClearDamageObjects();
         IsInSafezone = true;
@@ -78,7 +76,7 @@ public class Entity : NetworkBehaviour
         if (isLocalPlayer)
             GameUIManager.Instance.ShowScreenText("Entering Safezone, Weapons Disabled");
     }
-    public void OnLeaveSafezone()
+    public void OnLeaveSafezone(Entity entity)
     {
         IsInSafezone = false;
         //weaponSystem.WeaponSystemDisabled = false;
@@ -98,27 +96,6 @@ public class Entity : NetworkBehaviour
             return;
 
         this.displayName = displayName;
-    }
-
-    private void SetAsDead()
-    {
-        gameObject.SetActive(false);
-    }
-
-    public void UpdateDeathOrRespawn(bool oldValue, bool dead)
-    {
-        if (hasAuthority && dead)
-        {
-            GameUIManager.Instance.HandleRespawnScreen(showRespawn: false);
-            CameraFollow.Instance.SetTarget(transform);
-            Settings.Instance.KeysLocked = false;
-            transform.position = new Vector3(0, 0, -5000);
-        }
-        else if (hasAuthority && !dead)
-        {
-            Settings.Instance.KeysLocked = false;
-            transform.position = new Vector3();
-        }
     }
 
     //#region Collision

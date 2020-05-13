@@ -15,7 +15,6 @@ public class GameUIManager : MonoBehaviour
 
     [SerializeField] GameObject _settingsMenuPrefab;
     [SerializeField] GameObject _weaponMenuPrefab;
-    [SerializeField] GameObject _respawnScreenPrefab;
     [SerializeField] Canvas _inventoryCanvas;
     [SerializeField] GameObject _announceTextPrefab;
     [SerializeField] GameObject _lowerTextPrefab;
@@ -28,7 +27,6 @@ public class GameUIManager : MonoBehaviour
     [SerializeField] GameObject _performanceStatsPrefab;
 
     private GameObject _settingsMenu { get; set; }
-    private GameObject _respawnScreen { get; set; }
     private GameObject _weaponMenu { get; set; }
     private GameObject _chatBox { get; set; }
     private GameObject _playerMenu { get; set; }
@@ -122,32 +120,14 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-    public void HandleRespawnScreen(bool showRespawn = true, string attackerName = "") 
+    public void HandleRespawnScreen(bool hideAllUI) 
     {
-        if (showRespawn)
-        {
-            ToggleAllUI(false);
-            _respawnScreen = Instantiate(_respawnScreenPrefab);
-            var respawnUI = _respawnScreen.GetComponent<RespawnUI>();
-            respawnUI.Initialize(respawnTime:5.3f, attackerName);
-
-            Settings.Instance.KeysLocked = true;
-            //On Respawn
-            respawnUI.onRespawn += () => NetworkClient.Send(new RespawnMessage());
-        }
-        else 
-        {
-            Destroy(_respawnScreen);
-            ToggleAllUI(true);
-            Settings.Instance.KeysLocked = false;
-        }
+        ToggleAllUI(!hideAllUI);
+        Settings.Instance.KeysLocked = hideAllUI;
     }
 
     public void ToggleAllUI(bool active) 
     {
-        if (_respawnScreen != null)
-            _respawnScreen?.SetActive(active);
-
         if (_settingsMenu != null)
             _settingsMenu.SetActive(active);
 

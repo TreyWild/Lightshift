@@ -157,7 +157,7 @@ public class SettingsMenu : MonoBehaviour
         CreateKeyBinding("Settings Menu", "settingsMenuKey");
         CreateKeyBinding("System Map", "mapKey");
         CreateKeyBinding("Zoom Out", "zoomOutKey");
-        //CreateKeyBinding("Self Destruct", "selfDestructKey");
+        CreateKeyBinding("Self Destruct", "selfDestructKey");
 
         Settings.Instance.KeysLocked = true;
     }

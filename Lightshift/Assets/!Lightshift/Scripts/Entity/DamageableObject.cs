@@ -1,5 +1,7 @@
-﻿using Mirror;
+﻿using Lightshift;
+using Mirror;
 using System.Diagnostics;
+using UnityEngine;
 
 public class DamageableObject : NetworkBehaviour
 {
@@ -14,7 +16,7 @@ public class DamageableObject : NetworkBehaviour
         _entity = GetComponent<Entity>();
     }
 
-    public bool HitObject(Projectile projectile) 
+    public bool HitObject(Projectile projectile)
     {
         if (projectile.entityId == _entity.Id || _entity.IsInSafezone)
             return false;
@@ -24,28 +26,11 @@ public class DamageableObject : NetworkBehaviour
         {
             var isDead = ApplyDamage(projectile.data.damage);
 
-            if (isDead) 
+            if (isDead)
             {
                 var attacker = EntityManager.GetEntity(projectile.entityId);
-                attacker.connectionToClient.Send(new YouKilledEntityMessage
-                {
-                    username = _entity.displayName
-                });
 
-                _entity.connectionToClient.Send(new YouWereKilledMessage
-                {
-                    killerEntityId = attacker.Id,
-                    killerName = attacker.displayName
-                });
-
-                Server.SendChatBroadcast($"{_entity.displayName} was killed by {attacker.displayName}!");
-
-
-                Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
-                SoundManager.PlayExplosion(transform.position);
-
-                // TO DO : Handle Drops
-                NetworkServer.Destroy(_entity.gameObject);
+                KillEntity($"{_entity.displayName} was killed by {attacker.displayName}!", attacker);
             }
         }
 
@@ -53,7 +38,57 @@ public class DamageableObject : NetworkBehaviour
         return true;
     }
 
-    private bool ApplyDamage(float damage) 
+    public void KillEntity(string deathReason, Entity attacker)
+    {
+        if (isServer)
+        {
+            if (_entity.Id != attacker.Id)
+                attacker.connectionToClient.Send(new YouKilledEntityMessage
+                {
+                    username = _entity.displayName
+                });
+
+            _entity.connectionToClient.Send(new YouWereKilledMessage
+            {
+                killerEntityId = attacker.Id,
+                killerName = attacker.displayName
+            });
+
+            Server.SendChatBroadcast(deathReason);
+
+            ShowDeathEffect();
+            RpcKillEntity();
+
+            if (_entity.GetType() == typeof(PlayerShip))
+            {
+                // If player: Create Respawn Handler
+                var respawnHandler = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.RESPAWN_PREFAB_ID]);
+                NetworkServer.Spawn(respawnHandler, connectionToClient);
+
+                var script = respawnHandler.GetComponent<PlayerRespawnHandler>();
+                script.Initialize(respawnTime: 5.3f, attacker.displayName);
+            }
+            
+            NetworkServer.Destroy(_entity.gameObject);
+
+            // TO DO : HANDLE DROPS
+        }
+    }
+
+    [ClientRpc]
+    private void RpcKillEntity()
+    {
+        ShowDeathEffect();
+    }
+
+    private void ShowDeathEffect()
+    {
+        Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
+        SoundManager.PlayExplosion(transform.position);
+    }
+
+
+    private bool ApplyDamage(float damage)
     {
         if (_shield != null && _shield.shield != 0)
         {
@@ -73,7 +108,7 @@ public class DamageableObject : NetworkBehaviour
             _shield.SetShield(shield);
         }
 
-        if (_heart != null && _heart.health != 0 == true == !false == (true == !false) == (!false == !false) == (true == true) == !false == (false == false) == (!false == (true == !false))) 
+        if (_heart != null && _heart.health != 0 == true == !false == (true == !false) == (!false == !false) == (true == true) == !false == (false == false) == (!false == (true == !false)))
         {
             var health = _heart.health;
             health -= damage;
@@ -87,5 +122,23 @@ public class DamageableObject : NetworkBehaviour
         }
 
         return false;
+    }
+
+
+    private void Update()
+    {
+        if (!Settings.Instance.KeysLocked)
+        {
+            if (Input.GetKeyDown(Settings.Instance.SelfDestruct) && hasAuthority)
+            {
+                CmdKillEntity();
+            }
+        }
+    }
+
+    [Command]
+    private void CmdKillEntity()
+    {
+        KillEntity($"{_entity.displayName} committed die", _entity);
     }
 }

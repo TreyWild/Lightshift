@@ -1,0 +1,158 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &7683306769643539528
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4420061655662066787}
+  - component: {fileID: 3023908457747634818}
+  - component: {fileID: 1566791389451798087}
+  m_Layer: 0
+  m_Name: Inventory
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4420061655662066787
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7683306769643539528}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -7.1066256, y: -2.292057, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3023908457747634818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7683306769643539528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneId: 0
+  serverOnly: 0
+  m_AssetId: 
+--- !u!114 &1566791389451798087
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7683306769643539528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e186bfea5e09003489b7aae034e9bcfc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  syncMode: 0
+  syncInterval: 0.1
+  _shipInventory:
+    type: 0
+    slots:
+    - slotId: 0
+      item: {fileID: 11400000, guid: bcff13a6f451dff43a2bd3d21db2852b, type: 2}
+      amount: 1
+      type: 5
+      inventory: 0
+      identifier: 5
+    - slotId: 1
+      item: {fileID: 11400000, guid: 4c84fa4849ebd57488eabc6a146a4cc6, type: 2}
+      amount: 1
+      type: 5
+      inventory: 0
+      identifier: 5
+    - slotId: 2
+      item: {fileID: 0}
+      amount: 0
+      type: 5
+      inventory: 0
+      identifier: 5
+    - slotId: 3
+      item: {fileID: 0}
+      amount: 0
+      type: 5
+      inventory: 0
+      identifier: 5
+    - slotId: 4
+      item: {fileID: 0}
+      amount: 0
+      type: 5
+      inventory: 0
+      identifier: 5
+    - slotId: 5
+      item: {fileID: 11400000, guid: f275b4c20a10bb749a240f18065ea6a4, type: 2}
+      amount: 1
+      type: 3
+      inventory: 0
+      identifier: 3
+    - slotId: 6
+      item: {fileID: 11400000, guid: ec1d3b68f419d214b993d5b29c16ee66, type: 2}
+      amount: 1
+      type: 7
+      inventory: 0
+      identifier: 7
+    - slotId: 7
+      item: {fileID: 11400000, guid: 050bf84d35f42e247b593426e6e5e0b4, type: 2}
+      amount: 1
+      type: 6
+      inventory: 0
+      identifier: 6
+    - slotId: 8
+      item: {fileID: 11400000, guid: 6451db545ecd7d647a3f22f8cddcb0ed, type: 2}
+      amount: 1
+      type: 2
+      inventory: 0
+      identifier: 2
+    - slotId: 9
+      item: {fileID: 0}
+      amount: 0
+      type: 9
+      inventory: 0
+      identifier: 9
+    - slotId: 10
+      item: {fileID: 11400000, guid: b9f99ed1763b1744a80fb1fa2c05746f, type: 2}
+      amount: 1
+      type: 8
+      inventory: 0
+      identifier: 8
+    - slotId: 11
+      item: {fileID: 11400000, guid: 01c3fbb977b57d14ea1e6cfa04536256, type: 2}
+      amount: 0
+      type: 4
+      inventory: 0
+      identifier: 4
+  _storageInventory:
+    type: 2
+    slots: []
+  _cargoInventory:
+    type: 1
+    slots:
+    - slotId: 0
+      item: {fileID: 11400000, guid: e95fb87b58e920748b5eeeab05a88093, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+    - slotId: 1
+      item: {fileID: 11400000, guid: b7f3d8a57ccab0743b4af08694c8e39f, type: 2}
+      amount: 1
+      type: 0
+      inventory: 1
+      identifier: 0
+  _inventoryPrefab: {fileID: 1464883939077083148, guid: 258d1933343cffc4493393f0e2f051d9,
+    type: 3}

@@ -68,20 +68,11 @@ public class LightshiftAuthenticator : NetworkAuthenticator
 
                 if (authKey == msg.authKey && authKey != "")
                 {
-                    var player = new Player
-                    {
-                            //username = message.username,
-                            connection = conn,
-                        connectUserId = msg.userId,
-                        PlayerObject = o,
-                    };
 
-                    player.ConsumeAuthKey();
+                    Server.InitPlayer(conn, msg);
 
-                    Server.AddPlayer(player);
-
-                        // create and send msg to client so it knows to proceed
-                        AuthResponseMessage authResponseMessage = new AuthResponseMessage
+                    // create and send msg to client so it knows to proceed
+                    AuthResponseMessage authResponseMessage = new AuthResponseMessage
                     {
                         code = 100,
                         message = "Success"
@@ -89,24 +80,24 @@ public class LightshiftAuthenticator : NetworkAuthenticator
 
                     conn.Send(authResponseMessage);
 
-                        // Invoke the event to complete a successful authentication
-                        OnServerAuthenticated.Invoke(conn);
+                    // Invoke the event to complete a successful authentication
+                    OnServerAuthenticated.Invoke(conn);
                 }
             }
             else
             {
 
-                    // create and send msg to client so it knows to disconnect
-                    AuthResponseMessage authResponseMessage = new AuthResponseMessage
+                // create and send msg to client so it knows to disconnect
+                AuthResponseMessage authResponseMessage = new AuthResponseMessage
                 {
                     code = 200,
                     message = "Invalid Credentials"
                 };
                 conn.Send(authResponseMessage);
-                    // must set NetworkConnection isAuthenticated = false
-                    conn.isAuthenticated = false;
-                    // disconnect the client after 1 second so that response message gets delivered
-                    StartCoroutine(DelayedDisconnect(conn, 1));
+                // must set NetworkConnection isAuthenticated = false
+                conn.isAuthenticated = false;
+                // disconnect the client after 1 second so that response message gets delivered
+                StartCoroutine(DelayedDisconnect(conn, 1));
             }
         });
     }

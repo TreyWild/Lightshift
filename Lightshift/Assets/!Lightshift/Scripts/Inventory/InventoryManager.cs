@@ -8,6 +8,16 @@ using System;
 public class InventoryManager : NetworkBehaviour
 {
     private Player _player;
+    private Player player 
+    {
+        get 
+        {
+            if (_player == null)
+                _player = Server.GetPlayer(connectionToClient);
+
+            return _player;
+        }
+    }
 
     [SerializeField] private Inventory _shipInventory;
     [SerializeField] private Inventory _storageInventory;
@@ -18,11 +28,6 @@ public class InventoryManager : NetworkBehaviour
 
     private InventorySlot _heldSlot;
     private bool _holdingItem;
-
-    public override void OnStartServer()
-    {
-        _player = Server.GetPlayer(connectionToClient);
-    }
 
     public override void OnStartClient()
     {
@@ -60,9 +65,9 @@ public class InventoryManager : NetworkBehaviour
         bool itemSlotEmpty = (itemSlot.item == null);
 
         // Prevent Cheating extra slots
-        if (inventoryType == InventoryType.Cargo && slot > _player.InventoryMaxCargoCapacity)
+        if (inventoryType == InventoryType.Cargo && slot > player.InventoryMaxCargoCapacity)
             return;
-        else if (inventoryType == InventoryType.Storage && slot > _player.InventoryMaxStorageCapacity)
+        else if (inventoryType == InventoryType.Storage && slot > player.InventoryMaxStorageCapacity)
             return;
         else if (slot < 0)
             return;
@@ -257,11 +262,10 @@ public class InventoryManager : NetworkBehaviour
         RpcClearHeldItemSlot();
     }
 
-    public event Action<InventorySlot> equipChanged;
     private void UpdateSlot(InventorySlot slot) 
     {
         if (slot.inventory == InventoryType.Ship)
-            equipChanged?.Invoke(slot);
+            player.ship.OnEquipChanged(slot);
 
         RpcUpdateInventorySlot(GetInventorySlotMessage(slot));
     }
@@ -320,7 +324,7 @@ public class InventoryManager : NetworkBehaviour
     [Command]
     private void CmdRequestInventory()
     {
-        RpcBuildInventory(_player.InventoryMaxCargoCapacity, _player.InventoryMaxStorageCapacity);
+        RpcBuildInventory(player.InventoryMaxCargoCapacity, player.InventoryMaxStorageCapacity);
     }
 
     [Command]

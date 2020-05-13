@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class PrefabManager : MonoBehaviour
 {
+    public const int RESPAWN_PREFAB_ID = 0;
+    public const int INVENTORY_PREFAB_ID = 1;
+    public const int PLAYER_SHIP_PREFAB_ID = 1;
+
     public GameObject shieldPrefab;
     public GameObject shipPrefab;
     public GameObject stationPrefab;
