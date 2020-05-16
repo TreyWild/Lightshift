@@ -12,7 +12,7 @@ class AudioObject : MonoBehaviour
 
     private void Awake()
     {
-        _audioSource = gameObject.AddComponent<AudioSource>();
+        _audioSource = gameObject.GetComponent<AudioSource>();
     }
 
 

@@ -31,7 +31,6 @@ public class SettingsMenu : MonoBehaviour
             Save();
         });
         Settings.Instance.KeysLocked = true;
-        _fullScreen = Settings.Instance.IsFullscreen;
 
         CreateDivider("Graphics");
         CreateItemPicker("Quality", "gameQuality", new List<PickerItemObject>
@@ -67,7 +66,30 @@ public class SettingsMenu : MonoBehaviour
             },
         });
 
-        CreateItemPicker("Fullscreen Mode", "fullscreenMode", new List<PickerItemObject>
+        CreateItemPicker("Frame Rate", "frameRate", new List<PickerItemObject>
+        {
+            new PickerItemObject
+            {
+                displayValue = "30 FPS",
+                value = "30",
+            },
+            new PickerItemObject
+            {
+                displayValue = "60 FPS",
+                value = "60",
+            },
+            new PickerItemObject
+            {
+                displayValue = "120 FPS",
+                value = "120",
+            },new PickerItemObject
+            {
+                displayValue = "Unlimited",
+                value = Int32.MaxValue.ToString(),
+            },
+        });
+
+        CreateItemPicker("Window Mode", "fullscreenMode", new List<PickerItemObject>
         {
             new PickerItemObject
             {

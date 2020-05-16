@@ -14,7 +14,7 @@ public class Player : NetworkBehaviour
     public PlayerShip ship;
 
     [SyncVar(hook = nameof(OnInitPlayer))]
-    private PlayerData data;
+    public PlayerData data;
 
     private void OnInitPlayer(PlayerData oldData, PlayerData newData)
     {  
@@ -29,6 +29,7 @@ public class Player : NetworkBehaviour
             userId = connectUserId,
         };
     }
+
     private void OnDestroy()
     {
         PlayerManager.Instance.RemovePlayer(data);
@@ -51,7 +52,8 @@ public class Player : NetworkBehaviour
 
     public void ConsumeAuthKey() 
     {
-        PlayerObject.Remove("authKey");
+        if (PlayerObject.Contains("authKey"))
+            PlayerObject.Remove("authKey");
         PlayerObject.Save();
     }
 

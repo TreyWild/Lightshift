@@ -1,9 +1,6 @@
-﻿using Mirror;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 
@@ -11,6 +8,15 @@ public class EntityManager : MonoBehaviour
 {
     private static EntityManager Instance;
     private List<Entity> _entities = new List<Entity>();
+    public static int EntityCount 
+    {
+        get 
+        {
+            if (Instance == null || Instance._entities == null)
+                return 0;
+            else return Instance._entities.Count;
+        }
+    }
     private void Awake()
     {
         if (Instance != null)
@@ -41,6 +47,8 @@ public class EntityManager : MonoBehaviour
     {
         return Instance._entities.FirstOrDefault(e => e.Id == id);
     }
+
+    public static List<Entity> GetAllEntities() => Instance._entities;
 
     public void OnLevelWasLoaded(int level)
     {

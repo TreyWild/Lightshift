@@ -39,6 +39,11 @@ public class ChatBox : MonoBehaviour
             ChatBoxTextbox.verticalScrollbar.value = 1;
     }
 
+    private void OnEnable()
+    {
+        ChatBoxTextbox.verticalScrollbar.value = 1;
+    }
+
     void Update()
     {
 

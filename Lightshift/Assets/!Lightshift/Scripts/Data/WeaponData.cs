@@ -25,4 +25,6 @@ public struct BulletData
     public float damage;
     public int hitCount;
     public float range;
+    public bool tracksTarget;
+    public float agility;
 };

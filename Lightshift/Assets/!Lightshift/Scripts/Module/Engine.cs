@@ -23,8 +23,8 @@ public class Engine : NetworkBehaviour
     private PlayerController _input;
     private void Awake()
     {
-        _kinematic = GetComponent<Kinematic>();
         _thruster = Instantiate(PrefabManager.Instance.enginePrefab, transform).GetComponent<Thruster>();
+        _kinematic = GetComponent<Kinematic>();
         _input = GetComponent<PlayerController>();
     }
 
@@ -41,7 +41,7 @@ public class Engine : NetworkBehaviour
                 _thruster.StartThruster(overDrive);
             else _thruster.StopThruster();
 
-        if (isLocalPlayer)
+        if (hasAuthority)
         {
             float engineStr = acceleration * Time.fixedDeltaTime;
             if (overDrive)

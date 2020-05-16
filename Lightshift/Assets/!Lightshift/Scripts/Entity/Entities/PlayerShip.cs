@@ -42,39 +42,74 @@ public class PlayerShip : Entity
         _generator = GetComponent<Generator>();
         _equips.Callback += OnEquipsChanged;
         _weaponSystem = GetComponent<WeaponSystem>();
+
+        Debug.LogError(_heart.healthRegen);
     }
 
     private void Start()
     {
         base.Start();
 
-        if (isServer || isLocalPlayer)
+        if (isServer || hasAuthority)
             CameraFollow.Instance.SetTarget(gameObject.transform);
     }
     public override void OnStartServer()
     {
+        base.OnStartServer();
+
         player = Server.GetPlayer(connectionToClient);
-        player.ship = this;
+
+        player.InventoryManager.onEquipChanged += OnEquipChanged;
 
         if (player != null)
             SetDisplayName(displayName: player.Username);
         else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
-
-        UpdateStarship(player.GetStarship().key);
 
         _playerData = new PlayerData
         {
             userId = player.connectUserId,
             username = player.Username,
         };
+
+        UpdateStarship(player.GetStarship().key);
+
+        LoadEquips();
     }
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        LoadEquips();
+    }
+    private void LoadEquips() 
+    {
+        if (isServer)
+        {
+            _equips.Clear();
+            var equips = player.InventoryManager.GetAllEquips();
+            foreach (var equip in equips)
+                _equips.Add(equip);
+        }
+        else 
+        {
+            for (int i = 0; i < _equips.Count; i++)
+            {
+                OnEquipsChanged(default, i, null, _equips[i]);
+            }
+        }
+    }
     private void OnStarshipChanged(string oldValue, string newValue)
     {
         UpdateStarship(newValue);
     }
     private void UpdateStarship(string key)
     {
+        if (isServer)
+        {
+            _starshipDataKey = key;
+        }
+
         var starship = ItemManager.GetStarship(key);
         _hull.SetImage(starship.Sprite, starship.color);
         _wing.SetImage(null, Color.white);
@@ -82,16 +117,6 @@ public class PlayerShip : Entity
         _starshipData = starship.data;
 
         UpdateShipStats(true);
-
-        if (isServer)
-        {
-            _equips.Clear();
-            _starshipDataKey = key;
-
-            var equips = player.InventoryManager.GetAllEquips();
-            foreach (var equip in equips)
-                _equips.Add(equip);
-        }
     }
 
     public void OnEquipChanged(InventorySlot slot)
@@ -115,31 +140,39 @@ public class PlayerShip : Entity
 
     private void OnEquipsChanged(SyncList<Equip>.Operation op, int itemIndex, Equip oldItem, Equip newItem)
     {
+        Debug.LogError($"{oldItem?.itemKey} {newItem?.itemKey}");
         /* REMOVE ITEM */
         if (oldItem != null)
         {
             _starshipData -= oldItem.data;
-
+            Debug.Log(oldItem.data.ToString());
             var item = ItemManager.GetItem(oldItem.itemKey);
             switch (item.type)
             {
                 case ItemType.Engine:
-                    _engine.SetColor(Color.white);
+                    //_engine.SetColor(Color.white);
+                    Debug.Log($"Engine Removed: {item.name}");
                     break;
                 case ItemType.Generator:
+                    Debug.Log($"Generator Removed: {item.name}");
                     break;
                 case ItemType.Wing:
                     _wing.SetImage(null, Color.white);
+                    Debug.Log($"Wing Removed: {item.name}");
                     break;
                 case ItemType.Weapon:
                     _weaponSystem.RemoveWeapon(oldItem.slot);
+                    Debug.Log($"Weapon Removed: {item.name}");
                     break;
                 case ItemType.Shield:
+                    Debug.Log($"Shield Removed: {item.name}");
                     break;
                 case ItemType.LightLance:
                     _lightLance.SetColor(default);
-                    break;
+                    Debug.Log($"Lightlance Removed: {item.name}");
+                    break; 
                 case ItemType.MiningDrill:
+                    Debug.Log($"Mining Drill Removed: {item.name}");
                     break;
             }
         }
@@ -153,28 +186,38 @@ public class PlayerShip : Entity
             _starshipData += newItem.data;
 
             var item = ItemManager.GetItem(newItem.itemKey);
+
+            Debug.Log(newItem.data.ToString());
             switch (item.type)
             {
                 case ItemType.Engine:
                     _engine.SetColor(item.color);
+                    Debug.Log($"Engine Added: {item.name}");
                     break;
                 case ItemType.Generator:
+                    Debug.Log($"Generator Added: {item.name}");
                     break;
                 case ItemType.Wing:
                     _wing.SetImage(item.Sprite, item.color);
+                    Debug.Log($"Wing Added: {item.name}");
                     break;
                 case ItemType.Weapon:
                     _weaponSystem.AddWeapon(item as Weapon, newItem.slot);
+                    Debug.Log($"Weapon Added: {item.name}");
                     break;
                 case ItemType.Shield:
+                    Debug.Log($"Shield Added: {item.name}");
                     break;
                 case ItemType.LightLance:
                     _lightLance.SetColor(item.color);
+                    Debug.Log($"LightLance Added: {item.name}");
                     break;
                 case ItemType.MiningDrill:
+                    Debug.Log($"Mining Drill Removed: {item.name}");
                     break;
             }
         }
+
         UpdateShipStats();
     }
 
@@ -247,6 +290,13 @@ public class PlayerShip : Entity
 
         if (isServer)
             Server.GetPlayer(connectionToClient).lastSafePosition = entity.transform.position;
+    }
+
+    private void OnDestroy()
+    {
+        _equips.Callback -= OnEquipsChanged;
+        
+        base.OnDestroy();
     }
 }
 

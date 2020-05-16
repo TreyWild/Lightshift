@@ -19,9 +19,10 @@ public class Entity : NetworkBehaviour
     [SyncVar]
     public string teamId;
 
+    public Sprite mapIcon;
+
     public SmoothSyncMirror smoothSync;
     public Rigidbody2D rigidBody;
-    public ModuleData shipData;
     public Entity targetNeutral;
     public Entity targetEntity;
 
@@ -73,14 +74,14 @@ public class Entity : NetworkBehaviour
         //ClearDamageObjects();
         IsInSafezone = true;
 
-        if (isLocalPlayer)
+        if (hasAuthority)
             GameUIManager.Instance.ShowScreenText("Entering Safezone, Weapons Disabled");
     }
     public void OnLeaveSafezone(Entity entity)
     {
         IsInSafezone = false;
         //weaponSystem.WeaponSystemDisabled = false;
-        if (isLocalPlayer)
+        if (hasAuthority)
             GameUIManager.Instance.ShowScreenText("Leaving Safezone, Weapons Active");
     }
     #endregion
@@ -92,10 +93,8 @@ public class Entity : NetworkBehaviour
     {
         _ui.SetName(displayName);
 
-        if (isLocalPlayer)
-            return;
-
-        this.displayName = displayName;
+        if (isServer)
+            this.displayName = displayName;
     }
 
     //#region Collision

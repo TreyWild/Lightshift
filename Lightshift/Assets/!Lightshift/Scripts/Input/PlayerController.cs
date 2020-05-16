@@ -27,22 +27,22 @@ public class PlayerController : NetworkBehaviour
 
     private void Update()
     {
-        if (!isLocalPlayer || Settings.Instance.KeysLocked)
+        if (!hasAuthority || Settings.Instance.KeysLocked)
             return;
 
-        if (Input.GetKey(Settings.Instance.Weapon1))
+        if (Input.GetKeyDown(Settings.Instance.Weapon1))
             if (WeaponSlot != 0)
                 CmdUpdateWeaponSlot(0);
-        if (Input.GetKey(Settings.Instance.Weapon2))
+        if (Input.GetKeyDown(Settings.Instance.Weapon2))
             if (WeaponSlot != 1)
                 CmdUpdateWeaponSlot(1);
-        if (Input.GetKey(Settings.Instance.Weapon3))
+        if (Input.GetKeyDown(Settings.Instance.Weapon3))
             if (WeaponSlot != 2)
                 CmdUpdateWeaponSlot(2);
-        if (Input.GetKey(Settings.Instance.Weapon4))
+        if (Input.GetKeyDown(Settings.Instance.Weapon4))
             if (WeaponSlot != 3)
                 CmdUpdateWeaponSlot(3);
-        if (Input.GetKey(Settings.Instance.Weapon5))
+        if (Input.GetKeyDown(Settings.Instance.Weapon5))
             if (WeaponSlot != 4)
                 CmdUpdateWeaponSlot(4);
 
@@ -52,27 +52,15 @@ public class PlayerController : NetworkBehaviour
             CmdUpdateDown(down);
             Down = down;
         }
-
-        var up = Input.GetKey(Settings.Instance.UpKey);
-        if (up != Up)
+        else
         {
-            CmdUpdateUp(up);
-            Up = up;
-        }
 
-
-        var left = Input.GetKey(Settings.Instance.LeftKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == -1;
-        if (left != Left)
-        {
-            CmdUpdateLeft(left);
-            Left = left;
-        }
-
-        var right = Input.GetKey(Settings.Instance.RightKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == 1;
-        if (right != Right)
-        {
-            CmdUpdateRight(right);
-            Right = right;
+            var up = Input.GetKey(Settings.Instance.UpKey);
+            if (up != Up)
+            {
+                CmdUpdateUp(up);
+                Up = up;
+            }
         }
 
         if ((Settings.Instance.UseMouseAim && GetMouseAimInput() == 0) && (Left || Right))
@@ -82,6 +70,26 @@ public class PlayerController : NetworkBehaviour
             CmdUpdateRight(false);
             CmdUpdateLeft(false);
         }
+        else
+        {
+
+            var left = Input.GetKey(Settings.Instance.LeftKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == -1;
+            if (left != Left)
+            {
+                CmdUpdateLeft(left);
+                Left = left;
+            }
+            else
+            {
+                var right = Input.GetKey(Settings.Instance.RightKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == 1;
+                if (right != Right)
+                {
+                    CmdUpdateRight(right);
+                    Right = right;
+                }
+            }
+        }
+
 
 
         var overDrive = Input.GetKey(Settings.Instance.OverdriveKey);

@@ -137,8 +137,8 @@ public class GameUIManager : MonoBehaviour
         if (_weaponMenu != null)
         _weaponMenu?.gameObject.SetActive(active);
 
-        if (_chatBox != null)
-            _chatBox.gameObject.SetActive(active);
+        //if (_chatBox != null)
+        //    _chatBox.gameObject.SetActive(active);
 
         if (_weaponCreatorMenu != null)
             _weaponCreatorMenu.SetActive(active);
@@ -153,7 +153,7 @@ public class GameUIManager : MonoBehaviour
             _shipListMenu.SetActive(active);
 
         if (_inventoryUI != null)
-            ToggleInventoryUI(active);
+            _inventoryUI.gameObject.SetActive(false);
     }
 
     //public void ToggleWeaponMenu(WeaponSystem weaponSystem)

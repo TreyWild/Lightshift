@@ -69,8 +69,6 @@ public class LightshiftAuthenticator : NetworkAuthenticator
                 if (authKey == msg.authKey && authKey != "")
                 {
 
-                    Server.InitPlayer(conn, msg);
-
                     // create and send msg to client so it knows to proceed
                     AuthResponseMessage authResponseMessage = new AuthResponseMessage
                     {
@@ -82,6 +80,8 @@ public class LightshiftAuthenticator : NetworkAuthenticator
 
                     // Invoke the event to complete a successful authentication
                     OnServerAuthenticated.Invoke(conn);
+
+                    Server.InitPlayer(conn, msg, o);
                 }
             }
             else

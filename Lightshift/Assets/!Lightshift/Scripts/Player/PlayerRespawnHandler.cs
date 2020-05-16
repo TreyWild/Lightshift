@@ -77,11 +77,13 @@ public class PlayerRespawnHandler : NetworkBehaviour
         {
             var player = Server.GetPlayer(connectionToClient);
 
-            var ship = Instantiate(NetworkManager.singleton.playerPrefab, player.lastSafePosition, transform.rotation);
-
             TargetRpcSpawn();
 
+            var ship = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.PLAYER_SHIP_PREFAB_ID], player.lastSafePosition, transform.rotation);
+
             NetworkServer.Spawn(ship, connectionToClient);
+
+            player.ship = ship.GetComponent<PlayerShip>();
 
             NetworkServer.Destroy(gameObject);
         }

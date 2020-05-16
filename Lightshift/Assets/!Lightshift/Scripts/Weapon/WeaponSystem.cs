@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 public class WeaponSystem : MonoBehaviour
 {
-    public Weapon[] weapons = new Weapon[5];
+    public WeaponObject[] weapons = new WeaponObject[5];
 
-    public Weapon activeWeapon;
+    public WeaponObject activeWeapon;
     public int activeWeaponSlot;
     private Kinematic _kinematic;
     private Entity _entity;
@@ -17,16 +18,14 @@ public class WeaponSystem : MonoBehaviour
     }
     public void AddWeapon(Weapon weapon, int slot) 
     {
-        Debug.LogError("Weapon Added");
         if (slot < weapons.Length)
-            weapons[slot] = weapon;
+            weapons[slot] = new WeaponObject { item = weapon};
         else
-            weapons = weapons.Append(weapon);
+            weapons = weapons.Append(new WeaponObject { item = weapon });
     }
 
     public void RemoveWeapon(int slot)
     {
-        Debug.LogError("Weapon Removed");
         if (weapons[slot] != null)
             weapons[slot] = null;
     }
@@ -36,7 +35,9 @@ public class WeaponSystem : MonoBehaviour
         if (activeWeapon == null)
             return;
 
-        activeWeapon.timeSinceLastShot += Time.fixedDeltaTime;
+        for (int i = 0; i < weapons.Length; i++)
+            if (weapons[i] != null)
+                weapons[i].timeSinceLastShot += Time.fixedDeltaTime;
     }
 
     public void TryFireWeapon(int weapon) 
@@ -44,12 +45,13 @@ public class WeaponSystem : MonoBehaviour
         activeWeaponSlot = weapon;
         if (activeWeapon != weapons[weapon])
             activeWeapon = weapons[weapon];
+        
 
         if (_entity.IsInSafezone)
             return;
 
-        if (activeWeapon != null &&  activeWeapon.timeSinceLastShot > activeWeapon.weaponData.refire)
-            FireWeapon(activeWeapon);
+        if (activeWeapon != null && activeWeapon.item != null &&  activeWeapon.timeSinceLastShot > activeWeapon.item.weaponData.refire)
+            FireWeapon(activeWeapon.item);
     }
 
     private void FireWeapon(Weapon weapon)
@@ -85,7 +87,7 @@ public class WeaponSystem : MonoBehaviour
             if (weapon.weaponData.scale != Vector2.zero)
                 bullet.transform.localScale = weapon.weaponData.scale;
 
-            bullet.entityId = _entity.Id;
+            bullet.entity = _entity;
 
             bullet.weapon = weapon;
 

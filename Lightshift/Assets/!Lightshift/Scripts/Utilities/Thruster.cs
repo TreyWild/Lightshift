@@ -27,6 +27,7 @@ public class Thruster : MonoBehaviour
     {
         _particleSystem.GetComponent<Renderer>().sortingOrder = SortingOrders.ENGINE;
         _overDriveParticles.GetComponent<Renderer>().sortingOrder = SortingOrders.OVERDRIVE_ENGINE;
+        _cacheLight = transform.GetComponentInChildren<Light>().GetComponent<Light>();
     }
 
     private void Start()
@@ -37,8 +38,6 @@ public class Thruster : MonoBehaviour
         _audioSource.volume = Settings.Instance.soundEffectVolume;
         _audioSource.mute = true;
         _audioSource.Play();
-
-        _cacheLight = transform.GetComponentInChildren<Light>().GetComponent<Light>();
     }
 
     public void StartThruster(bool overDrive)

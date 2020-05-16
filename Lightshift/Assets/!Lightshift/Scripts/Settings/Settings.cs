@@ -43,12 +43,13 @@ namespace Lightshift
         public bool ShowTargetMarker = false;
         public float soundEffectVolume = .5f;
         public float musicVolume = .5f;
-        public bool IsFullscreen = false;
+        //public bool IsFullscreen = false;
         public bool ShowSkybox = true;
         public bool ShowBackgroundElements;
         public bool ShowDebugStats;
         public FullScreenMode fullScreenMode;
         public Vector2 resolution;
+        public int MaxFrameRate = 60;
         private void Awake()
         {
             if (Instance != null)
@@ -156,12 +157,8 @@ namespace Lightshift
 
         public void RefreshScreen() 
         {
-            var oldFs = IsFullscreen;
             var oldRes = resolution;
             var oldFsM = fullScreenMode;
-
-            if (oldFs != IsFullscreen)
-                IsFullscreen = bool.Parse(PlayerPrefs.GetString("isFullscreen", "True"));
 
             for (int i = 0; i < QualitySettings.names.Length; i++)
             {
@@ -175,9 +172,12 @@ namespace Lightshift
 
             }
 
-            fullScreenMode = (FullScreenMode)Enum.Parse(typeof(FullScreenMode), PlayerPrefs.GetString("fullscreenMode", "ExclusiveFullScreen"));
             if (oldFsM != fullScreenMode)
+            {
                 Screen.fullScreenMode = fullScreenMode;
+            }
+
+            MaxFrameRate = int.Parse(PlayerPrefs.GetString("frameRate", "60"));
 
             string[] split = PlayerPrefs.GetString("gameResulotion", $"{1280}:{720}").Split(':');
             int width = int.Parse(split[0]);
@@ -186,8 +186,16 @@ namespace Lightshift
             resolution = new Vector2(width, height);
 
             if (oldRes != resolution)
+            {
                 if (!Application.isEditor)
-                    Screen.SetResolution((int)resolution.x, (int)resolution.y, IsFullscreen);
+                    Screen.SetResolution((int)resolution.x, (int)resolution.y, fullScreenMode, MaxFrameRate);
+            }
+            else 
+            {
+                if (!Application.isEditor)
+                    Screen.SetResolution((int)oldRes.x, (int)oldRes.y, fullScreenMode, MaxFrameRate);
+            }
+                
         }
 
         public void RefreshBackgrounds() 

@@ -12,6 +12,8 @@ public class Server : MonoBehaviour
 {
     public static DatabaseConnection Database;
     public static Server Instance { get; set; }
+
+    private static List<Player> _players = new List<Player>();
     public void Awake()
     {
         if (Instance != null)
@@ -46,27 +48,39 @@ public class Server : MonoBehaviour
     }
     public static void RemovePlayer(Player player)
     {
+        if (_players.Contains(player))
+            _players.Remove(player);
+
         if (player.connection != null)
             NetworkServer.DestroyPlayerForConnection(player.connection);
     }
 
     public static Player GetPlayer(NetworkConnection connection)
     {
-        var networkIdentity =  connection.clientOwnedObjects.FirstOrDefault(o => o.GetType() == typeof(Player));
-        var obj = networkIdentity.gameObject;
-        var player = obj.GetComponent<Player>();
-        return player;
+        return _players.FirstOrDefault(p => p.connection == connection);
     }
-    public static void InitPlayer(NetworkConnection connection, AuthRequestMessage msg) 
+
+    private static void AddPlayer(Player player) 
     {
-        var player = GetPlayer(connection);
+        if (!_players.Contains(player))
+            _players.Add(player);
+    }
+    public static void InitPlayer(NetworkConnection connection, AuthRequestMessage msg, DatabaseObject playerObject)
+    {
+        //Create Player
+        var player = Instantiate(NetworkManager.singleton.playerPrefab).GetComponent<Player>();
 
+        // Init Player
+        player.connection = connection;
         player.connectUserId = msg.userId;
-
+        player.PlayerObject = playerObject;
         player.ConsumeAuthKey();
-
         player.InitPlayer();
 
+        AddPlayer(player);
+
+        NetworkServer.AddPlayerForConnection(connection, player.gameObject);
+        
         // Create Inventory
         var inventory = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.INVENTORY_PREFAB_ID]);
         player.InventoryManager = inventory.GetComponent<InventoryManager>();
@@ -74,7 +88,7 @@ public class Server : MonoBehaviour
 
         // Create Ship
         var ship = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.PLAYER_SHIP_PREFAB_ID]);
-        player.ship = inventory.GetComponent<PlayerShip>();
+        player.ship = ship.GetComponent<PlayerShip>();
         NetworkServer.Spawn(ship, player.connection);
     }
 

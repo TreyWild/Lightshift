@@ -18,7 +18,7 @@ public class DamageableObject : NetworkBehaviour
 
     public bool HitObject(Projectile projectile)
     {
-        if (projectile.entityId == _entity.Id || _entity.IsInSafezone)
+        if (projectile.entity.Id == _entity.Id || _entity.IsInSafezone)
             return false;
 
         // TO DO : Show particle effect
@@ -28,7 +28,7 @@ public class DamageableObject : NetworkBehaviour
 
             if (isDead)
             {
-                var attacker = EntityManager.GetEntity(projectile.entityId);
+                var attacker = EntityManager.GetEntity(projectile.entity.Id);
 
                 KillEntity($"{_entity.displayName} was killed by {attacker.displayName}!", attacker);
             }
@@ -69,7 +69,7 @@ public class DamageableObject : NetworkBehaviour
                 script.Initialize(respawnTime: 5.3f, attacker.displayName);
             }
             
-            NetworkServer.Destroy(_entity.gameObject);
+            NetworkServer.Destroy(gameObject);
 
             // TO DO : HANDLE DROPS
         }

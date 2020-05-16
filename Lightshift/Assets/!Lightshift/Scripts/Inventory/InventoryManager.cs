@@ -4,20 +4,11 @@ using Mirror;
 using System.Collections.Generic;
 using System.Linq;
 using System;
+using System.Security.Cryptography.X509Certificates;
 
 public class InventoryManager : NetworkBehaviour
 {
-    private Player _player;
-    private Player player 
-    {
-        get 
-        {
-            if (_player == null)
-                _player = Server.GetPlayer(connectionToClient);
-
-            return _player;
-        }
-    }
+    private Player _player => Server.GetPlayer(connectionToClient);
 
     [SerializeField] private Inventory _shipInventory;
     [SerializeField] private Inventory _storageInventory;
@@ -65,9 +56,9 @@ public class InventoryManager : NetworkBehaviour
         bool itemSlotEmpty = (itemSlot.item == null);
 
         // Prevent Cheating extra slots
-        if (inventoryType == InventoryType.Cargo && slot > player.InventoryMaxCargoCapacity)
+        if (inventoryType == InventoryType.Cargo && slot > _player.InventoryMaxCargoCapacity)
             return;
-        else if (inventoryType == InventoryType.Storage && slot > player.InventoryMaxStorageCapacity)
+        else if (inventoryType == InventoryType.Storage && slot > _player.InventoryMaxStorageCapacity)
             return;
         else if (slot < 0)
             return;
@@ -262,10 +253,11 @@ public class InventoryManager : NetworkBehaviour
         RpcClearHeldItemSlot();
     }
 
+    public Action<InventorySlot> onEquipChanged;
     private void UpdateSlot(InventorySlot slot) 
     {
         if (slot.inventory == InventoryType.Ship)
-            player.ship.OnEquipChanged(slot);
+            onEquipChanged?.Invoke(slot);
 
         RpcUpdateInventorySlot(GetInventorySlotMessage(slot));
     }
@@ -324,7 +316,7 @@ public class InventoryManager : NetworkBehaviour
     [Command]
     private void CmdRequestInventory()
     {
-        RpcBuildInventory(player.InventoryMaxCargoCapacity, player.InventoryMaxStorageCapacity);
+        RpcBuildInventory(_player.InventoryMaxCargoCapacity, _player.InventoryMaxStorageCapacity);
     }
 
     [Command]
