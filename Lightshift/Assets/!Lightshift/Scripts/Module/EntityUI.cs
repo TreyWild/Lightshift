@@ -16,7 +16,9 @@ public class EntityUI : NetworkBehaviour
     public override void OnStartClient()
     {
         if (_ui != null && hasAuthority)
-            _ui.gameObject.SetActive(false);
+            Destroy(_ui.gameObject);
+        else if (_ui == null)
+            _ui = Instantiate(PrefabManager.Instance.entityUIPrefab, transform).GetComponent<EntityUIControl>();
     }
 
     public void SetShield(float min, float max)

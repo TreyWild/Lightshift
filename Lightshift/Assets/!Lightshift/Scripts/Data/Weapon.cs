@@ -9,6 +9,8 @@ public class Weapon : Item
     public AudioClip ShootSound;
     public AudioClip HitSound;
 
+    public Color trailColor = Color.white;
+
     public WeaponData weaponData;
 
     [HideInInspector]

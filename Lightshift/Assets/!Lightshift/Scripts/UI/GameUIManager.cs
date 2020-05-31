@@ -13,28 +13,16 @@ public class GameUIManager : MonoBehaviour
 
     public static GameUIManager Instance;
 
-    [SerializeField] GameObject _settingsMenuPrefab;
-    [SerializeField] GameObject _weaponMenuPrefab;
-    [SerializeField] Canvas _inventoryCanvas;
     [SerializeField] GameObject _announceTextPrefab;
     [SerializeField] GameObject _lowerTextPrefab;
     [SerializeField] Canvas _gameCanvas;
     [SerializeField] GameObject _chatBoxPrefab;
     [SerializeField] GameObject _shipInterfacePrefab;
     [SerializeField] GameObject _playerListPrefab;
-    [SerializeField] GameObject _devCreatorMenuPrefab;
-    [SerializeField] GameObject _devListPrefab;
     [SerializeField] GameObject _performanceStatsPrefab;
-
-    private GameObject _settingsMenu { get; set; }
-    private GameObject _weaponMenu { get; set; }
     private GameObject _chatBox { get; set; }
     private GameObject _playerMenu { get; set; }
-    private GameObject _weaponListMenu { get; set; }
     private GameObject _shipListMenu { get; set; }
-    private GameObject _weaponCreatorMenu { get; set; }
-    private GameObject _shipCreatorMenu { get; set; }
-
     private GameObject _performanceStats { get; set; }
 
 
@@ -76,13 +64,6 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-    public void ToggleSettingsMenu()
-    {
-        if (_settingsMenu == null) 
-            _settingsMenu = Instantiate(_settingsMenuPrefab);
-        else Destroy(_settingsMenu);
-    }
-
     public void ShowAnnouncementText(string message) 
     {
         var obj = Instantiate(_announceTextPrefab, _gameCanvas.transform);
@@ -104,18 +85,16 @@ public class GameUIManager : MonoBehaviour
         if (_timeSinceLastStatUpdate > .5f)
         if (_statsText != null) 
         {
-            _statsText.text = $"ping: {(int)((NetworkTime.rtt / 2) * 1000)}, fps: {(int)(1f / Time.unscaledDeltaTime)}";
+            _statsText.text = $"ping: {Game.GetPing()}, fps: {(int)(1f / Time.unscaledDeltaTime)}";
                 _timeSinceLastStatUpdate = 0;
         }
 
-        if (!Settings.Instance.KeysLocked) {
-            if (Input.GetKeyDown(Settings.Instance.SettingsMenuKey))
-                ToggleSettingsMenu();
+        if (!Settings.KeysLocked) {
 
-            if (Input.GetKeyDown(Settings.Instance.InventoryKey))
+            if (Input.GetKeyDown(Settings.InventoryKey))
                 ToggleInventoryUI(true);
 
-            if (Input.GetKeyDown(Settings.Instance.PlayerMenuKey))
+            if (Input.GetKeyDown(Settings.PlayerMenuKey))
                 TogglePlayerMenu();
         }
     }
@@ -123,31 +102,20 @@ public class GameUIManager : MonoBehaviour
     public void HandleRespawnScreen(bool hideAllUI) 
     {
         ToggleAllUI(!hideAllUI);
-        Settings.Instance.KeysLocked = hideAllUI;
+        Settings.KeysLocked = hideAllUI;
     }
 
     public void ToggleAllUI(bool active) 
     {
-        if (_settingsMenu != null)
-            _settingsMenu.SetActive(active);
+
+        if (!active)
+            MainMenu.SetActive(active);
 
         if (ShipInterface != null)
             ShipInterface?.gameObject.SetActive(active);
 
-        if (_weaponMenu != null)
-        _weaponMenu?.gameObject.SetActive(active);
-
         //if (_chatBox != null)
         //    _chatBox.gameObject.SetActive(active);
-
-        if (_weaponCreatorMenu != null)
-            _weaponCreatorMenu.SetActive(active);
-
-        if (_shipCreatorMenu != null)
-            _shipCreatorMenu.SetActive(active);
-
-        if (_weaponListMenu != null)
-            _weaponListMenu.SetActive(active);
 
         if (_shipListMenu != null)
             _shipListMenu.SetActive(active);
@@ -204,7 +172,9 @@ public class GameUIManager : MonoBehaviour
         if (_inventoryUI == null)
             return;
 
+        if (toggle)
+            _inventoryUI?.ShowInventoryHeldItemSlot();
         _inventoryUI?.gameObject.SetActive(toggle);
-        Settings.Instance.KeysLocked = toggle;
+        Settings.KeysLocked = toggle;
     }
 }

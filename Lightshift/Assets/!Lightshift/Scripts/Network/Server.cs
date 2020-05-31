@@ -68,7 +68,7 @@ public class Server : MonoBehaviour
     public static void InitPlayer(NetworkConnection connection, AuthRequestMessage msg, DatabaseObject playerObject)
     {
         //Create Player
-        var player = Instantiate(NetworkManager.singleton.playerPrefab).GetComponent<Player>();
+        var player = Instantiate(LightshiftNetworkManager.GetPrefab<Player>()).GetComponent<Player>();
 
         // Init Player
         player.connection = connection;
@@ -82,12 +82,12 @@ public class Server : MonoBehaviour
         NetworkServer.AddPlayerForConnection(connection, player.gameObject);
         
         // Create Inventory
-        var inventory = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.INVENTORY_PREFAB_ID]);
+        var inventory = Instantiate(LightshiftNetworkManager.GetPrefab<InventoryManager>());
         player.InventoryManager = inventory.GetComponent<InventoryManager>();
         NetworkServer.Spawn(inventory, player.connection);
 
         // Create Ship
-        var ship = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.PLAYER_SHIP_PREFAB_ID]);
+        var ship = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerShip>());
         player.ship = ship.GetComponent<PlayerShip>();
         NetworkServer.Spawn(ship, player.connection);
     }

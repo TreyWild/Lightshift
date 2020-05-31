@@ -14,7 +14,8 @@ public class Projectile : MonoBehaviour
     private RaycastHit _raycast;
     private TrailRenderer _trailRenderer;
     private SpriteRenderer _renderer;
-    private CircleCollider2D _collider;
+    private BoxCollider2D _collider;
+    private Transform _target;
     private void Awake()
     {
         _kinematic = gameObject.AddComponent<Kinematic>();
@@ -23,13 +24,14 @@ public class Projectile : MonoBehaviour
         _trailRenderer.Clear();
     }
 
-    public void Initialize(Vector2 velocity, BulletData data, Sprite sprite, Color color) 
+    public void Initialize(Vector2 velocity, BulletData data, Sprite sprite, Color color, Color trailColor) 
     {
-        if (_collider == null)
-            _collider = gameObject.AddComponent<CircleCollider2D>();
+        if (entity != null && entity.targetNeutral != null)
+            _target = entity.targetNeutral.transform;
 
-        _collider.isTrigger = true;
-        //_collider.radius = (transform.localScale.x) / 2;
+        if (_collider == null)
+            _collider = gameObject.AddComponent<BoxCollider2D>();
+
         this.data = data;
         _kinematic.velocity = velocity;
         _remainingHits = data.hitCount;
@@ -37,12 +39,23 @@ public class Projectile : MonoBehaviour
 
         isAlive = true;
 
+        //_kinematic.mass = data.weight;
+
         _renderer.sprite = sprite;
         _renderer.color = color;
+        _renderer.sortingOrder = SortingOrders.BULLET;
+
+        _collider.isTrigger = true;
+        _collider.size = _renderer.sprite.bounds.size;
+        _collider.offset = _renderer.sprite.bounds.center;
+
+        _trailRenderer.sortingOrder = SortingOrders.BULLET_TRAIL;
         _trailRenderer.Clear();
         _trailRenderer.enabled = true;
         _trailRenderer.emitting = true;
-        _trailRenderer.material.color = color;
+        _trailRenderer.material.color = trailColor;
+        _trailRenderer.time = data.trailLength;
+        _trailRenderer.startWidth = data.trailSize;
     }
 
     void FixedUpdate()
@@ -104,7 +117,7 @@ public class Projectile : MonoBehaviour
 
     public int GetTargetAngle()
     {
-        var target = entity.targetEntity;
+        var target = _target;
         if (target == null)
             return 0;
 

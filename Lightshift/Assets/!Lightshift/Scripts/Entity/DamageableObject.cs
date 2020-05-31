@@ -1,10 +1,12 @@
 ﻿using Lightshift;
 using Mirror;
+using System;
 using System.Diagnostics;
 using UnityEngine;
 
 public class DamageableObject : NetworkBehaviour
 {
+
     private Heart _heart;
     private Shield _shield;
     private Entity _entity;
@@ -18,10 +20,14 @@ public class DamageableObject : NetworkBehaviour
 
     public bool HitObject(Projectile projectile)
     {
-        if (projectile.entity.Id == _entity.Id || _entity.IsInSafezone)
+        if (projectile.entity.Id == _entity.Id || _entity.IsInSafezone || !_entity.alive || _entity.teamId == projectile.entity.teamId)
             return false;
 
         // TO DO : Show particle effect
+
+        if (Settings.ShowDamageText)
+            DamageTextHandler.AddDamage(_entity, projectile.data.damage);
+
         if (isServer)
         {
             var isDead = ApplyDamage(projectile.data.damage);
@@ -42,51 +48,38 @@ public class DamageableObject : NetworkBehaviour
     {
         if (isServer)
         {
-            if (_entity.Id != attacker.Id)
-                attacker.connectionToClient.Send(new YouKilledEntityMessage
-                {
-                    username = _entity.displayName
-                });
-
-            _entity.connectionToClient.Send(new YouWereKilledMessage
-            {
-                killerEntityId = attacker.Id,
-                killerName = attacker.displayName
-            });
-
-            Server.SendChatBroadcast(deathReason);
-
-            ShowDeathEffect();
-            RpcKillEntity();
+            //Kill Entity
+            _entity.SetDead();
 
             if (_entity.GetType() == typeof(PlayerShip))
             {
+                if (_entity.Id != attacker.Id && attacker.connectionToClient != null)
+                    attacker.connectionToClient.Send(new YouKilledEntityMessage
+                    {
+                        username = _entity.displayName
+                    });
+
+                _entity.connectionToClient.Send(new YouWereKilledMessage
+                {
+                    killerEntityId = attacker.Id,
+                    killerName = attacker.displayName
+                });
+
+                Server.SendChatBroadcast(deathReason);
+
                 // If player: Create Respawn Handler
-                var respawnHandler = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.RESPAWN_PREFAB_ID]);
+                var respawnHandler = Server.GetPlayer(connectionToClient).RespawnHandler;
+                if (respawnHandler == null)
+                    respawnHandler = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerRespawnHandler>());
+
                 NetworkServer.Spawn(respawnHandler, connectionToClient);
 
                 var script = respawnHandler.GetComponent<PlayerRespawnHandler>();
                 script.Initialize(respawnTime: 5.3f, attacker.displayName);
             }
-            
-            NetworkServer.Destroy(gameObject);
-
             // TO DO : HANDLE DROPS
         }
     }
-
-    [ClientRpc]
-    private void RpcKillEntity()
-    {
-        ShowDeathEffect();
-    }
-
-    private void ShowDeathEffect()
-    {
-        Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
-        SoundManager.PlayExplosion(transform.position);
-    }
-
 
     private bool ApplyDamage(float damage)
     {
@@ -127,9 +120,9 @@ public class DamageableObject : NetworkBehaviour
 
     private void Update()
     {
-        if (!Settings.Instance.KeysLocked)
+        if (!Settings.KeysLocked)
         {
-            if (Input.GetKeyDown(Settings.Instance.SelfDestruct) && hasAuthority)
+            if (Input.GetKeyDown(Settings.SelfDestruct) && hasAuthority)
             {
                 CmdKillEntity();
             }

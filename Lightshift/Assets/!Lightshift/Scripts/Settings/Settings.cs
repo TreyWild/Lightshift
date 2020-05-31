@@ -7,42 +7,40 @@ namespace Lightshift
 {
     public class Settings : MonoBehaviour
     {
-
+        public const int SETTINGS_VERSION = 5;
         public static Settings Instance { get; set; }
 
-        public KeyCode DownKey = KeyCode.S;
-        public KeyCode UpKey = KeyCode.W;
-        public KeyCode LeftKey = KeyCode.A;
-        public KeyCode RightKey = KeyCode.D;
-        public KeyCode FireKey = KeyCode.Mouse0;
-        public KeyCode LightLanceKey = KeyCode.Mouse1;
-        public KeyCode TargetKey = KeyCode.Mouse1;
-        public KeyCode MiningDrillKey = KeyCode.X;
-        public KeyCode OverdriveKey = KeyCode.C;
-        public KeyCode MapKey = KeyCode.M;
-        public KeyCode SettingsMenuKey = KeyCode.H;
-        public KeyCode PlayerMenuKey = KeyCode.P;
-        public KeyCode InventoryKey = KeyCode.Tab;
-        public KeyCode ZoomOutKey = KeyCode.LeftControl;
-        public KeyCode Weapon1 = KeyCode.Alpha1;
-        public KeyCode Weapon2 = KeyCode.Alpha2;
-        public KeyCode Weapon3 = KeyCode.Alpha3;
-        public KeyCode Weapon4 = KeyCode.Alpha4;
-        public KeyCode Weapon5 = KeyCode.Alpha5;
-        public KeyCode RespawnKey = KeyCode.Space;
-        public KeyCode WeaponMenuKey = KeyCode.X;
-        public KeyCode ChatKey = KeyCode.KeypadEnter;
-        public KeyCode ChatKeyAlt = KeyCode.Return;
-        public KeyCode SelfDestruct = KeyCode.R;
-        public KeyCode DeveloperWeaponListKey = KeyCode.K;
-        public KeyCode DeveloperShipListKey = KeyCode.J;
-        public bool KeysLocked;
-        public bool FireWithWeaponHotkeys = false;
-        public bool UseMouseAim = false;
-        public bool AutoTarget = false;
-        public bool ShowTargetMarker = false;
-        public float soundEffectVolume = .5f;
-        public float musicVolume = .5f;
+        public static KeyCode DownKey = KeyCode.DownArrow;
+        public static KeyCode UpKey = KeyCode.UpArrow;
+        public static KeyCode LeftKey = KeyCode.LeftArrow;
+        public static KeyCode RightKey = KeyCode.RightArrow;
+        public static KeyCode FireKey = KeyCode.Space;
+        public static KeyCode LightLanceKey = KeyCode.F;
+        public static KeyCode MiningDrillKey = KeyCode.X;
+        public static KeyCode OverdriveKey = KeyCode.C;
+        public static KeyCode MapKey = KeyCode.M;
+        public static KeyCode MenuKey = KeyCode.Escape;
+        public static KeyCode PlayerMenuKey = KeyCode.P;
+        public static KeyCode InventoryKey = KeyCode.Tab;
+        public static KeyCode ZoomOutKey = KeyCode.LeftControl;
+        public static KeyCode Weapon1 = KeyCode.Alpha1;
+        public static KeyCode Weapon2 = KeyCode.Alpha2;
+        public static KeyCode Weapon3 = KeyCode.Alpha3;
+        public static KeyCode Weapon4 = KeyCode.Alpha4;
+        public static KeyCode Weapon5 = KeyCode.Alpha5;
+        public static KeyCode RespawnKey = KeyCode.Space;
+        public static KeyCode ChatKey = KeyCode.KeypadEnter;
+        public static KeyCode ChatKeyAlt = KeyCode.Return;
+        public static KeyCode SelfDestruct = KeyCode.R;
+        public static KeyCode DeveloperWeaponListKey = KeyCode.K;
+        public static KeyCode DeveloperShipListKey = KeyCode.J;
+        public static bool KeysLocked;
+        public static bool FireWithWeaponHotkeys = true;
+        public static bool UseMouseAim = false;
+        public static bool AutoTarget = false;
+        public static bool ShowTargetMarker = false;
+        public static float soundEffectVolume = .5f;
+        public static float musicVolume = .5f;
         //public bool IsFullscreen = false;
         public bool ShowSkybox = true;
         public bool ShowBackgroundElements;
@@ -50,6 +48,8 @@ namespace Lightshift
         public FullScreenMode fullScreenMode;
         public Vector2 resolution;
         public int MaxFrameRate = 60;
+        public static bool ShowDamageText;
+
         private void Awake()
         {
             if (Instance != null)
@@ -60,37 +60,18 @@ namespace Lightshift
             else Instance = this;
 
             DontDestroyOnLoad(gameObject);
-        }
 
-        void Start()
-        {
-            AddDefaultKey("upKey", KeyCode.UpArrow);
-            AddDefaultKey("downKey", KeyCode.DownArrow);
-            AddDefaultKey("leftKey", KeyCode.LeftArrow);
-            AddDefaultKey("rightKey", KeyCode.RightArrow);
-            //---
-            AddDefaultKey("fireKey", KeyCode.Space);
-            AddDefaultKey("lightLanceKey", KeyCode.F);
-            AddDefaultKey("overdriveKey", KeyCode.C);
-            AddDefaultKey("settingsMenuKey", KeyCode.H);
-            AddDefaultKey("weaponMenuKey", KeyCode.X);
-            AddDefaultKey("mapKey", KeyCode.M);
-            AddDefaultKey("inventoryKey", KeyCode.Tab);
-            AddDefaultKey("targetKey", KeyCode.Mouse1);
-            AddDefaultKey("zoomOutKey", KeyCode.LeftControl);
-            AddDefaultKey("respawnKey", KeyCode.Space);
-            AddDefaultKey("weapon1Key", KeyCode.Alpha1);
-            AddDefaultKey("weapon2Key", KeyCode.Alpha2);
-            AddDefaultKey("weapon3Key", KeyCode.Alpha3);
-            AddDefaultKey("weapon4Key", KeyCode.Alpha4);
-            AddDefaultKey("weapon5Key", KeyCode.Alpha5);
-            AddDefaultKey("selfDestructKey", KeyCode.R);
+            if (PlayerPrefs.GetInt("settingsVersion", 0) != SETTINGS_VERSION)
+            {
+                PlayerPrefs.DeleteAll();
+                PlayerPrefs.SetInt("settingsVersion", SETTINGS_VERSION);
+            }
 
             if (!PlayerPrefs.HasKey("soundEffectVolume"))
-                PlayerPrefs.SetFloat("soundEffectVolume", 50);
+                PlayerPrefs.SetString("soundEffectVolume", "50");
 
             if (!PlayerPrefs.HasKey("musicVolume"))
-                PlayerPrefs.SetFloat("musicVolume", 50);
+                PlayerPrefs.SetString("musicVolume", "50");
 
             if (!PlayerPrefs.HasKey("showSkybox"))
                 PlayerPrefs.SetString("showSkybox", "True");
@@ -101,61 +82,58 @@ namespace Lightshift
             if (!PlayerPrefs.HasKey("showDebugStats"))
                 PlayerPrefs.SetString("showDebugStats", "False");
 
+            if (!PlayerPrefs.HasKey("useWeaponHotKeys"))
+                PlayerPrefs.SetString("useWeaponHotKeys", "False");
+
+            if (PlayerPrefs.HasKey("showDamageText"))
+                PlayerPrefs.SetString("showDamageText", "True");
+
+            PlayerPrefs.Save();
+
             RefreshControls();
             RefreshScreen();
+            RefreshSound();
+            RefreshOptions();
         }
 
-        private void AddDefaultKey(string key, KeyCode keyCode)
+        private KeyCode GetControlValue(string key, KeyCode defaultValue = default)
         {
             if (!PlayerPrefs.HasKey(key))
-                PlayerPrefs.SetString(key, keyCode.ToString());
+                PlayerPrefs.SetString(key, defaultValue.ToString());
+            
+            return (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString(key));
         }
         public void RefreshControls()
         {
-            DownKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("downKey", "DownArrow"));
-            UpKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("upKey", "UpArrow"));
-            LeftKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("leftKey", "LeftArrow"));
-            RightKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("rightKey", "RightArrow"));
-            FireKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("fireKey", "Mouse0"));
-            LightLanceKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("lightLanceKey", "Mouse1"));
-            MiningDrillKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("miningDrillKey", "X"));
-            OverdriveKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("overdriveKey", "C"));
-            MapKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("mapKey", "M"));
-            SettingsMenuKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("settingsMenuKey", SettingsMenuKey.ToString()));
-            WeaponMenuKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weaponMenuKey", WeaponMenuKey.ToString()));
-            PlayerMenuKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("playerMenuKey", PlayerMenuKey.ToString()));
-            InventoryKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("inventoryKey", InventoryKey.ToString()));
-            TargetKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("targetKey", TargetKey.ToString()));
-            soundEffectVolume = float.Parse(PlayerPrefs.GetString("soundEffectVolume", "50")) * .01f;
-            musicVolume = float.Parse(PlayerPrefs.GetString("musicVolume", "30")) * .01f;
-            ZoomOutKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("zoomOutKey", "LeftControl"));
-            RespawnKey = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("respawnKey", "Space"));
-            Weapon1 = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weapon1Key", KeyCode.Alpha1.ToString()));
-            Weapon2 = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weapon2Key", KeyCode.Alpha2.ToString()));
-            Weapon3 = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weapon3Key", KeyCode.Alpha3.ToString()));
-            Weapon4 = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weapon4Key", KeyCode.Alpha4.ToString()));
-            Weapon5 = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("weapon5Key", KeyCode.Alpha5.ToString()));
-            SelfDestruct = (KeyCode)Enum.Parse(typeof(KeyCode), PlayerPrefs.GetString("selfDestructKey", SelfDestruct.ToString()));
-            FireWithWeaponHotkeys = bool.Parse(PlayerPrefs.GetString("useWeaponHotKeys", "False"));
+            DownKey = GetControlValue("downKey", DownKey);
+            UpKey = GetControlValue("upKey", UpKey);
+            LeftKey = GetControlValue("leftKey", LeftKey);
+            RightKey = GetControlValue("rightKey", RightKey);
+            FireKey = GetControlValue("fireKey", FireKey);
+            LightLanceKey = GetControlValue("lightLanceKey", LightLanceKey);
+            MiningDrillKey = GetControlValue("miningDrillKey", MiningDrillKey);
+            OverdriveKey = GetControlValue("overdriveKey", OverdriveKey);
+            MapKey = GetControlValue("mapKey", MapKey);
+            MenuKey = GetControlValue("menuKey", MenuKey);
+            PlayerMenuKey = GetControlValue("playerMenuKey", PlayerMenuKey);
+            InventoryKey = GetControlValue("inventoryKey", InventoryKey);
+            ZoomOutKey = GetControlValue("zoomOutKey", ZoomOutKey);
+            RespawnKey = GetControlValue("respawnKey", RespawnKey);
+            Weapon1 = GetControlValue("weapon1Key", Weapon1);
+            Weapon2 = GetControlValue("weapon2Key", Weapon2);
+            Weapon3 = GetControlValue("weapon3Key", Weapon3);
+            Weapon4 = GetControlValue("weapon4Key", Weapon4);
+            Weapon5 = GetControlValue("weapon5Key", Weapon5);
+            SelfDestruct = GetControlValue("selfDestructKey", SelfDestruct);
+            FireWithWeaponHotkeys = bool.Parse(PlayerPrefs.GetString("useWeaponHotKeys", "True"));
             UseMouseAim = bool.Parse(PlayerPrefs.GetString("useMouseAim", "False"));
             AutoTarget = bool.Parse(PlayerPrefs.GetString("useAutoTarget", "False"));
             ShowTargetMarker = bool.Parse(PlayerPrefs.GetString("useTargetMarker", "True"));
             ShowSkybox = bool.Parse(PlayerPrefs.GetString("showSkybox", "True"));
             ShowBackgroundElements = bool.Parse(PlayerPrefs.GetString("showBackgroundElements", "True"));
-            ShowDebugStats = bool.Parse(PlayerPrefs.GetString("showDebugStats", "False"));
-
-            if (GameUIManager.Instance != null)
-                GameUIManager.Instance.ShowScreenStats(ShowDebugStats);
-
-
-            if (SoundManager.Instance != null)
-            {
-                SoundManager.Instance.UpdateVolume();
-            }
-
         }
 
-        public void RefreshScreen() 
+        public void RefreshScreen()
         {
             var oldRes = resolution;
             var oldFsM = fullScreenMode;
@@ -172,30 +150,32 @@ namespace Lightshift
 
             }
 
-            if (oldFsM != fullScreenMode)
-            {
-                Screen.fullScreenMode = fullScreenMode;
-            }
+            fullScreenMode = (FullScreenMode)Enum.Parse(typeof(FullScreenMode), PlayerPrefs.GetString("screenMode", "Windowed"));
 
+            var oldFrameRate = MaxFrameRate;
             MaxFrameRate = int.Parse(PlayerPrefs.GetString("frameRate", "60"));
 
-            string[] split = PlayerPrefs.GetString("gameResulotion", $"{1280}:{720}").Split(':');
+            string[] split = PlayerPrefs.GetString("resolution", $"{Screen.currentResolution.width}:{Screen.currentResolution.height}").Split(':');
             int width = int.Parse(split[0]);
             int height = int.Parse(split[1]);
 
             resolution = new Vector2(width, height);
+            if (oldRes == resolution)
+            {
+                resolution.x = Screen.currentResolution.width;
+                resolution.y = Screen.currentResolution.height;
+            }
 
-            if (oldRes != resolution)
+            if (oldRes != resolution || oldFsM != fullScreenMode || MaxFrameRate != oldFrameRate) 
             {
-                if (!Application.isEditor)
-                    Screen.SetResolution((int)resolution.x, (int)resolution.y, fullScreenMode, MaxFrameRate);
+                Screen.SetResolution((int)resolution.x, (int)resolution.y, fullScreenMode, MaxFrameRate);
             }
-            else 
-            {
-                if (!Application.isEditor)
-                    Screen.SetResolution((int)oldRes.x, (int)oldRes.y, fullScreenMode, MaxFrameRate);
-            }
-                
+
+
+            var backgrounds = (ShowBackgroundElements) || ShowSkybox;
+            
+            if (backgrounds)
+                RefreshBackgrounds();
         }
 
         public void RefreshBackgrounds() 
@@ -207,12 +187,33 @@ namespace Lightshift
             ParallaxManager.Instance.ShowSkybox(ShowSkybox);
         }
 
+        public void RefreshOptions() 
+        {
+            ShowDamageText = bool.Parse(PlayerPrefs.GetString("showDamageText", "True"));
+            RefreshCameraMode();
+
+            ShowDebugStats = bool.Parse(PlayerPrefs.GetString("showDebugStats", "False"));
+
+            if (GameUIManager.Instance != null)
+                GameUIManager.Instance.ShowScreenStats(ShowDebugStats);
+        }
         public void RefreshCameraMode()
         {
             if (CameraFollow.Instance != null) 
             {
                 var immersive = bool.Parse(PlayerPrefs.GetString("immersiveCamera", "False"));
                 CameraFollow.Instance.SetCameraMode(immersive);
+            }
+        }
+
+        public void RefreshSound() 
+        {
+            soundEffectVolume = float.Parse(PlayerPrefs.GetString("soundEffectVolume", "50")) * .01f;
+            musicVolume = float.Parse(PlayerPrefs.GetString("musicVolume", "30")) * .01f;
+
+            if (SoundManager.Instance != null)
+            {
+                SoundManager.Instance.UpdateVolume();
             }
         }
     }

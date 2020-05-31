@@ -208,8 +208,9 @@ public class SU_AsteroidFieldEditor : Editor {
 		EditorGUILayout.LabelField("Asteroid Mesh Quality", EditorStyles.boldLabel);
 		EditorGUILayout.PropertyField( polyCount);
 		EditorGUILayout.PropertyField( polyCountCollider);
-		if (polyCountCollider.enumValueIndex != (int) SU_Asteroid.PolyCount.LOW) {
-			EditorGUILayout.LabelField("Warning! Using detailed collider meshes may heavily impact performance or raise errors if the mesh is too detailed.", EditorStyles.wordWrappedMiniLabel);	
+		if (polyCountCollider.enumValueIndex != (int)SU_Asteroid.PolyCount.LOW)
+		{
+			EditorGUILayout.LabelField("Warning! Using detailed collider meshes may heavily impact performance or raise errors if the mesh is too detailed.", EditorStyles.wordWrappedMiniLabel);
 		}
 		
 		// Asteroid Prefab (array of asteroid shapes the asteroid field should randomly consist of) 

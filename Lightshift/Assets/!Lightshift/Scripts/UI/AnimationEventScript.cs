@@ -8,4 +8,9 @@ public class AnimationEventScript : MonoBehaviour
     {
         Destroy(gameObject);
     }
+
+    public void DisableGameobject() 
+    {
+        gameObject.SetActive(false);
+    }
 }

@@ -168,7 +168,15 @@ public class InventoryUI : MonoBehaviour
     public void Exit()
     {
         gameObject.SetActive(false);
-        Settings.Instance.KeysLocked = false;
+        if (_heldItem != null && _heldItem.gameObject != null)
+            _heldItem.gameObject.SetActive(false);
+        Settings.KeysLocked = false;
+    }
+
+    public void ShowInventoryHeldItemSlot() 
+    {
+        if (_heldItem != null && _heldItem.gameObject != null)
+            _heldItem.gameObject.SetActive(true);
     }
 
     private GameObject _heldItem;
@@ -225,7 +233,7 @@ public class InventoryUI : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(Settings.Instance.InventoryKey))
+        if (Input.GetKeyDown(Settings.InventoryKey))
             Exit();
     }
 }

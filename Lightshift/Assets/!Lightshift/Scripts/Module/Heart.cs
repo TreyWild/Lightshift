@@ -67,6 +67,7 @@ public class Heart : NetworkBehaviour
     {
         if (!isServer)
             return;
+
         SetUIHealthMax(maxHealth, value);
         maxHealth = value;
     }

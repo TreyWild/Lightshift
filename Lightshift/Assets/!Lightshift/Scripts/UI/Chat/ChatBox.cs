@@ -47,11 +47,11 @@ public class ChatBox : MonoBehaviour
     void Update()
     {
 
-        if (Input.GetKeyDown(Settings.Instance.ChatKey) || Input.GetKeyDown(Settings.Instance.ChatKeyAlt))
+        if (Input.GetKeyDown(Settings.ChatKey) || Input.GetKeyDown(Settings.ChatKeyAlt))
         {
             if (ChatInputBox.activeInHierarchy)
             {
-                Settings.Instance.KeysLocked = false;
+                Settings.KeysLocked = false;
 
                 var msg = ChatInput.text;
                 msg.Replace("<", "");
@@ -66,11 +66,11 @@ public class ChatBox : MonoBehaviour
                 }
                 ChatInputBox.SetActive(false);
                 ChatInput.text = "";
-                Settings.Instance.KeysLocked = false;
+                Settings.KeysLocked = false;
             }
             else
             {
-                Settings.Instance.KeysLocked = true;
+                Settings.KeysLocked = true;
                 ChatInputBox.SetActive(true);
                 ChatInput.ActivateInputField();
             }

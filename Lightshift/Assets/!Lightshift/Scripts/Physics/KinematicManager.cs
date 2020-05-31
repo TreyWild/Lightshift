@@ -14,11 +14,13 @@ public class KinematicManager : MonoBehaviour
     {
         if (Instance == null)
             Instance = this;
-        else 
+        else
         {
             Destroy(gameObject);
             return;
         }
+
+        DontDestroyOnLoad(gameObject);
     }
 
     private List<GameObject> _kinematicObjects = new List<GameObject>();

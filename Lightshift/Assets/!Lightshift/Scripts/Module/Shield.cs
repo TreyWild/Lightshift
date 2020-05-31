@@ -17,7 +17,7 @@ public class Shield : NetworkBehaviour
     [SyncVar]
     public float shieldSize;
 
-    private GameObject _visualShield;
+    //private GameObject _visualShield;
     private EntityUI _ui;
     private Entity _entity;
     private void Awake()

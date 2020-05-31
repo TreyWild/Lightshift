@@ -47,4 +47,9 @@ public class Hull : NetworkBehaviour
     {
         _kinematic.mass = newValue;
     }
+
+    public void SetSortingOrder(int i) 
+    {
+        _hull.sortingOrder = i;
+    }
 }

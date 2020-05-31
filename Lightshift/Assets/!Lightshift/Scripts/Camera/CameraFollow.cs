@@ -11,7 +11,6 @@ public class CameraFollow : MonoBehaviour
 
 	public float smoothSpeed = 0.125f;
 	public Vector3 offset;
-	public Vector3 zoomOffset = new Vector3(0,0, -60);
 	private bool _immersive;
 	public void SetCameraMode(bool immersive)
 	{
@@ -42,9 +41,27 @@ public class CameraFollow : MonoBehaviour
 		if (target == null || _immersive)
 			return;
 
+		var zoom = Input.GetAxis("Mouse ScrollWheel") * 10;
+
+
+
+		if (offset.z > -5)
+		{
+			zoom = 0;
+			offset = new Vector3(offset.x, offset.y, -5f);
+		}else if (offset.z < -100)
+		{
+			zoom = 0;
+			offset = new Vector3(offset.x, offset.y, -100f);
+		}else 
+		{
+			offset = new Vector3(offset.x, offset.y, offset.z += zoom);
+		}
+
+
+
 		Vector3 desiredPosition = target.position + offset;
-		if (Input.GetKey(Settings.Instance.ZoomOutKey))
-			desiredPosition = target.position + zoomOffset;
+
 		Vector3 smoothedPosition = Vector3.Lerp(transform.position, desiredPosition, smoothSpeed);
 		transform.position = smoothedPosition;
 

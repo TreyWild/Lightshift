@@ -8,20 +8,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
-public class PlayerShip : Entity
+public class PlayerShip : Ship
 {
     private readonly SyncListEquip _equips = new SyncListEquip();
     private Player player;
-    private LightLance _lightLance;
-    private Engine _engine;
-    private Wing _wing;
-    private Hull _hull;
+
     private PlayerController _input;
-    private Heart _heart;
-    private Shield _shield;
-    private Generator _generator;
-    private ModuleData _starshipData;
-    private WeaponSystem _weaponSystem;
 
     [SyncVar(hook = nameof(InitPlayer))]
     private PlayerData _playerData;
@@ -32,26 +24,9 @@ public class PlayerShip : Entity
     private void Awake()
     {
         base.Awake();
-        _lightLance = GetComponent<LightLance>();
-        _engine = GetComponent<Engine>();
-        _wing = GetComponent<Wing>();
-        _hull = GetComponent<Hull>();
+
         _input = GetComponent<PlayerController>();
-        _shield = GetComponent<Shield>();
-        _heart = GetComponent<Heart>();
-        _generator = GetComponent<Generator>();
         _equips.Callback += OnEquipsChanged;
-        _weaponSystem = GetComponent<WeaponSystem>();
-
-        Debug.LogError(_heart.healthRegen);
-    }
-
-    private void Start()
-    {
-        base.Start();
-
-        if (isServer || hasAuthority)
-            CameraFollow.Instance.SetTarget(gameObject.transform);
     }
     public override void OnStartServer()
     {
@@ -74,6 +49,10 @@ public class PlayerShip : Entity
         UpdateStarship(player.GetStarship().key);
 
         LoadEquips();
+
+        trackingRange = 100;
+
+        teamId = player.connectUserId;
     }
 
     public override void OnStartClient()
@@ -111,12 +90,15 @@ public class PlayerShip : Entity
         }
 
         var starship = ItemManager.GetStarship(key);
-        _hull.SetImage(starship.Sprite, starship.color);
-        _wing.SetImage(null, Color.white);
+        if (starship == null)
+            return;
 
-        _starshipData = starship.data;
+        hull.SetImage(starship.Sprite, starship.color);
+        wing.SetImage(null, Color.white);
 
-        UpdateShipStats(true);
+        stats = starship.data;
+
+        UpdateStats(true);
     }
 
     public void OnEquipChanged(InventorySlot slot)
@@ -144,7 +126,7 @@ public class PlayerShip : Entity
         /* REMOVE ITEM */
         if (oldItem != null)
         {
-            _starshipData -= oldItem.data;
+            stats -= oldItem.data;
             Debug.Log(oldItem.data.ToString());
             var item = ItemManager.GetItem(oldItem.itemKey);
             switch (item.type)
@@ -157,18 +139,18 @@ public class PlayerShip : Entity
                     Debug.Log($"Generator Removed: {item.name}");
                     break;
                 case ItemType.Wing:
-                    _wing.SetImage(null, Color.white);
+                    wing.SetImage(null, Color.white);
                     Debug.Log($"Wing Removed: {item.name}");
                     break;
                 case ItemType.Weapon:
-                    _weaponSystem.RemoveWeapon(oldItem.slot);
+                    weaponSystem.RemoveWeapon(oldItem.slot);
                     Debug.Log($"Weapon Removed: {item.name}");
                     break;
                 case ItemType.Shield:
                     Debug.Log($"Shield Removed: {item.name}");
                     break;
                 case ItemType.LightLance:
-                    _lightLance.SetColor(default);
+                    lightLance.SetColor(default);
                     Debug.Log($"Lightlance Removed: {item.name}");
                     break; 
                 case ItemType.MiningDrill:
@@ -178,12 +160,12 @@ public class PlayerShip : Entity
         }
         else if (newItem != null && newItem.itemKey == null || newItem != null && newItem.itemKey == "")
         {
-            _wing.SetImage(null, Color.white);
+            wing.SetImage(null, Color.white);
         }
         /* ADD ITEM */
         else if (newItem != null)
         {
-            _starshipData += newItem.data;
+            stats += newItem.data;
 
             var item = ItemManager.GetItem(newItem.itemKey);
 
@@ -191,25 +173,25 @@ public class PlayerShip : Entity
             switch (item.type)
             {
                 case ItemType.Engine:
-                    _engine.SetColor(item.color);
+                    engine.SetColor(item.color);
                     Debug.Log($"Engine Added: {item.name}");
                     break;
                 case ItemType.Generator:
                     Debug.Log($"Generator Added: {item.name}");
                     break;
                 case ItemType.Wing:
-                    _wing.SetImage(item.Sprite, item.color);
+                    wing.SetImage(item.Sprite, item.color);
                     Debug.Log($"Wing Added: {item.name}");
                     break;
                 case ItemType.Weapon:
-                    _weaponSystem.AddWeapon(item as Weapon, newItem.slot);
+                    weaponSystem.AddWeapon(item as Weapon, newItem.slot);
                     Debug.Log($"Weapon Added: {item.name}");
                     break;
                 case ItemType.Shield:
                     Debug.Log($"Shield Added: {item.name}");
                     break;
                 case ItemType.LightLance:
-                    _lightLance.SetColor(item.color);
+                    lightLance.SetColor(item.color);
                     Debug.Log($"LightLance Added: {item.name}");
                     break;
                 case ItemType.MiningDrill:
@@ -218,46 +200,14 @@ public class PlayerShip : Entity
             }
         }
 
-        UpdateShipStats();
-    }
-
-    private void UpdateShipStats(bool refill = false)
-    {
-        var stats = _starshipData;
-
-        _engine.maxSpeed = stats.maxSpeed;
-        _engine.acceleration = stats.acceleration;
-        _engine.brakeForce = stats.brakeForce;
-        _engine.overDriveMultiplier = stats.overDriveBoostMultiplier;
-        _engine.overDrivePowerCost = stats.overDrivePowerCost;
-
-        _hull.weight = stats.weight;
-
-        _wing.agility = stats.agility;
-
-        _heart.SetMaxHealth(stats.maxHealth);
-        _heart.healthRegen = stats.healthRegen;
-
-        _shield.SetMaxShield(stats.maxShield);
-        _shield.shieldRegen = stats.shieldRegen;
-
-        _generator.maxPower = stats.maxPower;
-        _generator.powerRegen = stats.powerRegen;
-
-        _lightLance.SetRange(stats.lightLanceRange);
-        _lightLance.pullForce = stats.lightLancePullForce;
-        _lightLance.powerCost = stats.lightLancePowerCost;
-
-        if (refill)
-        {
-            _heart.health = stats.maxHealth;
-            _shield.shield = stats.maxShield;
-            _generator.power = stats.maxPower;
-        }
+        UpdateStats();
     }
 
     private void FixedUpdate()
     {
+        if (!alive)
+            return;
+
         base.FixedUpdate();
 
         //HandlePowerRegen();
@@ -266,15 +216,15 @@ public class PlayerShip : Entity
         //HandleDamageQueue();
         //HandleTargetting();
 
-        _engine.Move(_input.VerticalAxis, _input.OverDrive);
-        if (targetEntity != null && _starshipData.lightLanceRange != 0)
-            _lightLance.HandleLightLance(_input.LightLance, targetEntity.transform);
-        _wing.Turn(_input.HorizontalAxis);
+        engine.Move(_input.VerticalAxis, _input.OverDrive);
+        if (targetEntity != null && stats.lightLanceRange != 0)
+            lightLance.HandleLightLance(_input.LightLance, targetEntity.transform);
+        wing.Turn(_input.HorizontalAxis);
 
         HandleSafeZone();
 
         if (_input.Weapon)
-            _weaponSystem.TryFireWeapon(_input.WeaponSlot);
+            weaponSystem.TryFireWeapon(_input.WeaponSlot);
 
 
     }
@@ -297,6 +247,34 @@ public class PlayerShip : Entity
         _equips.Callback -= OnEquipsChanged;
         
         base.OnDestroy();
+    }
+
+    private bool hasDied = false;
+    public override void OnRespawn()
+    {
+        base.OnRespawn();
+
+        // Enable Children
+
+        _input.Locked = false;
+
+        if (isServer)
+            SetPosition(Server.GetPlayer(connectionToClient).lastSafePosition);
+
+        if (hasAuthority || isServer)
+            CameraFollow.Instance.SetTarget(transform);
+
+        if (hasDied)
+            UpdateStats(true);
+        else hasDied = true;
+
+    }
+
+    public override void OnDeath()
+    {
+        base.OnDeath();
+
+        _input.Locked = true;
     }
 }
 

@@ -14,7 +14,7 @@ public class SoundManager : MonoBehaviour
 
     [SerializeField] private List<AudioClip> _musicClips;
 
-    [SerializeField] private AudioClip _titleScreenMusic;
+    [SerializeField] private AudioClip[] _titleScreenMusic;
 
     private List<AudioObject> _audioObjects = new List<AudioObject>();
 
@@ -68,7 +68,8 @@ public class SoundManager : MonoBehaviour
         if (obj == null)
         {
             var gameObj = Instantiate(audioObjectPrefab);
-            _audioObjects.Add(gameObj.GetComponent<AudioObject>());
+            obj = gameObj.GetComponent<AudioObject>();
+            _audioObjects.Add(obj);
         }
         return obj;
     }
@@ -90,7 +91,7 @@ public class SoundManager : MonoBehaviour
         if (!_musicSource.isPlaying)
         {
             if (SceneManager.GetActiveScene().buildIndex == 0)
-                PlayMusic(_titleScreenMusic);
+                PlayTitleScreenMusic();
             else
                 PlayRandomMusic();
         }
@@ -103,11 +104,11 @@ public class SoundManager : MonoBehaviour
 
     public void UpdateVolume()
     {
-        if (Settings.Instance.soundEffectVolume > 0.05f)
+        if (Settings.soundEffectVolume > 0.05f)
             _musicSource.mute = false;
         else _musicSource.mute = true;
 
-        _musicSource.volume = Settings.Instance.musicVolume;
+        _musicSource.volume = Settings.musicVolume;
 
         Debug.Log(_musicSource.volume);
 
@@ -119,6 +120,11 @@ public class SoundManager : MonoBehaviour
     {
         if (level > 0)
             PlayRandomMusic();
-        else PlayMusic(_titleScreenMusic);
+        else PlayTitleScreenMusic();
+    }
+
+    public void PlayTitleScreenMusic() 
+    {
+        PlayMusic(_titleScreenMusic[UnityEngine.Random.Range(0, _titleScreenMusic.Length)]);
     }
 }

@@ -2,13 +2,15 @@
 using System.Collections;
 using System.Runtime.InteropServices;
 using System.Linq;
+using Mirror;
+using System;
 
-public class WeaponSystem : MonoBehaviour
+public class WeaponSystem : NetworkBehaviour
 {
     public WeaponObject[] weapons = new WeaponObject[5];
 
-    public WeaponObject activeWeapon;
-    public int activeWeaponSlot;
+    public WeaponObject activeWeapon { get; private set; }
+    public int activeWeaponSlot { get; private set; }
     private Kinematic _kinematic;
     private Entity _entity;
     private void Awake()
@@ -36,22 +38,51 @@ public class WeaponSystem : MonoBehaviour
             return;
 
         for (int i = 0; i < weapons.Length; i++)
+        {
             if (weapons[i] != null)
                 weapons[i].timeSinceLastShot += Time.fixedDeltaTime;
+        }
     }
 
     public void TryFireWeapon(int weapon) 
     {
-        activeWeaponSlot = weapon;
         if (activeWeapon != weapons[weapon])
+        {
             activeWeapon = weapons[weapon];
-        
+            if (isServer)
+            {
+                RpcSyncActiveWeapon(activeWeapon.timeSinceLastShot);
+                var oldWeapon = weapons[activeWeaponSlot];
+                if (oldWeapon == null)
+                    return;
+
+                RpcSyncLastWeapon(activeWeaponSlot, oldWeapon.timeSinceLastShot);
+            }
+        }
+
+        activeWeaponSlot = weapon;
 
         if (_entity.IsInSafezone)
             return;
 
         if (activeWeapon != null && activeWeapon.item != null &&  activeWeapon.timeSinceLastShot > activeWeapon.item.weaponData.refire)
             FireWeapon(activeWeapon.item);
+    }
+
+    [ClientRpc]
+    public void RpcSyncLastWeapon(int weaponId, float syncTime) 
+    {
+        var weapon = weapons[weaponId];
+        if (weapon != null)
+            weapon.timeSinceLastShot = syncTime;
+    }
+
+    [ClientRpc]
+    public void RpcSyncActiveWeapon(float syncTime)
+    {
+        var weapon = activeWeapon;
+        if (weapon != null)
+            weapon.timeSinceLastShot = syncTime;
     }
 
     private void FireWeapon(Weapon weapon)
@@ -81,17 +112,19 @@ public class WeaponSystem : MonoBehaviour
 
             Projectile bullet = LSObjectPool.GetUsableProjectile();
 
+            var velocity = new Vector2();
+            if (weapon.weaponData.inheritVelocity)
+               velocity = transform.up * (Mathf.Cos((Mathf.Atan2(_kinematic.velocity.y, _kinematic.velocity.x)) - rotation * Mathf.Deg2Rad) * 0.5f + 0.5f) * _kinematic.velocity.magnitude;
 
-            bullet.transform.eulerAngles = new Vector3(0,0, rotation);
-            bullet.transform.position = gunPoint;
+            bullet.entity = _entity;
+            bullet.weapon = weapon;
+
             if (weapon.weaponData.scale != Vector2.zero)
                 bullet.transform.localScale = weapon.weaponData.scale;
 
-            bullet.entity = _entity;
-
-            bullet.weapon = weapon;
-
-            bullet.Initialize(_kinematic.velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color);
+            bullet.transform.position = gunPoint;
+            bullet.transform.eulerAngles = new Vector3(0, 0, rotation);
+            bullet.Initialize(velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color, weapon.trailColor);
         }
         activeWeapon.timeSinceLastShot = 0;
     }

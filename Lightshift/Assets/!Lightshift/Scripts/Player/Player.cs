@@ -12,6 +12,7 @@ public class Player : NetworkBehaviour
     public DatabaseObject PlayerObject;
     public InventoryManager InventoryManager;
     public PlayerShip ship;
+    public GameObject RespawnHandler;
 
     [SyncVar(hook = nameof(OnInitPlayer))]
     public PlayerData data;
@@ -89,7 +90,7 @@ public class Player : NetworkBehaviour
         set
         {
             PlayerObject.Set("lastSafeZone.x", value.x);
-            PlayerObject.Set("lastSafeZone.z", value.y);
+            PlayerObject.Set("lastSafeZone.y", value.y);
             PlayerObject.Save();
         }
     }

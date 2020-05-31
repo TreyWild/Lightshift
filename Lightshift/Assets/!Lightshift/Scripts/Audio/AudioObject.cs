@@ -35,6 +35,6 @@ class AudioObject : MonoBehaviour
 
     public void UpdateVolume() 
     {
-        _audioSource.volume = Settings.Instance.soundEffectVolume / 2;
+        _audioSource.volume = Settings.soundEffectVolume / 2;
     }
 }

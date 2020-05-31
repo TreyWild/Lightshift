@@ -10,12 +10,24 @@ using UnityEngine.SceneManagement;
 
 public class LightshiftNetworkManager : NetworkManager 
 {
+    public static GameObject GetPrefab<T>() => singleton.spawnPrefabs.FirstOrDefault(o => o.gameObject.HasType<T>());
     public override void OnStartServer()
     {
+        spawnPrefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").ToList();
         gameObject.AddComponent<Server>();
         Debug.Log($"Server Started. Running on {networkAddress}.");
     }
 
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+        var prefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").ToList();
+
+        foreach (var prefab in prefabs)
+        {
+            ClientScene.RegisterPrefab(prefab);
+        }
+    }
     public override void OnServerReady(NetworkConnection conn)
     {
         Debug.Log($"Client with ID [{conn.connectionId}] connected.");

@@ -23,6 +23,15 @@ public class Kinematic : MonoBehaviour
             transform.position += new Vector3(velocity.x, velocity.y, 0) * Time.deltaTime;
 
     }
+
+    //public void Collide(Kinematic other) 
+    //{
+    //    var mass = this.mass + other.mass;
+
+    //    AddForce(other.velocity*mass);
+    //    other.AddForce(velocity*mass);
+    //}
+
     void FixedUpdate()
     {
         if (velocity.sqrMagnitude < 0.000001)

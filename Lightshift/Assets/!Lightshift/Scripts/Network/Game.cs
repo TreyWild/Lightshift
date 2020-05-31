@@ -51,4 +51,9 @@ public class Game : MonoBehaviour
     {
         ChatBox.Instance.AddMessage($"{chatObj.username}: {chatObj.message}");
     }
+
+    public static int GetPing() 
+    {
+        return (int)((NetworkTime.rtt / 2) * 1000);
+    }
 }

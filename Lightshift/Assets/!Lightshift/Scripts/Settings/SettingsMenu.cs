@@ -22,21 +22,35 @@ public class SettingsMenu : MonoBehaviour
 
     [SerializeField] private Button _saveButton;
 
+    public enum SettingsType 
+    {
+        None,
+        Controls,
+        Sound,
+        Graphics,
+        Options
+    }
     private bool _saved = false;
     private bool _fullScreen;
-    void Start()
+
+    private SettingsType _mode;
+    public void Init(SettingsType mode = default)
     {
+        _mode = mode;
+
         _saveButton.onClick.AddListener(delegate
         {
             Save();
         });
-        Settings.Instance.KeysLocked = true;
+        Settings.KeysLocked = true;
 
-        CreateDivider("Graphics");
-        CreateItemPicker("Quality", "gameQuality", new List<PickerItemObject>
+        if (mode == SettingsType.Graphics)
+        {
+            CreateDivider("Graphics");
+            CreateItemPicker("Quality", "gameQuality", new List<PickerItemObject>
         {
             new PickerItemObject
-            { 
+            {
                 displayValue = "Incredible",
                 value = "Fantastic",
             },
@@ -66,7 +80,7 @@ public class SettingsMenu : MonoBehaviour
             },
         });
 
-        CreateItemPicker("Frame Rate", "frameRate", new List<PickerItemObject>
+            CreateItemPicker("Frame Rate", "frameRate", new List<PickerItemObject>
         {
             new PickerItemObject
             {
@@ -89,22 +103,12 @@ public class SettingsMenu : MonoBehaviour
             },
         });
 
-        CreateItemPicker("Window Mode", "fullscreenMode", new List<PickerItemObject>
+            CreateItemPicker("Window Mode", "screenMode", new List<PickerItemObject>
         {
             new PickerItemObject
             {
                 displayValue = "Fullscreen",
-                value = "ExclusiveFullScreen",
-            },
-            new PickerItemObject
-            {
-                displayValue = "Fullscreen Window",
                 value = "FullScreenWindow",
-            },
-            new PickerItemObject
-            {
-                displayValue = "MaximizedWindow",
-                value = "MaximizedWindow",
             },
             new PickerItemObject
             {
@@ -113,27 +117,31 @@ public class SettingsMenu : MonoBehaviour
             }
         });
 
-        var resolutions = Screen.resolutions;
-        var resolutionItems = new List<PickerItemObject>();
-        foreach (var item in resolutions)
-        {
-            resolutionItems.Add(new PickerItemObject
+            var resolutions = Screen.resolutions;
+            var resolutionItems = new List<PickerItemObject>();
+            foreach (var item in resolutions)
             {
-                displayValue = item.ToString(),
-                value = $"{item.width}:{item.height}"
-            });
+                resolutionItems.Add(new PickerItemObject
+                {
+                    displayValue = item.ToString(),
+                    value = $"{item.width}:{item.height}"
+                });
+            }
+
+            CreateItemPicker("Resolution", "resolution", resolutionItems);
+
+            CreateToggleItem("Show Skybox", "showSkybox");
+            CreateToggleItem("Background Objects", "showBackgroundElements");
+
+            return;
         }
 
-        CreateItemPicker("Resolution", "gameResulotion", resolutionItems);
-
- 
-        CreateToggleItem("Use fullscreen", "isFullscreen");
-        CreateToggleItem("Show Skybox", "showSkybox");
-        CreateToggleItem("Background Objects", "showBackgroundElements");
-
-        CreateDivider("Utility");
-        CreateToggleItem("Show Debug Stats", "showDebugStats");
-        CreateItemPicker("Camera Mode", "immersiveCamera", new List<PickerItemObject>
+        if (mode == SettingsType.Options)
+        {
+            CreateDivider("Utility");
+            CreateToggleItem("Show Debug Stats", "showDebugStats");
+            CreateToggleItem("Show Damage Text", "showDamageText");
+            CreateItemPicker("Camera Mode", "immersiveCamera", new List<PickerItemObject>
         {
             new PickerItemObject
             {
@@ -147,41 +155,54 @@ public class SettingsMenu : MonoBehaviour
             }
         });
 
-        CreateDivider("Volume Control");
-        CreateSliderItem("Music Volume", "musicVolume");
-        CreateSliderItem("Sound Volume", "soundEffectVolume");
-        CreateDivider("Rotation");
-        CreateToggleItem("Use Mouse Aim", "useMouseAim");
-        CreateKeyBinding("Left", "leftKey");
-        CreateKeyBinding("Right", "rightKey");
-        CreateDivider("Thruster");
-        CreateKeyBinding("Forward", "upKey");
-        CreateKeyBinding("Brake", "downKey");
-        CreateDivider("Ability");
-        CreateKeyBinding("LightLance", "lightLanceKey");
-        CreateKeyBinding("Overdrive", "overdriveKey");
-        //CreateKeyBinding("Mining Drill", "miningDrillKey");
-        //CreateDivider("Targetting");
-        //CreateKeyBinding("Manual Target Key", "targetKey");
-        //CreateToggleItem("Show Target Marker", "useTargetMarker");
-        //CreateToggleItem("Use Auto Targetting", "useAutoTarget");
-        CreateDivider("Weapon");
-        CreateToggleItem("Fire with Weapon Hotkeys", "useWeaponHotKeys");
-        CreateKeyBinding("Fire Weapon", "fireKey");
-        CreateKeyBinding("Weapon 1", "weapon1Key");
-        CreateKeyBinding("Weapon 2", "weapon2Key");
-        CreateKeyBinding("Weapon 3", "weapon3Key");
-        CreateKeyBinding("Weapon 4", "weapon4Key");
-        CreateKeyBinding("Weapon 5", "weapon5Key");
-        CreateDivider("Hotkeys");
-        CreateKeyBinding("Respawn", "respawnKey");
-        CreateKeyBinding("Toggle Inventory", "inventoryKey");
-        CreateKeyBinding("Settings Menu", "settingsMenuKey");
-        CreateKeyBinding("System Map", "mapKey");
-        CreateKeyBinding("Zoom Out", "zoomOutKey");
-        CreateKeyBinding("Self Destruct", "selfDestructKey");
+            return;
+        }
 
-        Settings.Instance.KeysLocked = true;
+        if (mode == SettingsType.Sound || mode == SettingsType.None)
+        {
+            CreateDivider("Volume Control");
+            CreateSliderItem("Music Volume", "musicVolume");
+            CreateSliderItem("Sound Volume", "soundEffectVolume");
+
+            return;
+        }
+
+        if (mode == SettingsType.Controls)
+        {
+            CreateDivider("Steering");
+            CreateToggleItem("Use Mouse Aim", "useMouseAim");
+            CreateKeyBinding("Left", "leftKey");
+            CreateKeyBinding("Right", "rightKey");
+            CreateDivider("Thruster");
+            CreateKeyBinding("Forward", "upKey");
+            CreateKeyBinding("Brake", "downKey");
+            CreateDivider("Ability");
+            CreateKeyBinding("LightLance", "lightLanceKey");
+            CreateKeyBinding("Overdrive", "overdriveKey");
+            //CreateKeyBinding("Mining Drill", "miningDrillKey");
+            //CreateDivider("Targetting");
+            //CreateKeyBinding("Manual Target Key", "targetKey");
+            //CreateToggleItem("Show Target Marker", "useTargetMarker");
+            //CreateToggleItem("Use Auto Targetting", "useAutoTarget");
+            CreateDivider("Weapon");
+            CreateToggleItem("Fire with Weapon Hotkeys", "useWeaponHotKeys");
+            CreateKeyBinding("Fire Weapon", "fireKey");
+            CreateKeyBinding("Weapon 1", "weapon1Key");
+            CreateKeyBinding("Weapon 2", "weapon2Key");
+            CreateKeyBinding("Weapon 3", "weapon3Key");
+            CreateKeyBinding("Weapon 4", "weapon4Key");
+            CreateKeyBinding("Weapon 5", "weapon5Key");
+            CreateDivider("Hotkeys");
+            CreateKeyBinding("Respawn", "respawnKey");
+            CreateKeyBinding("Toggle Inventory", "inventoryKey");
+            CreateKeyBinding("Menu", "menuKey");
+            CreateKeyBinding("Player Menu", "playerMenuKey");
+            CreateKeyBinding("System Map", "mapKey");
+            CreateKeyBinding("Zoom Out", "zoomOutKey");
+            CreateKeyBinding("Self Destruct", "selfDestructKey");
+
+            return;
+        }
     }
 
     public void CreateToggleItem(string desc, string saveCode)
@@ -284,6 +305,7 @@ public class SettingsMenu : MonoBehaviour
     }
     public void Save()
     {
+
         foreach (var item in keybindings)
             if (item.keyCode == "---")
                 continue;
@@ -311,32 +333,52 @@ public class SettingsMenu : MonoBehaviour
 
         PlayerPrefs.Save();
 
-        Settings.Instance.RefreshControls();
-        Settings.Instance.RefreshBackgrounds();
-        Settings.Instance.RefreshScreen();
-        Settings.Instance.RefreshCameraMode();
+        if (_mode == SettingsType.Controls)
+            Settings.Instance.RefreshControls();
+        if (_mode == SettingsType.Sound)
+            Settings.Instance.RefreshSound();
+        if (_mode == SettingsType.Graphics)
+            Settings.Instance.RefreshScreen();
+        if (_mode == SettingsType.Options)
+            Settings.Instance.RefreshOptions();
 
         _saved = true;
+
         Exit();
     }
 
+    private bool _canExit = true;
     public void Exit()
     {
-        if (!_saved && HasChanges())
+        if (_canExit)
         {
-            DialogManager.ShowDialog("Are you sure you want to close without saving?", delegate (bool confirmed)
+
+            _canExit = false;
+
+            if (!_saved && HasChanges())
             {
-                if (confirmed)
+                DialogManager.ShowDialog("Are you sure you want to close without saving?", delegate (bool confirmed)
                 {
-                    Settings.Instance.KeysLocked = false;
-                    Destroy(transform.gameObject);
-                }
-            });
+                    _canExit = true;
+                    if (confirmed)
+                    {
+                        Settings.KeysLocked = false;
+                        Destroy(transform.gameObject);
+                    }
+                });
+            }
+            else
+            {
+                _canExit = true;
+                Settings.KeysLocked = false;
+                Destroy(transform.gameObject);
+            }
         }
-        else
-        {
-            Settings.Instance.KeysLocked = false;
-            Destroy(transform.gameObject);
-        }
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(Settings.MenuKey))
+            Exit();
     }
 }

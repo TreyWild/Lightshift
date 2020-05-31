@@ -15,8 +15,11 @@ public class SortingOrders
     public const int STATION_SHIELD = 5;
     public const int ENGINE = 20;
     public const int OVERDRIVE_ENGINE = 21;
-    public const int BULLET = 48;
+    public const int BULLET = 40;
     public const int TARGET_MARKER = 999999;
     public const int EFFECT = 60;
-    public const int BULLET_TRAIL = 47;
+    public const int BULLET_TRAIL = 40;
+
+    public const int NPC = 46;
+    public const int SPAWNER = 44;
 }

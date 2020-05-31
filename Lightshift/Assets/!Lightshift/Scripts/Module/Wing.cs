@@ -74,4 +74,12 @@ public class Wing : NetworkBehaviour
             else wing.sortingOrder = SortingOrders.SHIP_WING;
         }
     }
+
+    public void SetSortingOrder(int i)
+    {
+        foreach (var wing in _wings) 
+        {
+            wing.sortingOrder = i - 1;
+        }
+    }
 }

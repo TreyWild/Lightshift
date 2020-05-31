@@ -35,7 +35,7 @@ public class Thruster : MonoBehaviour
         _audioSource = GetComponentInChildren<AudioSource>();
 
         _audioSource.loop = true;
-        _audioSource.volume = Settings.Instance.soundEffectVolume;
+        _audioSource.volume = Settings.soundEffectVolume;
         _audioSource.mute = true;
         _audioSource.Play();
     }
@@ -65,15 +65,12 @@ public class Thruster : MonoBehaviour
 
         if (_isActive)
         {
+            if (!_audioSource.isPlaying)
+                _audioSource.Play();
 
-            // ...and if audio is muted...
-            if (_audioSource.mute)
-            {
-                // Unmute the audio
-                _audioSource.mute = false;
-            }
+            _audioSource.mute = false;
             // If the audio volume is lower than the sound effect volume...
-            var volume = Settings.Instance.soundEffectVolume;
+            var volume = Settings.soundEffectVolume;
             if (!_overDriveActive)
                 volume /= 2;
             if (_audioSource.volume < volume)

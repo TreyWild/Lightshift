@@ -7,6 +7,8 @@ public class PrefabManager : MonoBehaviour
     public const int RESPAWN_PREFAB_ID = 0;
     public const int INVENTORY_PREFAB_ID = 1;
     public const int PLAYER_SHIP_PREFAB_ID = 2;
+    public const int NPC_SHIP_PREFAB_ID = 3;
+    public const int SPAWNER_PREFAB_ID = 4;
 
     public GameObject shieldPrefab;
     public GameObject shipPrefab;
@@ -30,7 +32,7 @@ public class PrefabManager : MonoBehaviour
         if (Instance == null)
             Instance = this;
         else Destroy(gameObject);
+
+        
     }
-
-
 }

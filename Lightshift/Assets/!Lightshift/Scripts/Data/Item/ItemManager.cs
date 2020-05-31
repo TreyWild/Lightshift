@@ -7,6 +7,7 @@ public class ItemManager : MonoBehaviour
 {
     private static ItemManager Instance;
     private List<Item> _items = new List<Item>();
+
     private void Awake()
     {
         if (Instance == null)
@@ -16,6 +17,7 @@ public class ItemManager : MonoBehaviour
             return;
         }
 
+        _items.Clear();
         _items = Resources.LoadAll<Item>("").ToList();
     }
 

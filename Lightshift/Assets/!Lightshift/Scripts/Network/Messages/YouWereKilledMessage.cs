@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 public class YouWereKilledMessage : MessageBase
 {
-    public string killerEntityId;
+    public short killerEntityId;
     public string killerName;
 }
 

@@ -48,7 +48,7 @@ public class PlayerList : MonoBehaviour {
 
     private void Update()
     {
-        if (Input.GetKeyDown(Settings.Instance.PlayerMenuKey))
+        if (Input.GetKeyDown(Settings.PlayerMenuKey))
             Exit();
     }
 }

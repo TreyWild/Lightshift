@@ -49,7 +49,7 @@ public class PlayerRespawnHandler : NetworkBehaviour
 
         if (_canRespawn)
         {
-            if (Input.GetKeyDown(Settings.Instance.RespawnKey))
+            if (Input.GetKeyDown(Settings.RespawnKey))
                 Respawn();
         }
         else _respawnLabel.text = $"Respawning in {Mathf.RoundToInt(_timeRemaining)} Seconds";
@@ -59,7 +59,7 @@ public class PlayerRespawnHandler : NetworkBehaviour
     private void SetRespawnable()
     {
         _canRespawn = true;
-        _respawnLabel.text = $"Press {Settings.Instance.RespawnKey} to Respawn";
+        _respawnLabel.text = $"Press {Settings.RespawnKey} to Respawn";
     }
 
     private void Respawn()
@@ -77,20 +77,18 @@ public class PlayerRespawnHandler : NetworkBehaviour
         {
             var player = Server.GetPlayer(connectionToClient);
 
-            TargetRpcSpawn();
+            //var ship = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.PLAYER_SHIP_PREFAB_ID], player.lastSafePosition, transform.rotation);
 
-            var ship = Instantiate(NetworkManager.singleton.spawnPrefabs[PrefabManager.PLAYER_SHIP_PREFAB_ID], player.lastSafePosition, transform.rotation);
+            //NetworkServer.Spawn(ship, connectionToClient);
 
-            NetworkServer.Spawn(ship, connectionToClient);
+            //player.ship = ship.GetComponent<PlayerShip>();
+            player.ship.SetAlive();
 
-            player.ship = ship.GetComponent<PlayerShip>();
-
-            NetworkServer.Destroy(gameObject);
+            NetworkServer.UnSpawn(gameObject);
         }
     }
 
-    [TargetRpc]
-    public void TargetRpcSpawn() 
+    private void OnDisable()
     {
         GameUIManager.Instance.HandleRespawnScreen(false);
     }

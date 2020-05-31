@@ -1,11 +1,18 @@
-﻿using System;
+﻿using Mirror;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 public static class Extensions
 {
+    public static bool HasType<T>(this GameObject gameObject)
+    {
+        return gameObject.GetComponent<T>() != null;
+    }
+
     public static T[] Append<T>(this T[] array, T item)
     {
         if (array == null)

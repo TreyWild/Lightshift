@@ -305,8 +305,8 @@ public class InventoryManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcUpdateInventorySlot(InventoryItemSlotMessage slot) 
-    {
+    private void RpcUpdateInventorySlot(InventoryItemSlotMessage slot)
+    { 
         if (!hasAuthority)
             return;
 

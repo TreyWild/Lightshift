@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
 {
+    public bool Locked;
     public bool LightLance;
     public bool OverDrive;
     public bool Down;
@@ -27,26 +28,29 @@ public class PlayerController : NetworkBehaviour
 
     private void Update()
     {
-        if (!hasAuthority || Settings.Instance.KeysLocked)
+        if (Locked)
             return;
 
-        if (Input.GetKeyDown(Settings.Instance.Weapon1))
-            if (WeaponSlot != 0)
-                CmdUpdateWeaponSlot(0);
-        if (Input.GetKeyDown(Settings.Instance.Weapon2))
-            if (WeaponSlot != 1)
-                CmdUpdateWeaponSlot(1);
-        if (Input.GetKeyDown(Settings.Instance.Weapon3))
-            if (WeaponSlot != 2)
-                CmdUpdateWeaponSlot(2);
-        if (Input.GetKeyDown(Settings.Instance.Weapon4))
-            if (WeaponSlot != 3)
-                CmdUpdateWeaponSlot(3);
-        if (Input.GetKeyDown(Settings.Instance.Weapon5))
-            if (WeaponSlot != 4)
-                CmdUpdateWeaponSlot(4);
+        if (!hasAuthority || Settings.KeysLocked)
+            return;
 
-        var down = Input.GetKey(Settings.Instance.DownKey);
+        if (Input.GetKeyDown(Settings.Weapon1))
+            if (WeaponSlot != 0)
+                UpdateWeaponSlot(0);
+        if (Input.GetKeyDown(Settings.Weapon2))
+            if (WeaponSlot != 1)
+                UpdateWeaponSlot(1);
+        if (Input.GetKeyDown(Settings.Weapon3))
+            if (WeaponSlot != 2)
+                UpdateWeaponSlot(2);
+        if (Input.GetKeyDown(Settings.Weapon4))
+            if (WeaponSlot != 3)
+                UpdateWeaponSlot(3);
+        if (Input.GetKeyDown(Settings.Weapon5))
+            if (WeaponSlot != 4)
+                UpdateWeaponSlot(4);
+
+        var down = Input.GetKey(Settings.DownKey);
         if (down != Down)
         {
             CmdUpdateDown(down);
@@ -55,7 +59,7 @@ public class PlayerController : NetworkBehaviour
         else
         {
 
-            var up = Input.GetKey(Settings.Instance.UpKey);
+            var up = Input.GetKey(Settings.UpKey);
             if (up != Up)
             {
                 CmdUpdateUp(up);
@@ -63,7 +67,7 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        if ((Settings.Instance.UseMouseAim && GetMouseAimInput() == 0) && (Left || Right))
+        if ((Settings.UseMouseAim && GetMouseAimInput() == 0) && (Left || Right))
         {
             Right = false;
             Left = false;
@@ -73,7 +77,7 @@ public class PlayerController : NetworkBehaviour
         else
         {
 
-            var left = Input.GetKey(Settings.Instance.LeftKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == -1;
+            var left = Input.GetKey(Settings.LeftKey) || Settings.UseMouseAim && GetMouseAimInput() == -1;
             if (left != Left)
             {
                 CmdUpdateLeft(left);
@@ -81,7 +85,7 @@ public class PlayerController : NetworkBehaviour
             }
             else
             {
-                var right = Input.GetKey(Settings.Instance.RightKey) || Settings.Instance.UseMouseAim && GetMouseAimInput() == 1;
+                var right = Input.GetKey(Settings.RightKey) || Settings.UseMouseAim && GetMouseAimInput() == 1;
                 if (right != Right)
                 {
                     CmdUpdateRight(right);
@@ -92,26 +96,26 @@ public class PlayerController : NetworkBehaviour
 
 
 
-        var overDrive = Input.GetKey(Settings.Instance.OverdriveKey);
+        var overDrive = Input.GetKey(Settings.OverdriveKey);
         if (overDrive != OverDrive)
         {
             CmdUpdateOverDrive(overDrive);
             OverDrive = overDrive;
         }
 
-        var lightLance = Input.GetKey(Settings.Instance.LightLanceKey);
+        var lightLance = Input.GetKey(Settings.LightLanceKey);
         if (lightLance != LightLance)
         {
             CmdUpdateLightLance(lightLance);
             LightLance = lightLance;
         }
 
-        var weapon = Input.GetKey(Settings.Instance.FireKey) || (Settings.Instance.FireWithWeaponHotkeys && (
-            Input.GetKey(Settings.Instance.Weapon1) ||
-            Input.GetKey(Settings.Instance.Weapon2) ||
-            Input.GetKey(Settings.Instance.Weapon3) ||
-            Input.GetKey(Settings.Instance.Weapon4) ||
-            Input.GetKey(Settings.Instance.Weapon5)));
+        var weapon = Input.GetKey(Settings.FireKey) || (Settings.FireWithWeaponHotkeys && (
+            Input.GetKey(Settings.Weapon1) ||
+            Input.GetKey(Settings.Weapon2) ||
+            Input.GetKey(Settings.Weapon3) ||
+            Input.GetKey(Settings.Weapon4) ||
+            Input.GetKey(Settings.Weapon5)));
 
         if (weapon != Weapon)
         {
@@ -143,6 +147,12 @@ public class PlayerController : NetworkBehaviour
         {
             return 0;
         }
+    }
+
+    private void UpdateWeaponSlot(short slot) 
+    {
+        WeaponSlot = slot;
+        CmdUpdateWeaponSlot(slot);
     }
 
     [Command]

@@ -10,7 +10,6 @@ public struct WeaponData
     public bool inheritVelocity;
     public float spread;
     public float spacing;
-    public float trailLength;
     public int projectileCount;
     public Vector2 gunPoint;
     public Vector2 scale;
@@ -21,10 +20,12 @@ public struct WeaponData
 public struct BulletData
 {
     public float speed;
-    public float speedVariance;
     public float damage;
     public int hitCount;
     public float range;
     public bool tracksTarget;
     public float agility;
+    public float trailLength;
+    public float trailSize;
+    public float weight;
 };

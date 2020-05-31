@@ -25,7 +25,10 @@ public class LSObjectPool : MonoBehaviour
     {
         var projectile = Instance._projectiles.FirstOrDefault(p => !p.isAlive);
         if (projectile == null)
-            projectile = Instantiate(Instance._bulletPrefab, Instance._projectileHolder).GetComponent<Projectile>();
+            projectile = Instantiate(Instance._bulletPrefab, Instance._projectileHolder).AddComponent<Projectile>();
+
+        if (!Instance._projectiles.Contains(projectile))
+            Instance._projectiles.Add(projectile);
 
         projectile.gameObject.SetActive(true);
         return projectile;
