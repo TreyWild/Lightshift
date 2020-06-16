@@ -92,7 +92,44 @@ public class WeaponSystem : NetworkBehaviour
 
         for (int i = 0; i < weapon.weaponData.projectileCount; i++)
         {
-            var rotation = _kinematic.rotation; 
+            Vector2 newProjVel = _kinematic.velocity * weapon.weaponData.bulletData.speed;
+            var angle = _kinematic.rotation;
+            var targetEntity = _entity.targetNeutral;
+            if (targetEntity != null)
+            {
+                var target = targetEntity.kinematic;
+
+                Vector2 diffVel;
+                if (weapon.weaponData.inheritVelocity)
+                    diffVel = target.velocity - _kinematic.velocity; //add kinematic.velocity later
+                else
+                    diffVel = target.velocity;
+                if (diffVel.sqrMagnitude < weapon.weaponData.bulletData.speed * weapon.weaponData.bulletData.speed) //microoptimization, ha
+                {
+                    float directAngle = Mathf.Atan2(target.transform.position.y - _kinematic.transform.position.y, target.transform.position.x - _kinematic.transform.position.x); //angle to target, in radians
+                    Vector2 directVel = new Vector2(Mathf.Cos(directAngle), Mathf.Sin(directAngle));
+                    float cx = directVel.x * diffVel.x;
+                    float sy = directVel.y * diffVel.y;
+                    float x2y2 = diffVel.x * diffVel.x + diffVel.y * diffVel.y;
+                    float extraSpeed = Mathf.Sqrt(weapon.weaponData.bulletData.speed * weapon.weaponData.bulletData.speed - x2y2 + (cx + sy) * (cx + sy)) - cx - sy;
+                    newProjVel = diffVel + directVel * extraSpeed;
+                    //debug: newProjVel.magnitude should be bulletSpeed.
+                    angle = Mathf.Atan2(newProjVel.y, newProjVel.x) * Mathf.Rad2Deg;
+                    //then start the bullet at bulletSpeed in this ^  direction. Fixed speed bullets work best
+
+                    var angleDiff = angle - _kinematic.rotation; //now check if it's actually in the range
+                    if (angleDiff > 180)
+                        angleDiff -= 360;
+                    else if (angleDiff < -180)
+                        angleDiff += 360;
+                    if (angleDiff > weapon.weaponData.aimAssistArc / 2)
+                        angle = _kinematic.rotation + weapon.weaponData.aimAssistArc / 2; //max arc, left
+                    else if (angleDiff < -weapon.weaponData.aimAssistArc / 2)
+                        angle = _kinematic.rotation - weapon.weaponData.aimAssistArc / 2; //max arc, right
+                }
+            }
+
+            var rotation = angle; 
             if (weapon.weaponData.spread != 0)
                 rotation+=-(-(weapon.weaponData.spread / 2) + (i * (weapon.weaponData.spread / weapon.weaponData.projectileCount)));
 
@@ -114,7 +151,8 @@ public class WeaponSystem : NetworkBehaviour
 
             var velocity = new Vector2();
             if (weapon.weaponData.inheritVelocity)
-               velocity = transform.up * (Mathf.Cos((Mathf.Atan2(_kinematic.velocity.y, _kinematic.velocity.x)) - rotation * Mathf.Deg2Rad) * 0.5f + 0.5f) * _kinematic.velocity.magnitude;
+                velocity = newProjVel;
+               //velocity = transform.up * (Mathf.Cos((Mathf.Atan2(_kinematic.velocity.y, _kinematic.velocity.x)) - rotation * Mathf.Deg2Rad) * 0.5f + 0.5f) * _kinematic.velocity.magnitude;
 
             bullet.entity = _entity;
             bullet.weapon = weapon;

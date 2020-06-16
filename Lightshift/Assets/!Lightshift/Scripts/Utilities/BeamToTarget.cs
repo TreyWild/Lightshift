@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class BeamToTarget : MonoBehaviour
 {
-    private Transform _target;
+    private Kinematic _target;
 
     private LineRenderer _lineRenderer;
 
@@ -13,14 +13,14 @@ public class BeamToTarget : MonoBehaviour
 
     public float maxDistance;
 
-    public Action<Transform, float> OnFocus;
+    public Action<Kinematic, float> OnFocus;
     private void Awake()
     {
         _lineRenderer = GetComponent<LineRenderer>();
         _lineRenderer.sortingOrder = SortingOrders.LIGHTLANCE;
     }
 
-    public void TryFocusTarget(Transform target) 
+    public void TryFocusTarget(Kinematic target) 
     {
         if (target != null)
         {

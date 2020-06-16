@@ -18,6 +18,7 @@ namespace Lightshift
         public static KeyCode LightLanceKey = KeyCode.F;
         public static KeyCode MiningDrillKey = KeyCode.X;
         public static KeyCode OverdriveKey = KeyCode.C;
+        public static KeyCode DriftKey = KeyCode.D;
         public static KeyCode MapKey = KeyCode.M;
         public static KeyCode MenuKey = KeyCode.Escape;
         public static KeyCode PlayerMenuKey = KeyCode.P;
@@ -36,7 +37,6 @@ namespace Lightshift
         public static KeyCode DeveloperShipListKey = KeyCode.J;
         public static bool KeysLocked;
         public static bool FireWithWeaponHotkeys = true;
-        public static bool UseMouseAim = false;
         public static bool AutoTarget = false;
         public static bool ShowTargetMarker = false;
         public static float soundEffectVolume = .5f;
@@ -50,6 +50,8 @@ namespace Lightshift
         public int MaxFrameRate = 60;
         public static bool ShowDamageText;
 
+        public static SteeringMode Steering;
+        public enum SteeringMode { Standard, Mouse, Axis }
         private void Awake()
         {
             if (Instance != null)
@@ -114,6 +116,7 @@ namespace Lightshift
             MiningDrillKey = GetControlValue("miningDrillKey", MiningDrillKey);
             OverdriveKey = GetControlValue("overdriveKey", OverdriveKey);
             MapKey = GetControlValue("mapKey", MapKey);
+            DriftKey = GetControlValue("driftKey", DriftKey);
             MenuKey = GetControlValue("menuKey", MenuKey);
             PlayerMenuKey = GetControlValue("playerMenuKey", PlayerMenuKey);
             InventoryKey = GetControlValue("inventoryKey", InventoryKey);
@@ -126,11 +129,11 @@ namespace Lightshift
             Weapon5 = GetControlValue("weapon5Key", Weapon5);
             SelfDestruct = GetControlValue("selfDestructKey", SelfDestruct);
             FireWithWeaponHotkeys = bool.Parse(PlayerPrefs.GetString("useWeaponHotKeys", "True"));
-            UseMouseAim = bool.Parse(PlayerPrefs.GetString("useMouseAim", "False"));
             AutoTarget = bool.Parse(PlayerPrefs.GetString("useAutoTarget", "False"));
             ShowTargetMarker = bool.Parse(PlayerPrefs.GetString("useTargetMarker", "True"));
             ShowSkybox = bool.Parse(PlayerPrefs.GetString("showSkybox", "True"));
             ShowBackgroundElements = bool.Parse(PlayerPrefs.GetString("showBackgroundElements", "True"));
+            Steering = (SteeringMode)Enum.Parse(typeof(SteeringMode), PlayerPrefs.GetString("steeringMode", "Standard"));
         }
 
         public void RefreshScreen()
@@ -166,6 +169,11 @@ namespace Lightshift
                 resolution.y = Screen.currentResolution.height;
             }
 
+            if (resolution.x < 840)
+                resolution.x = 840;
+            if (resolution.y < 680)
+                resolution.y = 680;
+
             if (oldRes != resolution || oldFsM != fullScreenMode || MaxFrameRate != oldFrameRate) 
             {
                 Screen.SetResolution((int)resolution.x, (int)resolution.y, fullScreenMode, MaxFrameRate);
@@ -190,20 +198,11 @@ namespace Lightshift
         public void RefreshOptions() 
         {
             ShowDamageText = bool.Parse(PlayerPrefs.GetString("showDamageText", "True"));
-            RefreshCameraMode();
 
             ShowDebugStats = bool.Parse(PlayerPrefs.GetString("showDebugStats", "False"));
 
             if (GameUIManager.Instance != null)
                 GameUIManager.Instance.ShowScreenStats(ShowDebugStats);
-        }
-        public void RefreshCameraMode()
-        {
-            if (CameraFollow.Instance != null) 
-            {
-                var immersive = bool.Parse(PlayerPrefs.GetString("immersiveCamera", "False"));
-                CameraFollow.Instance.SetCameraMode(immersive);
-            }
         }
 
         public void RefreshSound() 

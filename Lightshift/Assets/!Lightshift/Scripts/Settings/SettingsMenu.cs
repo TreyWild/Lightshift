@@ -141,20 +141,6 @@ public class SettingsMenu : MonoBehaviour
             CreateDivider("Utility");
             CreateToggleItem("Show Debug Stats", "showDebugStats");
             CreateToggleItem("Show Damage Text", "showDamageText");
-            CreateItemPicker("Camera Mode", "immersiveCamera", new List<PickerItemObject>
-        {
-            new PickerItemObject
-            {
-                displayValue = "Normal",
-                value = "False",
-            },
-            new PickerItemObject
-            {
-                displayValue = "Immersive",
-                value = "True",
-            }
-        });
-
             return;
         }
 
@@ -170,9 +156,27 @@ public class SettingsMenu : MonoBehaviour
         if (mode == SettingsType.Controls)
         {
             CreateDivider("Steering");
-            CreateToggleItem("Use Mouse Aim", "useMouseAim");
+            CreateItemPicker("Steering Mode", "steeringMode", new List<PickerItemObject>
+        {
+            new PickerItemObject
+            {
+                displayValue = "Standard",
+                value = "Standard",
+            },
+            new PickerItemObject
+            {
+                displayValue = "Mouse",
+                value = "Mouse",
+            },
+            new PickerItemObject
+            {
+                displayValue = "Axis",
+                value = "Axis",
+            }
+        });
             CreateKeyBinding("Left", "leftKey");
             CreateKeyBinding("Right", "rightKey");
+            CreateKeyBinding("Drift", "driftKey");
             CreateDivider("Thruster");
             CreateKeyBinding("Forward", "upKey");
             CreateKeyBinding("Brake", "downKey");
@@ -198,7 +202,6 @@ public class SettingsMenu : MonoBehaviour
             CreateKeyBinding("Menu", "menuKey");
             CreateKeyBinding("Player Menu", "playerMenuKey");
             CreateKeyBinding("System Map", "mapKey");
-            CreateKeyBinding("Zoom Out", "zoomOutKey");
             CreateKeyBinding("Self Destruct", "selfDestructKey");
 
             return;

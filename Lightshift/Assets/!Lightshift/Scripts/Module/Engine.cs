@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-public class Engine : NetworkBehaviour 
+public class Engine : NetworkBehaviour
 {
     [SyncVar]
     public float maxSpeed;
@@ -20,16 +20,14 @@ public class Engine : NetworkBehaviour
 
     private Thruster _thruster;
     private Kinematic _kinematic;
-    private PlayerController _input;
     private void Awake()
     {
         _thruster = Instantiate(PrefabManager.Instance.enginePrefab, transform).GetComponent<Thruster>();
         _kinematic = GetComponent<Kinematic>();
-        _input = GetComponent<PlayerController>();
     }
 
 
-    public void SetColor(Color color) 
+    public void SetColor(Color color)
     {
         _thruster.SetColor(color);
     }
@@ -51,12 +49,11 @@ public class Engine : NetworkBehaviour
             if (overDrive)
                 maxSpeed *= overDriveMultiplier;
 
-            if (_input.Up)
+            if (axis == 1)
             {
-                if (_kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed * overDriveMultiplier * overDriveMultiplier && overDrive) //over max speed but boosting
+                if (overDrive && _kinematic.velocity.sqrMagnitude > maxSpeed * maxSpeed) //over max speed but boosting
                 {
                     float speed = _kinematic.velocity.magnitude;
-                    engineStr *= overDriveMultiplier;
                     _kinematic.AddForce(transform.up * engineStr / 2);
                     _kinematic.velocity *= Mathf.Max(speed - engineStr / _kinematic.mass / 2, 0) / speed;
                 }
@@ -71,16 +68,16 @@ public class Engine : NetworkBehaviour
                     _kinematic.AddForce(transform.up * engineStr);
                 }
             }
-            if (_input.Down)
+            if (axis == -1)
             {
                 engineStr *= brakeForce / _kinematic.mass; //this uses mass
                 if (_kinematic.velocity.sqrMagnitude > engineStr * engineStr)
                     _kinematic.velocity -= engineStr * _kinematic.velocity.normalized;
-                else if (!_input.Up)
+                else if (axis != 1)
                     _kinematic.velocity = Vector2.zero;
             }
 
-            if (!_input.OverDrive)
+            if (!overDrive)
                 _kinematic.drag = 0.99f;
             else
                 _kinematic.drag = 0.999f;

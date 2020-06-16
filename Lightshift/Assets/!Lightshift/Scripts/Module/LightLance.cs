@@ -16,7 +16,7 @@ public class LightLance : NetworkBehaviour
     [SyncVar]
     public float powerCost;
 
-    private float minimumDistance = 8;
+    private float minimumDistance = 2;
 
     private Kinematic _kinematic;
     private BeamToTarget _lightLance;
@@ -29,7 +29,7 @@ public class LightLance : NetworkBehaviour
     }
 
     public void SetColor(Color color) => _lightLance.SetColor(color);
-    public void HandleLightLance(bool active, Transform target)
+    public void HandleLightLance(bool active, Kinematic target)
     {
         if (active)
             _lightLance.TryFocusTarget(target);
@@ -37,17 +37,37 @@ public class LightLance : NetworkBehaviour
             _lightLance.CancelFocus();
     }
 
-    private void OnLightLanceFocus(Transform targetTransform, float distance)
+    private void OnLightLanceFocus(Kinematic target, float distance)
     {
         _lightLance.TryDrawBeam();
 
         if (hasAuthority)
         {
-            if (transform.position == targetTransform.position)
-                return;
+            //if (transform.position == targetTransform.position)
+            //    return;
 
-            var force = (pullForce/distance) * Time.fixedDeltaTime;
-            _kinematic.AddForce((targetTransform.position + (transform.forward * force) - transform.position) * (force));
+            //var force = (pullForce/distance) * Time.fixedDeltaTime;
+            //_kinematic.AddForce((targetTransform.position + (transform.forward * force) - transform.position) * (force));
+
+            Vector2 diffVel = target.velocity - _kinematic.velocity;
+            Vector3 diffPos = target.transform.position - _kinematic.transform.position;
+            float dist = diffPos.magnitude;
+            Vector3 diffPosN = diffPos / dist;
+
+            if (dist <= maxRange)
+            {
+                float c = diffPosN.x;
+                float s = -diffPosN.z;
+
+                float xn = c * diffVel.x - s * diffVel.y; //force toward/away between target/origin
+                Vector2 tempVelShift = new Vector2(diffPosN.x, diffPosN.z) * Mathf.Max(xn + (dist - minimumDistance) * 0.8f, (dist - minimumDistance) * 0.8f) / (target.mass + target.mass) * (0.0625f);
+
+                target.velocity -= tempVelShift * _kinematic.mass; //mass crossover: one gets the other's mass
+                _kinematic.velocity += tempVelShift * target.mass;
+
+                //alt version, in case you prefer no movement for the other thing:
+                //origin.velocity += new Vector2(diffPosN.x, diffPosN.z) * Mathf.Max(xn + (dist - minDist) * 0.8f, (dist - minDist) * 0.8f) * (0.0625f); //and delete the previous 3 lines
+            }
         }
     }
 

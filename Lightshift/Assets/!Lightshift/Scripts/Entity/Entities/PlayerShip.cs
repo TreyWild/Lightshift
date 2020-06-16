@@ -216,10 +216,21 @@ public class PlayerShip : Ship
         //HandleDamageQueue();
         //HandleTargetting();
 
-        engine.Move(_input.VerticalAxis, _input.OverDrive);
-        if (targetEntity != null && stats.lightLanceRange != 0)
-            lightLance.HandleLightLance(_input.LightLance, targetEntity.transform);
-        wing.Turn(_input.HorizontalAxis);
+
+        if (targetEntity != null && stats.lightLanceRange != 0) 
+            lightLance.HandleLightLance(_input.LightLance, targetEntity.kinematic);
+
+        if (Settings.Steering == Settings.SteeringMode.Axis)
+        {
+            if (wing.AxisAlignedAim())
+                engine.Move(1, _input.OverDrive);
+            else engine.Move(-1, false);
+        }
+        else
+        {
+            wing.Turn(_input.HorizontalAxis);
+            engine.Move(_input.VerticalAxis, _input.OverDrive);
+        }
 
         HandleSafeZone();
 

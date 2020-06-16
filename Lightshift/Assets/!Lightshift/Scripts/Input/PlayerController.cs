@@ -2,6 +2,7 @@
 using Mirror;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 
 public class PlayerController : NetworkBehaviour
@@ -14,6 +15,7 @@ public class PlayerController : NetworkBehaviour
     public bool Left;
     public bool Right;
     public bool Weapon;
+    public bool Drifting;
     public int WeaponSlot;
     public int VerticalAxis => GetAxis(Up, Down);
     public int HorizontalAxis => GetAxis(Left, Right);
@@ -67,7 +69,7 @@ public class PlayerController : NetworkBehaviour
             }
         }
 
-        if ((Settings.UseMouseAim && GetMouseAimInput() == 0) && (Left || Right))
+        if ((Settings.Steering == Settings.SteeringMode.Mouse && GetMouseAimInput() == 0) && (Left || Right))
         {
             Right = false;
             Left = false;
@@ -77,7 +79,7 @@ public class PlayerController : NetworkBehaviour
         else
         {
 
-            var left = Input.GetKey(Settings.LeftKey) || Settings.UseMouseAim && GetMouseAimInput() == -1;
+            var left = Input.GetKey(Settings.LeftKey) || Settings.Steering == Settings.SteeringMode.Mouse && GetMouseAimInput() == -1;
             if (left != Left)
             {
                 CmdUpdateLeft(left);
@@ -85,7 +87,7 @@ public class PlayerController : NetworkBehaviour
             }
             else
             {
-                var right = Input.GetKey(Settings.RightKey) || Settings.UseMouseAim && GetMouseAimInput() == 1;
+                var right = Input.GetKey(Settings.RightKey) || Settings.Steering == Settings.SteeringMode.Mouse && GetMouseAimInput() == 1;
                 if (right != Right)
                 {
                     CmdUpdateRight(right);
@@ -108,6 +110,13 @@ public class PlayerController : NetworkBehaviour
         {
             CmdUpdateLightLance(lightLance);
             LightLance = lightLance;
+        }
+
+        var drifting = Input.GetKey(Settings.DriftKey);
+        if (drifting != Drifting)
+        {
+            CmdUpdateDrifting(drifting);
+            Drifting = drifting;
         }
 
         var weapon = Input.GetKey(Settings.FireKey) || (Settings.FireWithWeaponHotkeys && (
@@ -248,6 +257,22 @@ public class PlayerController : NetworkBehaviour
             return;
 
         LightLance = value;
+    }
+
+    [Command]
+    public void CmdUpdateDrifting(bool value)
+    {
+        Drifting = value;
+        RpcUpdateDrifting(value);
+    }
+
+    [ClientRpc]
+    public void RpcUpdateDrifting(bool value)
+    {
+        if (hasAuthority)
+            return;
+
+        Drifting = value;
     }
 
     [Command]

@@ -5,6 +5,7 @@ using System;
 [Serializable]
 public struct WeaponData
 {
+    public float aimAssistArc;
     public float powerCost;
     public float refire;
     public bool inheritVelocity;

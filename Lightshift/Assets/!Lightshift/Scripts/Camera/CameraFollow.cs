@@ -7,17 +7,9 @@ public class CameraFollow : MonoBehaviour
 	public static CameraFollow Instance;
 
 	public Transform target;
-	public CinemachineVirtualCamera _virtualCamera;
 
 	public float smoothSpeed = 0.125f;
 	public Vector3 offset;
-	private bool _immersive;
-	public void SetCameraMode(bool immersive)
-	{
-		_immersive = immersive;
-		GetComponent<CinemachineBrain>().enabled = immersive;
-		_virtualCamera.enabled = immersive;
-	}
 
 	private void Awake()
 	{
@@ -25,25 +17,14 @@ public class CameraFollow : MonoBehaviour
 			Instance = this;
 		else Destroy(gameObject);
 	}
-
-	private void Start()
-	{
-		Settings.Instance.RefreshCameraMode();
-	}
 	public void SetTarget(Transform target)
 	{
 		this.target = target;
-		_virtualCamera.Follow = target;
-		_virtualCamera.LookAt = target;
 	}
 	void LateUpdate()
 	{
-		if (target == null || _immersive)
-			return;
 
-		var zoom = Input.GetAxis("Mouse ScrollWheel") * 10;
-
-
+		var zoom = Input.GetAxis("Mouse ScrollWheel") * 20;
 
 		if (offset.z > -5)
 		{
