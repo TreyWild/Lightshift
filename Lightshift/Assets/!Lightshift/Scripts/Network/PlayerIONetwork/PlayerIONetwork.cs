@@ -65,7 +65,7 @@ public class PlayerIONetwork : MonoBehaviour{
 
     public  void JoinServer(string authKey)
     {
-        LightshiftNetworkManager.Authenticate(_client.ConnectUserId, authKey);
+        //LightshiftNetworkManager.Authenticate(_client.ConnectUserId, authKey);
 
         ServiceConnection.Disconnect();
     }

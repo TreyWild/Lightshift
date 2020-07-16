@@ -7,6 +7,7 @@ using System.Linq;
 using PlayerIOClient;
 using Mirror.Authenticators;
 using static LightshiftAuthenticator;
+using SharedModels.Models.User;
 
 public class Server : MonoBehaviour
 {
@@ -65,15 +66,15 @@ public class Server : MonoBehaviour
         if (!_players.Contains(player))
             _players.Add(player);
     }
-    public static void InitPlayer(NetworkConnection connection, AuthRequestMessage msg, DatabaseObject playerObject)
+    public static void InitPlayer(NetworkConnection connection, Account account)
     {
         //Create Player
         var player = Instantiate(LightshiftNetworkManager.GetPrefab<Player>()).GetComponent<Player>();
 
         // Init Player
         player.connection = connection;
-        player.connectUserId = msg.userId;
-        player.PlayerObject = playerObject;
+        //player.connectUserId = msg.userId;
+        //player.PlayerObject = playerObject;
         player.ConsumeAuthKey();
         player.InitPlayer();
 

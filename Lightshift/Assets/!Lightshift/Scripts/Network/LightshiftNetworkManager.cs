@@ -1,4 +1,5 @@
 ﻿using Mirror;
+using PlayerIOClient;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -53,11 +54,32 @@ public class LightshiftNetworkManager : NetworkManager
         SceneManager.LoadScene("_AUTHENTICATION_");
     }
 
-    public static void Authenticate(string connectUserId, string authKey) 
+    public static void Register(string email, string username, string password) 
     {
         var authenticator = FindObjectOfType<LightshiftAuthenticator>();
-        authenticator.userId = connectUserId;
-        authenticator.authKey = authKey;
+        authenticator.authType = LightshiftAuthenticator.AuthType.Register;
+        authenticator.email = email;
+        authenticator.username = username;
+        authenticator.passwordHash = PasswordHasher.Hash(password);
+
+        singleton.StartClient();
+    }
+
+    public static void Login(string email, string password)
+    {
+        var authenticator = FindObjectOfType<LightshiftAuthenticator>();
+        authenticator.authType = LightshiftAuthenticator.AuthType.Login;
+        authenticator.email = email;
+        authenticator.passwordHash = PasswordHasher.Hash(password);
+
+        singleton.StartClient();
+    }
+
+    public static void Recover(string email)
+    {
+        var authenticator = FindObjectOfType<LightshiftAuthenticator>();
+        authenticator.authType = LightshiftAuthenticator.AuthType.Recover;
+        authenticator.email = email;
 
         singleton.StartClient();
     }

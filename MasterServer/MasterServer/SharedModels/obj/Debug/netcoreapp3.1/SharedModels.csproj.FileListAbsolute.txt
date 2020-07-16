@@ -1,0 +1,12 @@
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\bin\Debug\netcoreapp3.1\SharedModels.deps.json
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\bin\Debug\netcoreapp3.1\SharedModels.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\bin\Debug\netcoreapp3.1\SharedModels.pdb
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\obj\Debug\netcoreapp3.1\SharedModels.AssemblyInfoInputs.cache
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\obj\Debug\netcoreapp3.1\SharedModels.AssemblyInfo.cs
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\obj\Debug\netcoreapp3.1\SharedModels.csproj.CoreCompileInputs.cache
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\obj\Debug\netcoreapp3.1\SharedModels.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\obj\Debug\netcoreapp3.1\SharedModels.pdb
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\SharedModels\obj\Debug\netcoreapp3.1\SharedModels.csprojAssemblyReference.cache
+C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\netcoreapp3.1\SharedModels.deps.json
+C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\netcoreapp3.1\SharedModels.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\netcoreapp3.1\SharedModels.pdb

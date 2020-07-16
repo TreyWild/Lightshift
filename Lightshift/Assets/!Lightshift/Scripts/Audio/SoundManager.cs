@@ -104,7 +104,7 @@ public class SoundManager : MonoBehaviour
 
     public void UpdateVolume()
     {
-        if (Settings.soundEffectVolume > 0.05f)
+        if (Settings.musicVolume > 0.05f)
             _musicSource.mute = false;
         else _musicSource.mute = true;
 

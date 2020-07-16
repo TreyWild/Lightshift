@@ -1,5 +1,6 @@
 ﻿using Mirror;
 using PlayerIOClient;
+using SharedModels.Models.User;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,6 +13,7 @@ public class Player : NetworkBehaviour
     public DatabaseObject PlayerObject;
     public InventoryManager InventoryManager;
     public PlayerShip ship;
+    public Account account;
     public GameObject RespawnHandler;
 
     [SyncVar(hook = nameof(OnInitPlayer))]

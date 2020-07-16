@@ -23,12 +23,16 @@ public class Npc : Ship
     public Action onDataLoaded;
 
     private List<NpcBehavior> _behaviors = new List<NpcBehavior>();
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     public void Awake()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         base.Awake();
     }
 
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     public void Start()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         base.Start();
     }

@@ -23,6 +23,8 @@ public class CameraFollow : MonoBehaviour
 	}
 	void LateUpdate()
 	{
+		if (target == null)
+			return;
 
 		var zoom = Input.GetAxis("Mouse ScrollWheel") * 20;
 

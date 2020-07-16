@@ -1,29 +1,59 @@
-﻿using Mirror;
+﻿using JetBrains.Annotations;
+using Mirror;
 using PlayerIOClient;
+using SharedModels.Models.User;
+using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
-
+using UnityEngine.Rendering;
 
 public class LightshiftAuthenticator : NetworkAuthenticator
 {
+    public enum AuthType
+    {
+        Login,
+        Register,
+        Recover,
+        ConfirmAccount,
+    }
+
+    public enum AuthResponse 
+    {
+        LoginSuccess,
+        LoginFail,
+        UsernameTaken,
+        EmailTaken,
+        RegisterSuccess,
+        Banned,
+        RecoverSuccess,
+        RecoverFail,
+    }
+
     [Header("Custom Properties")]
 
     // set these in the inspector
-    public string userId;
-    public string authKey;
+    public string email = "";
+    public string username = "";
+    public string passwordHash = "";
+    public string verificationToken;
+    public AuthType authType;
 
     public class AuthRequestMessage : MessageBase
     {
         // use whatever credentials make sense for your game
         // for example, you might want to pass the accessToken if using oauth
-        public string userId;
-        public string authKey;
+        public string email = "";
+        public string username = "";
+        public string passwordHash = "";
+        public string verificationToken;
+
+        public AuthType authType;
     }
 
     public class AuthResponseMessage : MessageBase
     {
-        public byte code;
-        public string message;
+        public AuthResponse response;
     }
 
     public override void OnStartServer()
@@ -47,59 +77,142 @@ public class LightshiftAuthenticator : NetworkAuthenticator
     {
         AuthRequestMessage authRequestMessage = new AuthRequestMessage
         {
-            authKey = authKey,
-            userId = userId
+            authType = authType,
+            email = email,
+            passwordHash = passwordHash,
+            username = username,
+            verificationToken = verificationToken
         };
 
         conn.Send(authRequestMessage);
     }
 
-    public void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage msg)
+    public void Disconnect(NetworkConnection connection, AuthResponse reason) 
     {
-        Debug.LogFormat("Authentication Request: {0} {1}", msg.userId, msg.authKey);
-
-        // check the credentials by calling your web server, database table, playfab api, or any method appropriate.
-
-        Server.Database.GetPlayerObject(msg.userId, delegate (DatabaseObject o)
+        AuthResponseMessage authResponseMessage = new AuthResponseMessage
         {
-            if (o != null)
-            {
-                var authKey = o.GetString("authKey", "");
+            response = reason
+        };
+        connection.Send(authResponseMessage);
+        connection.isAuthenticated = false;
+        StartCoroutine(DelayedDisconnect(connection, 1));
+        return;
+    }
 
-                if (authKey == msg.authKey && authKey != "")
+    public void LoginSuccess(NetworkConnection connection, AuthResponse response, Account account)
+    {
+        // create and send msg to client so it knows to proceed
+        AuthResponseMessage authResponseMessage = new AuthResponseMessage
+        {
+            response = response
+        };
+
+        OnServerAuthenticated.Invoke(connection);
+
+        Server.InitPlayer(connection, account);
+        return;
+    }
+
+    public void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage message)
+    {
+        Debug.Log($"{message.authType}[ Email: {message.email}, PasswordHash: {message.passwordHash}, Username: {message.username}, Verification: {message.verificationToken} ]");
+
+        switch (message.authType)
+        {
+            case AuthType.Recover:
+                // TO DO : RECOVER ACCOUNT
+                break;
+            case AuthType.ConfirmAccount:
+                // TO DO : CONFIRM ACCOUNT
+                break;
+            case AuthType.Login:
                 {
-
-                    // create and send msg to client so it knows to proceed
-                    AuthResponseMessage authResponseMessage = new AuthResponseMessage
+                    DB.Accounts.GetAccountByEmail(message.email, delegate (Account account) 
                     {
-                        code = 100,
-                        message = "Success"
-                    };
+                        bool validPassword = PasswordHasher.Verify(message.passwordHash, account.password);
 
-                    conn.Send(authResponseMessage);
+                        if (account == null || !validPassword)
+                        {
+                            Disconnect(conn, AuthResponse.LoginFail);
+                            return;
+                        }
 
-                    // Invoke the event to complete a successful authentication
-                    OnServerAuthenticated.Invoke(conn);
-
-                    Server.InitPlayer(conn, msg, o);
+                        LoginSuccess(conn, AuthResponse.LoginSuccess, account);
+                    });           
                 }
-            }
-            else
-            {
-
-                // create and send msg to client so it knows to disconnect
-                AuthResponseMessage authResponseMessage = new AuthResponseMessage
+                break;
+            case AuthType.Register:
                 {
-                    code = 200,
-                    message = "Invalid Credentials"
-                };
-                conn.Send(authResponseMessage);
-                // must set NetworkConnection isAuthenticated = false
-                conn.isAuthenticated = false;
-                // disconnect the client after 1 second so that response message gets delivered
-                StartCoroutine(DelayedDisconnect(conn, 1));
-            }
-        });
+                    DB.Accounts.CheckEmailAvailability(message.email, delegate (bool available) 
+                    {
+                        if (!available)
+                        {
+                            Disconnect(conn, AuthResponse.EmailTaken);
+                            return;
+                        }
+
+                        DB.Accounts.CheckUsernameAvailability(message.username, delegate (bool available) 
+                        {
+                            if (!available)
+                            {
+                                Disconnect(conn, AuthResponse.UsernameTaken);
+                                return;
+                            }
+
+                            var account = new Account 
+                            {
+                                emailAddress = message.email,
+                                Id = Guid.NewGuid().ToString(),
+                                password = message.passwordHash,
+                                username = message.username,
+
+                            };
+                        });
+                    });
+
+
+                    DB.Accounts.GetAccountByEmail(message.email, delegate (Account account)
+                    {
+                        bool validPassword = PasswordHasher.Verify(message.passwordHash, account.password);
+
+                        if (account == null || !validPassword)
+                        {
+                            Disconnect(conn, AuthResponse.LoginFail);
+                            return;
+                        }
+
+                        LoginSuccess(conn, AuthResponse.LoginSuccess, account);
+                    });
+                    //if (!Database.Users.EmailAvailable(message.email))
+                    //{
+                    //    Disconnect(conn, AuthResponse.EmailTaken);
+                    //    return;
+                    //}
+                    //else if (!Database.Users.UsernameAvailable(message.username))
+                    //{
+                    //    Disconnect(conn, AuthResponse.UsernameTaken);
+                    //    return;
+                    //}
+                    //else
+                    //{
+
+                    //    //var user = new User
+                    //    //{
+                    //    //    passwordHash = PasswordHasher.Hash(message.passwordHash),
+                    //    //    username = message.username,
+                    //    //    emailAddress = message.email,
+                    //    //    Id = Guid.NewGuid().ToString(),
+                    //    //    IsVerified = false,
+                    //    //};
+
+
+                    //    //Database.Users.Save(user);
+
+                    //    LoginSuccess(conn, AuthResponse.RegisterSuccess, user);
+                    //}
+                }
+            break;
+        }
     }
 
     public IEnumerator DelayedDisconnect(NetworkConnection conn, float waitTime)
@@ -110,23 +223,19 @@ public class LightshiftAuthenticator : NetworkAuthenticator
 
     public void OnAuthResponseMessage(NetworkConnection conn, AuthResponseMessage msg)
     {
-        if (msg.code == 100)
-        {
-            Debug.LogFormat("Authentication Response: {0}", msg.message);
+        Debug.Log(msg.response);
 
-            // Invoke the event to complete a successful authentication
+        if (msg.response == AuthResponse.RegisterSuccess || msg.response == AuthResponse.LoginSuccess)
+        {
             OnClientAuthenticated.Invoke(conn);
+            return;
         }
-        else
-        {
-            Debug.LogErrorFormat("Authentication Response: {0}", msg.message);
 
-            // Set this on the client for local reference
-            conn.isAuthenticated = false;
+        LoginManager.Instance.HandleResponse(msg.response);
 
-            // disconnect the client
-            conn.Disconnect();
-        }
+        conn.isAuthenticated = false;
+        // disconnect the client
+        conn.Disconnect();
     }
 }
 
