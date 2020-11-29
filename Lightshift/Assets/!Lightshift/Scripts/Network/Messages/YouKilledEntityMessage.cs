@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class YouKilledEntityMessage : MessageBase
+public class YouKilledEntityMessage : NetworkMessage
 {
     public string username;
 }

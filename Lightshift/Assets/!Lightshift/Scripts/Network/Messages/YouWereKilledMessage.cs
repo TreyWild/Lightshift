@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-public class YouWereKilledMessage : MessageBase
+public class YouWereKilledMessage : NetworkMessage
 {
     public short killerEntityId;
     public string killerName;

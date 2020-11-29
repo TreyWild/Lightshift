@@ -1,0 +1,8 @@
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\bin\Debug\SharedModels.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\bin\Debug\SharedModels.pdb
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.csproj.CoreCompileInputs.cache
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.pdb
+C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\SharedModels.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\SharedModels.pdb
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.csprojAssemblyReference.cache

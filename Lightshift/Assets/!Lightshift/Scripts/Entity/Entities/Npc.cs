@@ -71,7 +71,7 @@ public class Npc : Ship
 
         SetName(npcData.Name);
         SetWeapons(npcData.weapons);
-        stats = npcData.data;
+        //stats = npcData.data;
         SetFaction(npcData.faction);
         LoadBehaviors(npcData.Behavior);
 
@@ -79,7 +79,7 @@ public class Npc : Ship
             transform.localScale = new Vector3(1, 1, 1);
         transform.localScale = new Vector3(npcData.scale.x, npcData.scale.y, 1);
 
-        UpdateStats(true);
+        //UpdateStats(true);
         onDataLoaded?.Invoke();
     }
 
@@ -117,8 +117,8 @@ public class Npc : Ship
 
     public void RunBasicFollowAI() 
     {
-        MoveForwards(stats.maxSpeed);
-        RotateTowardsTarget(stats.agility);
+        //MoveForwards(stats.maxSpeed);
+        //RotateTowardsTarget(stats.agility);
         RunAIChecks();
     }
 
@@ -188,7 +188,7 @@ public class Npc : Ship
     public override void OnDeath()
     {
         base.OnDeath();
-        stats = new ModuleData { };
+        //stats = new ModuleData { };
         onDeath?.Invoke(this);
     }
 }

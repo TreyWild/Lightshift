@@ -1,7 +1,10 @@
-﻿using JetBrains.Annotations;
+﻿using Assets._Lightshift.Scripts.Web;
+using JetBrains.Annotations;
+using MasterServer;
 using Mirror;
 using PlayerIOClient;
-using SharedModels.Models.User;
+using SharedModels;
+using SharedModels.WebRequestObjects;
 using System;
 using System.Collections;
 using System.Linq;
@@ -10,50 +13,19 @@ using UnityEngine.Rendering;
 
 public class LightshiftAuthenticator : NetworkAuthenticator
 {
-    public enum AuthType
-    {
-        Login,
-        Register,
-        Recover,
-        ConfirmAccount,
-    }
-
-    public enum AuthResponse 
-    {
-        LoginSuccess,
-        LoginFail,
-        UsernameTaken,
-        EmailTaken,
-        RegisterSuccess,
-        Banned,
-        RecoverSuccess,
-        RecoverFail,
-    }
-
-    [Header("Custom Properties")]
+    [Header("Authentication")]
 
     // set these in the inspector
-    public string email = "";
-    public string username = "";
-    public string passwordHash = "";
-    public string verificationToken;
-    public AuthType authType;
+    public string sessionAuthKey = "";
 
-    public class AuthRequestMessage : MessageBase
+    public class AuthRequestMessage : NetworkMessage
     {
-        // use whatever credentials make sense for your game
-        // for example, you might want to pass the accessToken if using oauth
-        public string email = "";
-        public string username = "";
-        public string passwordHash = "";
-        public string verificationToken;
-
-        public AuthType authType;
+        public string sessionAuthKey;
     }
 
-    public class AuthResponseMessage : MessageBase
+    public class AuthResponseMessage : NetworkMessage
     {
-        public AuthResponse response;
+        public AuthenticationResponseType response;
     }
 
     public override void OnStartServer()
@@ -77,18 +49,15 @@ public class LightshiftAuthenticator : NetworkAuthenticator
     {
         AuthRequestMessage authRequestMessage = new AuthRequestMessage
         {
-            authType = authType,
-            email = email,
-            passwordHash = passwordHash,
-            username = username,
-            verificationToken = verificationToken
+            sessionAuthKey = sessionAuthKey
         };
 
         conn.Send(authRequestMessage);
     }
 
-    public void Disconnect(NetworkConnection connection, AuthResponse reason) 
+    public void Disconnect(NetworkConnection connection, AuthenticationResponseType reason) 
     {
+        Debug.LogError($"Auth Failed: [{reason}]");
         AuthResponseMessage authResponseMessage = new AuthResponseMessage
         {
             response = reason
@@ -99,120 +68,39 @@ public class LightshiftAuthenticator : NetworkAuthenticator
         return;
     }
 
-    public void LoginSuccess(NetworkConnection connection, AuthResponse response, Account account)
+    public void LoginSuccess(NetworkConnection connection)
     {
         // create and send msg to client so it knows to proceed
         AuthResponseMessage authResponseMessage = new AuthResponseMessage
         {
-            response = response
+            response = AuthenticationResponseType.AuthenticationSuccess
         };
 
-        OnServerAuthenticated.Invoke(connection);
+        ServerAccept(connection);
 
-        Server.InitPlayer(connection, account);
+        connection.Send(authResponseMessage);
+
+        Debug.Log($"{((JsonString)connection.authenticationData).Value} was authenticated.");
+
         return;
     }
 
     public void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage message)
     {
-        Debug.Log($"{message.authType}[ Email: {message.email}, PasswordHash: {message.passwordHash}, Username: {message.username}, Verification: {message.verificationToken} ]");
-
-        switch (message.authType)
+        Debug.LogError($"Auth Message [{message.sessionAuthKey}]");
+        HttpService.Get("account/authenticate", new JsonString {Value = message.sessionAuthKey },
+        delegate (JsonString json)
         {
-            case AuthType.Recover:
-                // TO DO : RECOVER ACCOUNT
-                break;
-            case AuthType.ConfirmAccount:
-                // TO DO : CONFIRM ACCOUNT
-                break;
-            case AuthType.Login:
-                {
-                    DB.Accounts.GetAccountByEmail(message.email, delegate (Account account) 
-                    {
-                        bool validPassword = PasswordHasher.Verify(message.passwordHash, account.password);
-
-                        if (account == null || !validPassword)
-                        {
-                            Disconnect(conn, AuthResponse.LoginFail);
-                            return;
-                        }
-
-                        LoginSuccess(conn, AuthResponse.LoginSuccess, account);
-                    });           
-                }
-                break;
-            case AuthType.Register:
-                {
-                    DB.Accounts.CheckEmailAvailability(message.email, delegate (bool available) 
-                    {
-                        if (!available)
-                        {
-                            Disconnect(conn, AuthResponse.EmailTaken);
-                            return;
-                        }
-
-                        DB.Accounts.CheckUsernameAvailability(message.username, delegate (bool available) 
-                        {
-                            if (!available)
-                            {
-                                Disconnect(conn, AuthResponse.UsernameTaken);
-                                return;
-                            }
-
-                            var account = new Account 
-                            {
-                                emailAddress = message.email,
-                                Id = Guid.NewGuid().ToString(),
-                                password = message.passwordHash,
-                                username = message.username,
-
-                            };
-                        });
-                    });
-
-
-                    DB.Accounts.GetAccountByEmail(message.email, delegate (Account account)
-                    {
-                        bool validPassword = PasswordHasher.Verify(message.passwordHash, account.password);
-
-                        if (account == null || !validPassword)
-                        {
-                            Disconnect(conn, AuthResponse.LoginFail);
-                            return;
-                        }
-
-                        LoginSuccess(conn, AuthResponse.LoginSuccess, account);
-                    });
-                    //if (!Database.Users.EmailAvailable(message.email))
-                    //{
-                    //    Disconnect(conn, AuthResponse.EmailTaken);
-                    //    return;
-                    //}
-                    //else if (!Database.Users.UsernameAvailable(message.username))
-                    //{
-                    //    Disconnect(conn, AuthResponse.UsernameTaken);
-                    //    return;
-                    //}
-                    //else
-                    //{
-
-                    //    //var user = new User
-                    //    //{
-                    //    //    passwordHash = PasswordHasher.Hash(message.passwordHash),
-                    //    //    username = message.username,
-                    //    //    emailAddress = message.email,
-                    //    //    Id = Guid.NewGuid().ToString(),
-                    //    //    IsVerified = false,
-                    //    //};
-
-
-                    //    //Database.Users.Save(user);
-
-                    //    LoginSuccess(conn, AuthResponse.RegisterSuccess, user);
-                    //}
-                }
-            break;
-        }
+            if (json.Value == null)
+            {
+                Disconnect(conn, AuthenticationResponseType.AuthenticationFail);
+            }
+            else 
+            {
+                conn.authenticationData = json;
+                LoginSuccess(conn);
+            }
+        });
     }
 
     public IEnumerator DelayedDisconnect(NetworkConnection conn, float waitTime)
@@ -225,9 +113,9 @@ public class LightshiftAuthenticator : NetworkAuthenticator
     {
         Debug.Log(msg.response);
 
-        if (msg.response == AuthResponse.RegisterSuccess || msg.response == AuthResponse.LoginSuccess)
+        if (msg.response == AuthenticationResponseType.AuthenticationSuccess)
         {
-            OnClientAuthenticated.Invoke(conn);
+            ClientAccept(conn);
             return;
         }
 

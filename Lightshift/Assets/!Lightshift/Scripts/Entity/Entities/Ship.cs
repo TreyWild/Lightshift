@@ -8,8 +8,8 @@ using UnityEngine;
 [RequireComponent(typeof(EntityUI), typeof(Heart), typeof(Shield))]
 public class Ship : Entity
 {
-    [HideInInspector]
-    public ModuleData stats;
+    //[HideInInspector]
+    //public ModuleData stats;
 
     [HideInInspector]
     public LightLance lightLance;
@@ -77,50 +77,50 @@ public class Ship : Entity
     }
 
 
-    public void UpdateStats(bool refill = false)
-    {
-        if (engine != null)
-        {
-            engine.maxSpeed = stats.maxSpeed;
-            engine.acceleration = stats.acceleration;
-            engine.brakeForce = stats.brakeForce;
-            engine.overDriveMultiplier = stats.overDriveBoostMultiplier;
-            engine.overDrivePowerCost = stats.overDrivePowerCost;
-        }
+    //public void UpdateStats(bool refill = false)
+    //{
+    //    if (engine != null)
+    //    {
+    //        engine.maxSpeed = stats.maxSpeed;
+    //        engine.acceleration = stats.acceleration;
+    //        engine.brakeForce = stats.brakeForce;
+    //        engine.overDriveMultiplier = stats.overDriveBoostMultiplier;
+    //        engine.overDrivePowerCost = stats.overDrivePowerCost;
+    //    }
 
-        if (hull != null)
-            hull.weight = stats.weight;
+    //    if (hull != null)
+    //        hull.weight = stats.weight;
 
-        if (wing != null)
-            wing.agility = stats.agility;
+    //    if (wing != null)
+    //        wing.agility = stats.agility;
 
-        heart.SetMaxHealth(stats.maxHealth);
-        heart.healthRegen = stats.healthRegen;
+    //    heart.SetMaxHealth(stats.maxHealth);
+    //    heart.healthRegen = stats.healthRegen;
 
-        shield.SetMaxShield(stats.maxShield);
-        shield.shieldRegen = stats.shieldRegen;
+    //    shield.SetMaxShield(stats.maxShield);
+    //    shield.shieldRegen = stats.shieldRegen;
 
-        if (generator != null)
-        {
-            generator.maxPower = stats.maxPower;
-            generator.powerRegen = stats.powerRegen;
-        }
-        if (lightLance != null)
-        {
-            lightLance.SetRange(stats.lightLanceRange);
-            lightLance.pullForce = stats.lightLancePullForce;
-            lightLance.powerCost = stats.lightLancePowerCost;
-        }
+    //    if (generator != null)
+    //    {
+    //        generator.maxPower = stats.maxPower;
+    //        generator.powerRegen = stats.powerRegen;
+    //    }
+    //    if (lightLance != null)
+    //    {
+    //        lightLance.SetRange(stats.lightLanceRange);
+    //        lightLance.pullForce = stats.lightLancePullForce;
+    //        lightLance.powerCost = stats.lightLancePowerCost;
+    //    }
 
-        if (refill)
-        {
-            heart.health = stats.maxHealth - 1;
-            shield.shield = stats.maxShield - 1;
+    //    if (refill)
+    //    {
+    //        heart.health = stats.maxHealth - 1;
+    //        shield.shield = stats.maxShield - 1;
 
-            if (generator != null)
-            generator.power = stats.maxPower - 1;
-        }
-    }
+    //        if (generator != null)
+    //        generator.power = stats.maxPower - 1;
+    //    }
+    //}
 
 }
 

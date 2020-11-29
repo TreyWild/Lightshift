@@ -6,12 +6,7 @@ public class Game : MonoBehaviour
     public static Game Instance { get; set; }
     public void Awake()
     {
-        if (Instance != null)
-            Destroy(Instance.gameObject);
-
         Instance = this;
-
-        DontDestroyOnLoad(gameObject);
     }
     public void Start()
     {

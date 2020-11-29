@@ -29,7 +29,7 @@ public class NpcData : ScriptableObject
 
     public Sprite mapIcon;
     public float trackingRange;
-    public ModuleData data;
+    //public ModuleData data;
     public Vector2 scale = new Vector2(1,1);
     public Sprite sprite;
     public int renderOrder = 45;

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class AuthMessage : MessageBase
+public class AuthMessage : NetworkMessage
 {
     public string authKey;
     public string connectUserId;

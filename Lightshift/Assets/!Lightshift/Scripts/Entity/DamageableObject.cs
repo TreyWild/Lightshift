@@ -67,15 +67,15 @@ public class DamageableObject : NetworkBehaviour
 
                 Server.SendChatBroadcast(deathReason);
 
-                // If player: Create Respawn Handler
-                var respawnHandler = Server.GetPlayer(connectionToClient).RespawnHandler;
-                if (respawnHandler == null)
-                    respawnHandler = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerRespawnHandler>());
+                //// If player: Create Respawn Handler
+                //var respawnHandler = Server.GetPlayer(connectionToClient).RespawnHandler;
+                //if (respawnHandler == null)
+                //    respawnHandler = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerRespawnHandler>());
 
-                NetworkServer.Spawn(respawnHandler, connectionToClient);
+                //NetworkServer.Spawn(respawnHandler, connectionToClient);
 
-                var script = respawnHandler.GetComponent<PlayerRespawnHandler>();
-                script.Initialize(respawnTime: 5.3f, attacker.displayName);
+                //var script = respawnHandler.GetComponent<PlayerRespawnHandler>();
+                //script.Initialize(respawnTime: 5.3f, attacker.displayName);
             }
             // TO DO : HANDLE DROPS
         }

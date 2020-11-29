@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 
-public class InitMessage : MessageBase
+public class InitMessage : NetworkMessage
 {
     public int Level;
     public int Xp;

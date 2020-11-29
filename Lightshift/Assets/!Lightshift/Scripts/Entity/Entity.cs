@@ -311,7 +311,52 @@ public class Entity : NetworkBehaviour
 
     //    if (isServer && connectionToClient == null || hasAuthority) 
     //    {
-            
+
     //    } 
     //}
+
+    #region Checkpoints
+    public event Action<string> OnLeaveCheckpoint;
+    public event Action<string> OnEnterCheckpoint;
+
+    public void EnterCheckpoint(Checkpoint checkpoint) 
+    {
+        HandleCheckpoint(checkpoint.Id, false);
+    }
+    public void LeaveCheckpoint(Checkpoint checkpoint)
+    {
+        HandleCheckpoint(checkpoint.Id, true);
+    }
+    public void HandleCheckpoint(string id, bool leaving) 
+    {
+        if (isLocalPlayer && hasAuthority)
+            CmdHandleCheckpoint(id, leaving);
+        else if (isServer && hasAuthority)
+        {
+            RpcHandleCheckpoint(id, leaving);
+            UpdateCheckpointCallbacks(id, leaving);
+        }
+    }
+
+    [Command]
+    private void CmdHandleCheckpoint(string id, bool leaving)
+    {
+        // Run on server
+        UpdateCheckpointCallbacks(id, leaving);
+    }
+
+    [ClientRpc]
+    private void RpcHandleCheckpoint(string id, bool leaving)
+    {
+        // Run on clients
+        UpdateCheckpointCallbacks(id, leaving);
+    }
+
+    private void UpdateCheckpointCallbacks(string id, bool leaving) 
+    {
+        if (leaving)
+            OnLeaveCheckpoint?.Invoke(id);
+        else OnEnterCheckpoint?.Invoke(id);
+    }
+    #endregion
 }

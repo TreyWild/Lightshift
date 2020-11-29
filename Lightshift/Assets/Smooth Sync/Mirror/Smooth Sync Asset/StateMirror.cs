@@ -52,6 +52,13 @@ namespace Smooth
         /// The time on the server when the StateMirror is validated. Only used by server for latestVerifiedStateMirror.
         /// </summary>
         public float receivedOnServerTimestamp;
+
+        /// <summary>The localTime that a state was received on a non-owner.</summary>
+        public float receivedTimestamp;
+
+        /// <summary>This value is incremented each time local time is reset so that non-owners can detect and handle the reset.</summary>
+        public int localTimeResetIndicator;
+
         /// <summary>
         /// Used in Deserialize() so we don't have to make a new Vector3 every time.
         /// </summary>
@@ -94,6 +101,8 @@ namespace Smooth
             scale = state.scale;
             velocity = state.velocity;
             angularVelocity = state.angularVelocity;
+            receivedTimestamp = state.receivedTimestamp;
+            localTimeResetIndicator = state.localTimeResetIndicator;
             return this;
         }
 
@@ -128,11 +137,13 @@ namespace Smooth
             atPositionalRest = false;
             atRotationalRest = false;
             teleport = false;
+            receivedTimestamp = 0;
+            localTimeResetIndicator = 0;
         }
 
         public void copyFromSmoothSync(SmoothSyncMirror smoothSyncScript)
         {
-            ownerTimestamp = Time.realtimeSinceStartup;
+            ownerTimestamp = smoothSyncScript.localTime;
             position = smoothSyncScript.getPosition();
             rotation = smoothSyncScript.getRotation();
             scale = smoothSyncScript.getScale();
@@ -154,6 +165,7 @@ namespace Smooth
                 velocity = Vector3.zero;
                 angularVelocity = Vector3.zero;
             }
+            localTimeResetIndicator = smoothSyncScript.localTimeResetIndicator;
             //atPositionalRest = smoothSyncScript.sendAtPositionalRestMessage;
             //atRotationalRest = smoothSyncScript.sendAtRotationalRestMessage;
         }
@@ -165,7 +177,7 @@ namespace Smooth
     /// <remarks>
     /// This only sends and receives the parts of the StateMirror that are enabled on the SmoothSync component.
     /// </remarks>
-    public class NetworkStateMirror : MessageBase
+    public class NetworkStateMirror : NetworkMessage
     {
         /// <summary>
         /// The SmoothSync object associated with this StateMirror.
@@ -190,19 +202,25 @@ namespace Smooth
             this.smoothSync = smoothSyncScript;
             state.copyFromSmoothSync(smoothSyncScript);
         }
+    }
+
+    public static class SyncProjectilesMessageFunctions
+    {
         /// <summary>
         /// Serialize the message over the network.
         /// </summary>
         /// <remarks>
         /// Only sends what it needs and compresses floats if you chose to.
         /// </remarks>
-        /// <param name="writer">The NetworkWriter to write to.</param>
-        override public void Serialize(NetworkWriter writer)
+        public static void Serialize(this NetworkWriter writer, NetworkStateMirror msg)
         {
             bool sendPosition, sendRotation, sendScale, sendVelocity, sendAngularVelocity, sendAtPositionalRestTag, sendAtRotationalRestTag;
 
+            var smoothSync = msg.smoothSync;
+            var state = msg.state;
+
             // If is a server trying to relay client information back out to other clients.
-            if (NetworkServer.active && !smoothSync.hasAuthorityOrUnownedOnServer)
+            if (NetworkServer.active && !smoothSync.hasControl)
             {
                 sendPosition = state.serverShouldRelayPosition;
                 sendRotation = state.serverShouldRelayRotation;
@@ -212,7 +230,7 @@ namespace Smooth
                 sendAtPositionalRestTag = state.atPositionalRest;
                 sendAtRotationalRestTag = state.atRotationalRest;
             }
-            else // If is a server or client trying to send owned object information across the network.
+            else // If is a server or client trying to send controlled object information across the network.
             {
                 sendPosition = smoothSync.sendPosition;
                 sendRotation = smoothSync.sendRotation;
@@ -416,6 +434,11 @@ namespace Smooth
             {
                 writer.WriteByte((byte)smoothSync.ownerChangeIndicator); 
             }
+
+            if (smoothSync.automaticallyResetTime)
+            {
+                writer.WriteByte((byte)state.localTimeResetIndicator);
+            }
         }
 
         /// <summary>
@@ -424,9 +447,11 @@ namespace Smooth
         /// <remarks>
         /// Only receives what it needs and decompresses floats if you chose to.
         /// </remarks>
-        /// <param name="writer">The Networkreader to read from.</param>
-        override public void Deserialize(NetworkReader reader)
+        public static NetworkStateMirror Deserialize(this NetworkReader reader)
         {
+            var msg = new NetworkStateMirror();
+            var state = msg.state;
+
             // The first received byte tells us what we need to be syncing.
             byte syncInfoByte = reader.ReadByte();
             bool syncPosition = shouldSyncPosition(syncInfoByte);
@@ -441,7 +466,7 @@ namespace Smooth
             if (networkIdentity == null)
             {
                 Debug.LogWarning("Could not find target for network StateMirror message.");
-                return;
+                return null;
             }
             uint netID = networkIdentity.netId;
             int syncIndex = (int)reader.ReadPackedUInt32();
@@ -453,35 +478,39 @@ namespace Smooth
             if (!ob)
             {
                 Debug.LogWarning("Could not find target for network StateMirror message.");
-                return;
+                return null;
             }
 
             // It doesn't matter which SmoothSync is returned since they all have the same list.
-            smoothSync = ob.GetComponent<SmoothSyncMirror>();
+            msg.smoothSync = ob.GetComponent<SmoothSyncMirror>();
 
-            if (!smoothSync)
+            if (!msg.smoothSync)
             {
                 Debug.LogWarning("Could not find target for network StateMirror message.");
-                return;
+                return null;
             }
 
+            // Find the correct object to sync according to the syncIndex.
+            for (int i = 0; i < msg.smoothSync.childObjectSmoothSyncs.Length; i++)
+            {
+                if (msg.smoothSync.childObjectSmoothSyncs[i].syncIndex == syncIndex)
+                {
+                    msg.smoothSync = msg.smoothSync.childObjectSmoothSyncs[i];
+                }
+            }
+
+            var smoothSync = msg.smoothSync;
+
+            state.receivedTimestamp = smoothSync.localTime;
+
             // If we want the server to relay non-owned object information out to other clients, set these variables so we know what we need to send.
-            if (NetworkServer.active && !smoothSync.hasAuthorityOrUnownedOnServer)
+            if (NetworkServer.active && !smoothSync.hasControl)
             {
                 state.serverShouldRelayPosition = syncPosition;
                 state.serverShouldRelayRotation = syncRotation;
                 state.serverShouldRelayScale = syncScale;
                 state.serverShouldRelayVelocity = syncVelocity;
                 state.serverShouldRelayAngularVelocity = syncAngularVelocity;
-            }
-
-            // Find the correct object to sync according to the syncIndex.
-            for (int i = 0; i < smoothSync.childObjectSmoothSyncs.Length; i++)
-            {
-                if (smoothSync.childObjectSmoothSyncs[i].syncIndex == syncIndex)
-                {
-                    smoothSync = smoothSync.childObjectSmoothSyncs[i];
-                }
             }
 
             if (smoothSync.receivedStatesCounter < smoothSync.sendRate) smoothSync.receivedStatesCounter++;
@@ -719,39 +748,46 @@ namespace Smooth
             {
                 smoothSync.ownerChangeIndicator = (int)reader.ReadByte();
             }
+
+            if (smoothSync.automaticallyResetTime)
+            {
+                state.localTimeResetIndicator = (int)reader.ReadByte();
+            }
+
+            return msg;
         }
         /// <summary>
         /// Hardcoded information to determine position syncing.
         /// </summary>
-        byte positionMask = 1;        // 0000_0001
+        const byte positionMask = 1;        // 0000_0001
         /// <summary>
         /// Hardcoded information to determine rotation syncing.
         /// </summary>
-        byte rotationMask = 2;        // 0000_0010
+        const byte rotationMask = 2;        // 0000_0010
         /// <summary>
         /// Hardcoded information to determine scale syncing.
         /// </summary>
-        byte scaleMask = 4;        // 0000_0100
+        const byte scaleMask = 4;        // 0000_0100
         /// <summary>
         /// Hardcoded information to determine velocity syncing.
         /// </summary>
-        byte velocityMask = 8;        // 0000_1000
+        const byte velocityMask = 8;        // 0000_1000
         /// <summary>
         /// Hardcoded information to determine angular velocity syncing.
         /// </summary>
-        byte angularVelocityMask = 16; // 0001_0000
+        const byte angularVelocityMask = 16; // 0001_0000
         /// <summary>
         /// Hardcoded information to determine whether the object is at rest and should stop extrapolating.
         /// </summary>
-        byte atPositionalRestMask = 64; // 0100_0000
+        const byte atPositionalRestMask = 64; // 0100_0000
         /// <summary>
         /// Hardcoded information to determine whether the object is at rest and should stop extrapolating.
         /// </summary>
-        byte atRotationalRestMask = 128; // 1000_0000
+        const byte atRotationalRestMask = 128; // 1000_0000
         /// <summary>
         /// Encode sync info based on what we want to send.
         /// </summary>
-        byte encodeSyncInformation(bool sendPosition, bool sendRotation, bool sendScale, bool sendVelocity, bool sendAngularVelocity, bool atPositionalRest, bool atRotationalRest)
+        static byte encodeSyncInformation(bool sendPosition, bool sendRotation, bool sendScale, bool sendVelocity, bool sendAngularVelocity, bool atPositionalRest, bool atRotationalRest)
         {
             byte encoded = 0;
 
@@ -788,7 +824,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we want to sync position.
         /// </summary>
-        bool shouldSyncPosition(byte syncInformation)
+        static bool shouldSyncPosition(byte syncInformation)
         {
             if ((syncInformation & positionMask) == positionMask)
             {
@@ -802,7 +838,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we want to sync rotation.
         /// </summary>
-        bool shouldSyncRotation(byte syncInformation)
+        static bool shouldSyncRotation(byte syncInformation)
         {
             if ((syncInformation & rotationMask) == rotationMask)
             {
@@ -816,7 +852,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we want to sync scale.
         /// </summary>
-        bool shouldSyncScale(byte syncInformation)
+        static bool shouldSyncScale(byte syncInformation)
         {
             if ((syncInformation & scaleMask) == scaleMask)
             {
@@ -830,7 +866,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we want to sync velocity.
         /// </summary>
-        bool shouldSyncVelocity(byte syncInformation)
+        static bool shouldSyncVelocity(byte syncInformation)
         {
             if ((syncInformation & velocityMask) == velocityMask)
             {
@@ -844,7 +880,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we want to sync angular velocity.
         /// </summary>
-        bool shouldSyncAngularVelocity(byte syncInformation)
+        static bool shouldSyncAngularVelocity(byte syncInformation)
         {
             if ((syncInformation & angularVelocityMask) == angularVelocityMask)
             {
@@ -858,7 +894,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we should be at positional rest. (Stop extrapolating)
         /// </summary>
-        bool shouldBeAtPositionalRest(byte syncInformation)
+        static bool shouldBeAtPositionalRest(byte syncInformation)
         {
             if ((syncInformation & atPositionalRestMask) == atPositionalRestMask)
             {
@@ -872,7 +908,7 @@ namespace Smooth
         /// <summary>
         /// Decode sync info to see if we should be at rotational rest. (Stop extrapolating)
         /// </summary>
-        bool shouldBeAtRotationalRest(byte syncInformation)
+        static bool shouldBeAtRotationalRest(byte syncInformation)
         {
             if ((syncInformation & atRotationalRestMask) == atRotationalRestMask)
             {

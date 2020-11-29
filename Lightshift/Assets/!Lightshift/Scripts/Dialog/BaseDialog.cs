@@ -11,4 +11,7 @@ public class BaseDialog : MonoBehaviour {
     {
         displayText.text = message;
     }
+
+    [SerializeField] TextMeshProUGUI _buttonText;
+    public void SetButtonText(string text) => _buttonText.text = text;
 }

@@ -162,7 +162,7 @@ public class WeaponSystem : NetworkBehaviour
 
             bullet.transform.position = gunPoint;
             bullet.transform.eulerAngles = new Vector3(0, 0, rotation);
-            bullet.Initialize(velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color, weapon.trailColor);
+            //bullet.Initialize(velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color, weapon.trailColor);
         }
         activeWeapon.timeSinceLastShot = 0;
     }

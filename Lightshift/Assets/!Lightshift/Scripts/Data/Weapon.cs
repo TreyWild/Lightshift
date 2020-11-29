@@ -3,7 +3,7 @@ using System.Collections;
 using System;
 
 [CreateAssetMenu(fileName = "Weapon", menuName = "Lightshift/Create Weapon", order = 3)]
-public class Weapon : Item
+public class Weapon : ModuleItem
 {
     public GameObject hitEffectPrefab;
     public AudioClip ShootSound;

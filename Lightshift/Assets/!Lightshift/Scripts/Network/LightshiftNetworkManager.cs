@@ -1,5 +1,10 @@
-﻿using Mirror;
+﻿using Assets._Lightshift.Scripts;
+using Assets._Lightshift.Scripts.Web;
+using MasterServer;
+using Mirror;
 using PlayerIOClient;
+using SharedModels;
+using SharedModels.WebRequestObjects;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,6 +16,8 @@ using UnityEngine.SceneManagement;
 
 public class LightshiftNetworkManager : NetworkManager 
 {
+    public bool UseTestServers;
+    public bool Invert;
     public static GameObject GetPrefab<T>() => singleton.spawnPrefabs.FirstOrDefault(o => o.gameObject.HasType<T>());
     public override void OnStartServer()
     {
@@ -40,7 +47,6 @@ public class LightshiftNetworkManager : NetworkManager
 
         Debug.Log($"Game Scene Loaded. Server Ready.");
     }
-
     public override void OnClientConnect(NetworkConnection conn)
     {
         base.OnClientConnect(conn);
@@ -50,38 +56,47 @@ public class LightshiftNetworkManager : NetworkManager
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
-        Destroy(gameObject);
-        SceneManager.LoadScene("_AUTHENTICATION_");
+        //Destroy(gameObject);
+        //SceneManager.LoadScene("_AUTHENTICATION_");
+        singleton.StopClient();
+    }
+    public override void OnServerAddPlayer(NetworkConnection conn)
+    {
+        //Delegator.WaitForEndOfFrame(delegate 
+        //{
+            base.OnServerAddPlayer(conn);
+        //});
     }
 
-    public static void Register(string email, string username, string password) 
+    public void Authenticate(string key)
     {
         var authenticator = FindObjectOfType<LightshiftAuthenticator>();
-        authenticator.authType = LightshiftAuthenticator.AuthType.Register;
-        authenticator.email = email;
-        authenticator.username = username;
-        authenticator.passwordHash = PasswordHasher.Hash(password);
+        authenticator.sessionAuthKey = key;
 
-        singleton.StartClient();
-    }
+        if (Application.isEditor || UseTestServers)
+        {
+            singleton.networkAddress = "localhost";
+            if (Application.isEditor && !Invert)
+            {
+                HttpService.InitGameServerAuthentication("dev-access");
+                StartHost();
+                return;
+            }
+            else if (Invert && Application.isEditor)
+            {
+                StartClient();
+                return;
+            }
+            else 
+            {
+                HttpService.InitGameServerAuthentication("dev-access");
+                StartHost();
+                return;
+            }
+        }
+        else singleton.networkAddress = "167.99.149.84";
 
-    public static void Login(string email, string password)
-    {
-        var authenticator = FindObjectOfType<LightshiftAuthenticator>();
-        authenticator.authType = LightshiftAuthenticator.AuthType.Login;
-        authenticator.email = email;
-        authenticator.passwordHash = PasswordHasher.Hash(password);
-
-        singleton.StartClient();
-    }
-
-    public static void Recover(string email)
-    {
-        var authenticator = FindObjectOfType<LightshiftAuthenticator>();
-        authenticator.authType = LightshiftAuthenticator.AuthType.Recover;
-        authenticator.email = email;
-
-        singleton.StartClient();
+        StartClient();
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
