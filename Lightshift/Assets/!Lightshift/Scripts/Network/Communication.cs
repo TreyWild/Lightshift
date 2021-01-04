@@ -29,7 +29,7 @@ namespace Assets._Lightshift.Scripts.Network
                 if (player == null)
                     return;
 
-                message = $"{player.GetProfile().Username}{message}";
+                message = $"{player.Username}{message}";
                 RpcSendChatMessage(message);
             }
             else CmdSendChatMessage(message);

@@ -44,8 +44,8 @@ namespace MasterServer.Controllers
 
                 // CREATE NEW USER SESSION
                 var authKey = AuthenticationService.CreateSession(account.Id, Request);
-                account.Profile.TotalSessions++;
-                account.Profile.LastActivity = DateTime.Now;
+                account.TotalSessions++;
+                account.LastActivity = DateTime.Now;
 
                 //SAVE ACCOUNT
                 DB.Accounts.SaveDocument(account);
@@ -128,13 +128,12 @@ namespace MasterServer.Controllers
                 Id = userId,
                 EmailAddress = register.Email.ToLowerInvariant(),
                 CaseSensitiveUsername = register.Username.ToUpper(),
-
+                TotalSessions = 1,
+                CreationDate = DateTime.Now,
+                LastActivity = DateTime.Now,
                 Profile = new Profile
                 {
-                    CreationDate = DateTime.Now,
-                    LastActivity = DateTime.Now,
                     Level = 1,
-                    TotalSessions = 1,
                     Username = register.Username,
                     XP = 0,
                 }

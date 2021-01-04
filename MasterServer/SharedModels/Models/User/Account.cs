@@ -12,6 +12,10 @@ namespace SharedModels
         public bool AccountConfirmed { get; set; }
         public string EmailAddress { get; set; }
         public string CaseSensitiveUsername { get; set; }
-        public Profile Profile;
+        public Profile Profile { get; set; }
+        public DateTime CreationDate { get; set; }
+        public DateTime LastActivity { get; set; }
+
+        public int TotalSessions { get; set; }
     }
 }

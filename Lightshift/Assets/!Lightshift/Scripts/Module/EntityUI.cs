@@ -4,17 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
-public class EntityUI : NetworkBehaviour
+public class EntityUI : MonoBehaviour
 {
     private EntityUIControl _ui;
+    private bool hasAuthority;
+    private bool isServer;
     private void Awake()
     {
-        _ui = Instantiate(PrefabManager.Instance.entityUIPrefab, transform).GetComponent<EntityUIControl>();
+        if (_ui != null)
+            _ui = Instantiate(PrefabManager.Instance.entityUIPrefab, transform).GetComponent<EntityUIControl>();
     }
 
-    public override void OnStartClient()
+    public void Init(bool hasAuthority = false, bool isServer = false)
     {
+        this.hasAuthority = hasAuthority;
+        this.isServer = isServer;
+
+        if (isServer)
+            return;
+
         if (_ui != null && hasAuthority)
             Destroy(_ui.gameObject);
         else if (_ui == null)
@@ -23,6 +33,9 @@ public class EntityUI : NetworkBehaviour
 
     public void SetShield(float min, float max)
     {
+        if (isServer)
+            return;
+
         if (hasAuthority)
             GameUIManager.Instance.ShipInterface.SetShield(min, max);
         else _ui?.SetShield(min, max);
@@ -30,6 +43,9 @@ public class EntityUI : NetworkBehaviour
 
     public void SetHealth(float min, float max)
     {
+        if (isServer)
+            return;
+
         if (hasAuthority)
             GameUIManager.Instance.ShipInterface.SetHealth(min, max);
         else _ui?.SetHealth(min, max);
@@ -37,11 +53,17 @@ public class EntityUI : NetworkBehaviour
 
     public void SetPower(float min, float max)
     {
+        if (isServer)
+            return;
+
         if (hasAuthority)
             GameUIManager.Instance.ShipInterface.SetPower(min, max);
     }
     public void SetName(string name)
     {
+        if (isServer)
+            return;
+
         if (!hasAuthority)
             _ui?.SetName(name);
         //else _ui?.SetName("");

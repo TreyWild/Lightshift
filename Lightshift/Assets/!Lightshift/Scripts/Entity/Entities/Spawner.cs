@@ -22,17 +22,17 @@ public class Spawner : NpcEntity
         //if (!HasTarget || TargetDistance > 50)
         //    return;
 
-        if (isServer)
-        {
+        //if (isServer)
+        //{
 
-            for (int i = 0; i < spawnData.Length; i++)
-            {
-                if (!(spawnData[i].currentSpawnCount >= spawnData[i].maxSpawns))
-                    spawnData[i].timeSinceLastSpawn -= Time.fixedDeltaTime;
+        //    for (int i = 0; i < spawnData.Length; i++)
+        //    {
+        //        if (!(spawnData[i].currentSpawnCount >= spawnData[i].maxSpawns))
+        //            spawnData[i].timeSinceLastSpawn -= Time.fixedDeltaTime;
 
-                TrySpawnNpcs(i);
-            }
-        }
+        //        TrySpawnNpcs(i);
+        //    }
+        //}
     }
 
     private void TrySpawnNpcs(int i) 
@@ -68,8 +68,8 @@ public class Spawner : NpcEntity
 
             NetworkServer.Spawn(npc);
 
-            entity = npc.GetComponent<Npc>();
-            entity.mapIcon = spawnData[i].npcData.mapIcon;
+            //entity = npc.GetComponent<Npc>();
+            //entity.mapIcon = spawnData[i].npcData.mapIcon;
         }
 
         entity.LoadNpcData(spawnData[i].npcData.key);
@@ -78,7 +78,7 @@ public class Spawner : NpcEntity
         entity.SetPosition(transform.position);
         spawnData[i].currentSpawnCount++;
         spawnData[i].timeSinceLastSpawn = spawnData[i].spawnRate;
-        entity.SetAlive();
+        entity.Respawn();
         entity.onDeath += Entity_onDeath;
 
         return entity;

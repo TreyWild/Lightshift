@@ -14,5 +14,6 @@ namespace SharedModels.Models.Game
         public string HullId { get; set; }
         public List<string> EquippedModules { get; set; }
         public List<Item> OwnedItems { get; set; }
+        public List<CargoObject> Cargo { get; set; }
     }
 }

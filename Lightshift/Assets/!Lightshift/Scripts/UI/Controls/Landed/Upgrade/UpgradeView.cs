@@ -31,7 +31,12 @@ public class UpgradeView : MonoBehaviour
     {
         _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
 
-        _creditsLabel.text = $"{_player.GetProfile().Credits}";
+        _creditsLabel.text = $"{_player.Credits}";
+
+        _player.onCreditsChanged += (credits) =>
+        {
+            _creditsLabel.text = $"{credits}";
+        };
     }
     public void InitializeUpgrades(Item item)
     {
@@ -59,7 +64,7 @@ public class UpgradeView : MonoBehaviour
 
                 _item.Upgrades.Add(upgrade);
             }
-            script.Init(upgrade, upgradeInfo, totalUpgrades, _player.GetProfile().Credits, totalUpgrades >= _gameItem.MaxUpgrades);
+            script.Init(upgrade, upgradeInfo, totalUpgrades, _player.Credits, totalUpgrades >= _gameItem.MaxUpgrades);
 
             script.OnUpgrade += OnUpgrade;
             _controls.Add(script);
@@ -73,13 +78,12 @@ public class UpgradeView : MonoBehaviour
 
         var totalUpgrades = _item.Upgrades.Sum(s => s.Level);
         _upgradesRemainingLabel.text = $"{_gameItem.MaxUpgrades - totalUpgrades}";
-        _creditsLabel.text = $"{_player.GetProfile().Credits}";
 
         foreach (var upgradeInfo in _gameItem.Upgrades)
         {
             var script = _controls.FirstOrDefault(c => c.Type == upgradeInfo.Type);
             var upgrade = _item.Upgrades.FirstOrDefault(e => e.Type == upgradeInfo.Type);
-            script.Init(upgrade, upgradeInfo, totalUpgrades, _player.GetProfile().Credits, totalUpgrades >= _gameItem.MaxUpgrades);
+            script.Init(upgrade, upgradeInfo, totalUpgrades, _player.Credits, totalUpgrades >= _gameItem.MaxUpgrades);
         }
     }
 

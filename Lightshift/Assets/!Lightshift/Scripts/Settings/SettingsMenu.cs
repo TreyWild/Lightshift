@@ -198,12 +198,12 @@ public class SettingsMenu : MonoBehaviour
             CreateKeyBinding("Weapon 5", "weapon5Key");
             CreateDivider("Hotkeys");
             CreateKeyBinding("Respawn", "respawnKey");
-            CreateKeyBinding("Toggle Inventory", "inventoryKey");
+            CreateKeyBinding("Dock", "dockKey");
+            //CreateKeyBinding("Toggle Inventory", "inventoryKey");
             CreateKeyBinding("Menu", "menuKey");
             CreateKeyBinding("Player Menu", "playerMenuKey");
             CreateKeyBinding("System Map", "mapKey");
             CreateKeyBinding("Self Destruct", "selfDestructKey");
-
             return;
         }
     }

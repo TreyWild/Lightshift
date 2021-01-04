@@ -87,7 +87,6 @@ public class LightshiftAuthenticator : NetworkAuthenticator
 
     public void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage message)
     {
-        Debug.LogError($"Auth Message [{message.sessionAuthKey}]");
         HttpService.Get("account/authenticate", new JsonString {Value = message.sessionAuthKey },
         delegate (JsonString json)
         {

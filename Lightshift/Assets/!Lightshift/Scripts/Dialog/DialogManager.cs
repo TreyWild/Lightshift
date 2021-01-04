@@ -8,6 +8,7 @@ public class DialogManager : MonoBehaviour
     [Header("Dialogs")]
     [SerializeField] GameObject _messageBox;
     [SerializeField] GameObject _dialogBox;
+    [SerializeField] GameObject _dialogEjectBox;
     [SerializeField] GameObject _colorDialog;
     [SerializeField] GameObject _listView;
     [SerializeField] GameObject _upgradeView;
@@ -33,6 +34,17 @@ public class DialogManager : MonoBehaviour
         dialog.SetDisplay(message);
 
         dialog.OnClick += (result) => callback?.Invoke(result);
+    }
+
+
+    public static void ShowEjectDialog(string message, int amount, Action<bool, int> callback = null, string buttonText = null, string button2Text = null)
+    {
+        var obj = Instantiate(Instance._dialogEjectBox);
+        var dialog = obj.GetComponent<ConfirmEjectDialog>();
+        dialog.MaxValue = amount;
+        dialog.SetDisplay(message);
+
+        dialog.OnClick += (result, amt) => callback?.Invoke(result, amt);
     }
 
     public static void ShowColorDialog(Action<Color> callback = null)

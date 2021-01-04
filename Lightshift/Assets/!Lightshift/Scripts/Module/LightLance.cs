@@ -5,18 +5,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-public class LightLance : NetworkBehaviour
+public class LightLance : MonoBehaviour
 {
-    [SyncVar]
     public float pullForce;
-
-    [SyncVar(hook = nameof(SetMaxRange))]
     public float maxRange;
-
-    [SyncVar]
     public float powerCost;
-
     private float minimumDistance = 2;
+
+    public bool hasAuthority;
 
     private Kinematic _kinematic;
     private BeamToTarget _lightLance;

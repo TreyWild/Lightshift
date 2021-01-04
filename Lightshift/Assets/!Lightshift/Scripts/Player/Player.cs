@@ -16,15 +16,31 @@ using UnityEngine;
 
 public class Player : NetworkBehaviour
 {
-    public string Id { get; set; }
+    [SyncVar(hook = nameof(OnCreditsChanged))] public int Credits;
+    [SyncVar(hook = nameof(OnBankCreditsChanged))] public int BankCredits;
+    private void OnCreditsChanged(int oldValue, int newValue)
+    {
+        onCreditsChanged?.Invoke(newValue);
+    }
+    private void OnBankCreditsChanged(int oldValue, int newValue)
+    {
+        onBankCreditsChanged?.Invoke(newValue);
+    }
+
+    [SyncVar] public string Username;
+    [SyncVar] public string ActiveShip;
+    [SyncVar] public string Id;
     public PlayerShip ship { get; set; }
 
-    [SyncVar] private Profile _profile;
+    private Profile _profile;
+
     private Account _account;
 
     private List<ShipObject> _ships = new List<ShipObject>();
 
-    private Action shipsLoaded;
+    public Action<int> onCreditsChanged;
+
+    public Action<int> onBankCreditsChanged;
     public override void OnStartServer()
     {
         base.OnStartServer();
@@ -32,11 +48,22 @@ public class Player : NetworkBehaviour
         HttpService.Get("account/get", connectionToClient.authenticationData,
         delegate (Account account)
         {
-            Debug.Log($"{account.Profile.Username} connected.");
+            Debug.Log($"Connected [{account.CaseSensitiveUsername}].");
             _account = account;
             _profile = _account.Profile;
+            if (_profile == null)
+                _profile = new Profile 
+                {
+                    Username = account.CaseSensitiveUsername,
+                    Level = 1,
+                };
 
-            Id = account.Id;
+            // SPAWN PLAYER SHIP
+            var obj = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerShip>());
+            ship = obj.GetComponent<PlayerShip>();
+            ship.displayName = _profile.Username;
+
+            NetworkServer.Spawn(obj, connectionToClient);
 
             LoadShips(delegate () 
             {
@@ -53,11 +80,24 @@ public class Player : NetworkBehaviour
                 if (_profile.ActiveShip == null)
                 {
                     _profile.ActiveShip = _ships.FirstOrDefault().Id;
-                    SaveAccount();
                 }
 
+                Credits = _profile.Credits;
+                Username = _profile.Username;
+                ActiveShip = _profile.ActiveShip;
+                Id = account.Id;
+
+                if (_profile.IsLanded)
+                {
+                    var station = LandableManager.GetLandableById(_profile.LandedLocationId);
+                    if (station != null)
+                    {
+                        ship.transform.position = station.transform.position;
+                        Land(_profile.LandedLocationId);
+                    }
+                }
                 //Tell client to land
-                Land(_profile.LandedLocationId);
+
             });
 
 
@@ -67,7 +107,6 @@ public class Player : NetworkBehaviour
         });
     }
 
-    public Profile GetProfile() => _profile;
     public NetworkConnection GetConnection() 
     {
         if (isServer)
@@ -86,8 +125,6 @@ public class Player : NetworkBehaviour
         TargetLoadShip(JsonConvert.SerializeObject(ship));
 
         SaveShip(ship);
-
-        SaveAccount();
     }
     public void SaveShip(ShipObject ship, Action callback = null)
     {
@@ -110,6 +147,11 @@ public class Player : NetworkBehaviour
     {
         if (!isServer)
             return;
+
+        _profile.ActiveShip = ActiveShip;
+        _profile.Username = Username;
+        _profile.Credits = Credits;
+        _profile.BankCredits = BankCredits;
 
         _account.Profile = _profile;
         HttpService.Get("account/save", _account,
@@ -134,7 +176,6 @@ public class Player : NetworkBehaviour
     [Command]
     private void CmdLand(string landableId) 
     {
-        Debug.LogError(isServer);
         Land(landableId);
     }
 
@@ -145,9 +186,50 @@ public class Player : NetworkBehaviour
         {
             RpcLand(landableId);
 
-            // TO DO : Destroy ship?
+            _profile.LandedLocationId = landableId;
+
+            _profile.IsLanded = true;
+
+            ship.SetLanding();
         }
         else CmdLand(landableId);
+    }
+
+    [ClientRpc]
+    private void RpcTakeoff()
+    {
+        // TO DO : Landing effect
+        if (hasAuthority)
+        {
+            GameUIManager.Instance.LeaveLandable();
+        }
+    }
+
+    [Command]
+    private void CmdTakeoff()
+    {
+        TakeOff();
+    }
+
+    public void TakeOff()
+    {
+        if (isServer)
+        {
+            var station = LandableManager.GetLandableById(_profile.LandedLocationId);
+            if (station != null)
+                ship.transform.position = new Vector2(station.transform.position.x, station.transform.position.y);
+
+            ship.transform.eulerAngles = new Vector3(0, 0, UnityEngine.Random.Range(0, 360));
+
+            ship.InitShipObject(GetActiveShip());
+            ship.SetCargo(GetActiveShip().Cargo);
+            ship.Respawn();
+
+            _profile.IsLanded = false;
+
+            RpcTakeoff();
+        }
+        else CmdTakeoff();
     }
 
     public void LoadShips(Action callback)
@@ -163,6 +245,9 @@ public class Player : NetworkBehaviour
             Debug.Log($"Server loaded ships [{ships?.Count}]");
 
             TargetLoadShips(JsonConvert.SerializeObject(_ships));
+
+            if (ActiveShip == null || ActiveShip == "")
+                ActiveShip = _ships.FirstOrDefault().Id;
 
             callback?.Invoke();
         });
@@ -190,7 +275,8 @@ public class Player : NetworkBehaviour
         _ships.Add(ship);
         Debug.Log($"Added ship to [{_account.CaseSensitiveUsername}]");
     }
-    public ShipObject GetActiveShip() => _ships.FirstOrDefault(s => s.Id == _profile.ActiveShip);
+
+    public ShipObject GetActiveShip() => _ships.FirstOrDefault(s => s.Id == ActiveShip);
     public List<ShipObject> GetAllShips() => _ships;
 
     private Action<Item> _onUpgradePurchased;
@@ -232,7 +318,6 @@ public class Player : NetworkBehaviour
             return;
 
         _profile.ActiveShip = ship.Id;
-        SaveAccount();
         TargetRpcChangeShip(ship.Id);
     }
 
@@ -281,7 +366,7 @@ public class Player : NetworkBehaviour
 
         SaveShip(GetActiveShip());
 
-        TargetRpcEquipModule(ship.Id);
+        TargetRpcEquipModule(module.Id);
     }
 
     [TargetRpc]
@@ -305,8 +390,6 @@ public class Player : NetworkBehaviour
 
         item.SpentCredits = 0;
         item.Upgrades = null;
-
-        SaveAccount();
 
         SaveShip(GetActiveShip());
 
@@ -362,16 +445,15 @@ public class Player : NetworkBehaviour
 
         var cost = upgradeInfo.Cost * (int)((upgrade.Level + totalUpgrades + 1) * 1.15f);
 
-        bool affordable = cost <= GetProfile().Credits;
+        bool affordable = cost <= Credits;
 
         // INVALID FUNDS
         if (!affordable)
             return;
 
-        _profile.Credits -= cost;
+        Credits -= cost;
         item.SpentCredits += cost;
 
-        SaveAccount();
         upgrade.Level++;
 
         SaveShip(GetActiveShip());
@@ -386,4 +468,79 @@ public class Player : NetworkBehaviour
         if (item != null)
             _onUpgradePurchased?.Invoke(item);
     }
+
+    private void OnDestroy()
+    {
+        SaveAccount();
+    }
+
+    public void BankTransaction(BankAction action, int credits)
+    {
+        CmdBankAction((uint)action, credits);
+    }
+
+    [Command]
+    private void CmdBankAction(uint actionId, int credits) 
+    {
+        var action = (BankAction)actionId;
+
+        switch (action) 
+        {
+            case BankAction.Deposit:
+                if (credits > Credits)
+                {
+                    BankCredits += Credits;
+                    Credits = 0;
+                }
+                else if (credits > 0)
+                {
+                    BankCredits += credits;
+                    Credits -= credits;
+                }
+                break;
+            case BankAction.Withdraw:
+                if (credits > BankCredits)
+                {
+                    Credits += BankCredits;
+                    BankCredits = 0;
+                }
+                else if (credits > 0)
+                {
+                    Credits += credits;
+                    BankCredits -= credits;
+                }
+                break;
+        }
+    }
+
+    public void EjectCargo(CargoType type, int amount) 
+    {
+        if (!isServer)
+        {
+            CmdEjectCargo((uint)type, amount);
+        }
+    }
+
+    public void EjectAllCargo()
+    {
+        if (!isServer)
+        {
+            CmdEjectAllCargo();
+        }
+    }
+
+    [Command]
+    private void CmdEjectAllCargo()
+    {
+
+    }
+
+    [Command]
+    private void CmdEjectCargo(uint typeId, int amount) 
+    {
+        var type = (CargoType)typeId;
+
+    }
+
+
 }

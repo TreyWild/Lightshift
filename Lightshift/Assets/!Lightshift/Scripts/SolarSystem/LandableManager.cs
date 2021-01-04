@@ -25,18 +25,19 @@ namespace Assets._Lightshift.Scripts.SolarSystem
             return station;
         }
 
+        public static void RequestLand(string id) 
+        {
+            var player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
+            player.Land(id);
+        }
+
         public static void Land(string id) 
         {
             var landable = GetLandableById(id);
             if (landable == null)
                 return;
 
-            switch (landable.Type) 
-            {
-                case LandableType.Hanger:
-                    GameUIManager.Instance.ShowHanger();
-                    break;
-            }
+            GameUIManager.Instance.ShowLandable(landable.Type);
         }
     }
 }

@@ -18,6 +18,7 @@ public class GameUIManager : MonoBehaviour
 
     [SerializeField] private List<UIObject> _uiObjects = new List<UIObject>();
 
+    [HideInInspector]
     public ShipInterface ShipInterface;
 
     private TextMeshProUGUI _statsText;
@@ -26,6 +27,11 @@ public class GameUIManager : MonoBehaviour
         if (Instance == null) Instance = this;
         else if (Instance != this) Destroy(gameObject);
 
+        InitUI();
+    }
+
+    public void InitUI() 
+    {
         var shipInterface = ShowUI("ShipInterface");
         ShipInterface = shipInterface.GetComponent<ShipInterface>();
 
@@ -44,9 +50,17 @@ public class GameUIManager : MonoBehaviour
 
         return ui.MemoryStorage;
     }
+
+    public void DestroyUI(string key) 
+    {
+        var ui = GetUI(key);
+        if (ui != null)
+            Destroy(ui.MemoryStorage);
+    }
     public GameObject ToggleUI(string key, bool active = true, bool useGameCanvas = false)
     {
         var ui = GetUI(key);
+
         if (ui.MemoryStorage == null)
             ui.MemoryStorage = ShowUI(key, useGameCanvas);
 
@@ -107,12 +121,6 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-    public void HandleRespawnScreen(bool hideAllUI) 
-    {
-        ToggleAllUI(!hideAllUI);
-        Settings.KeysLocked = hideAllUI;
-    }
-
     public void ToggleAllUI(bool active) 
     {
         foreach (var ui in _uiObjects)
@@ -150,9 +158,32 @@ public class GameUIManager : MonoBehaviour
         }
     }
 
-    public void ShowHanger() 
+    public void ShowLandable(LandableType landable) 
     {
         ToggleAllUI(false);
-        ToggleUI("Hanger");
+        ToggleUI(landable.ToString());
+        Settings.KeysLocked = true;
+    }
+
+    public void LeaveLandable()
+    {
+        //ToggleAllUI(true);
+        InitUI();
+        foreach (LandableType landable in (LandableType[])Enum.GetValues(typeof(LandableType)))
+            DestroyUI(landable.ToString());
+
+        Settings.KeysLocked = false;
+    }
+
+    public void ShowDockingPrompt(Landable landable) 
+    {
+        var docker = ShowUI("DockPrompt");
+        var control = docker.GetComponent<DockPromptControl>();
+        control.landable = landable;
+    }
+
+    public void HideDockPromot() 
+    {
+        DestroyUI("DockPrompt");
     }
 }

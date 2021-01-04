@@ -87,10 +87,15 @@ public class LightshiftNetworkManager : NetworkManager
                 StartClient();
                 return;
             }
-            else 
+            else if (!Application.isEditor && Invert)
             {
                 HttpService.InitGameServerAuthentication("dev-access");
                 StartHost();
+                return;
+            }
+            else 
+            {
+                StartClient();
                 return;
             }
         }

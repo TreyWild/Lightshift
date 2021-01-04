@@ -1,5 +1,7 @@
-﻿using Lightshift;
+﻿using Assets._Lightshift.Scripts.Data;
+using Lightshift;
 using Mirror;
+using SharedModels.Models.Game;
 using Smooth;
 using System;
 using System.Collections;
@@ -15,52 +17,177 @@ public class Entity : NetworkBehaviour
     [HideInInspector]
     [SyncVar(hook = nameof(UpdateLivingState))] public bool alive;
 
-    [HideInInspector]
-    public Sprite mapIcon;
+    [SyncVar] private bool isLanding;
 
     [SyncVar]
     public short Id;
-
-    public float TargetCheckSpeed = 0.5f;
 
     [SyncVar(hook = nameof(SetDisplayName))]
     public string displayName;
 
     [SyncVar]
     public string teamId;
+    public SmoothSyncMirror smoothSync;
+    public Rigidbody2D rigidBody;
+    public Entity targetNeutral;
+    public Entity targetEntity;
 
-    [HideInInspector]
-    public SmoothSyncMirror smoothSync { get; set; }
-    [HideInInspector]
-    public Rigidbody2D rigidBody { get; set; }
-
-
-    public Entity targetNeutral { get; set; }
-    public Entity targetEntity { get; set; }
-
-    [HideInInspector]
     public Kinematic kinematic;
 
-    private EntityUI _ui;
+    public EntityUI ui;
     private float _timeSinceLastTargetUpdate = 0;
     public void Awake()
     {
         //weaponSystem = gameObject.AddComponent<WeaponSystem>();
         rigidBody = gameObject.GetComponent<Rigidbody2D>();
         kinematic = gameObject.GetComponent<Kinematic>();
-        _ui = GetComponent<EntityUI>();
+        ui = gameObject.AddComponent<EntityUI>();
     }
 
     public override void OnStartServer()
     {
         base.OnStartServer();
 
-        SetAlive();
+        //SetAlive();
     }
 
     public void Start()
     {
         EntityManager.AddEntity(this);
+
+        ui.Init(hasAuthority, isServer);
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        Modifiers.Callback += Modifiers_Callback;
+
+        foreach (var modifier in Modifiers)
+        {
+            UpdateModifier(modifier.Key, modifier.Value);
+        };
+
+        Cargo.Callback += Cargo_Callback;
+
+        foreach (var modifier in Modifiers)
+        {
+            UpdateModifier(modifier.Key, modifier.Value);
+        };
+    }
+
+    private void Modifiers_Callback(SyncIDictionary<Modifier, float>.Operation op, Modifier key, float value)
+    {
+        if (isServer)
+            return;
+
+        UpdateModifier(key, value);
+    }
+
+    public readonly SyncDictionary<Modifier, float> Modifiers = new SyncDictionary<Modifier, float>();
+
+    public void ClearModifiers() 
+    {
+        if (isServer)
+        {
+            var modifiers = Modifiers.ToList();
+            foreach (var modifier in modifiers)
+                UpdateModifier(modifier.Key, modifier.Value);
+        }
+    }
+    public void SetModifiers(List<GameModifier> modifiers)
+    {
+        if (!isServer)
+            return;
+
+        ClearModifiers();
+
+        foreach (var modifier in modifiers)
+        {
+            UpdateModifier(modifier.Type, modifier.Value);
+
+            switch (modifier.Type)
+            {
+                case Modifier.MaxHealth:
+                    UpdateModifier(Modifier.Health, modifier.Value);
+                    break;
+
+                case Modifier.MaxShield:
+                    UpdateModifier(Modifier.Shield, modifier.Value);
+                    break;
+
+                case Modifier.MaxPower:
+                    UpdateModifier(Modifier.Power, modifier.Value);
+                    break;
+            }
+        }
+
+        //foreach (var modifier in Modifiers)
+        //    UpdateModifier(modifier.Key, modifier.Value);
+    }
+
+    public Action<Modifier, float> onModifierChanged;
+    public void UpdateModifier(Modifier type, float value) 
+    {
+        if (isServer)
+        {
+            if (!Modifiers.ContainsKey(type))
+                Modifiers.Add(type, value);
+            else
+                Modifiers[type] = value;
+        }
+
+        onModifierChanged?.Invoke(type, value);
+    }
+
+    private void Cargo_Callback(SyncIDictionary<CargoType, int>.Operation op, CargoType key, int value)
+    {
+        if (isServer)
+            return;
+
+        UpdateCargo(key, value);
+    }
+
+    public readonly SyncDictionary<CargoType, int> Cargo = new SyncDictionary<CargoType, int>();
+
+    public void ClearCargos()
+    {
+        if (isServer)
+        {
+            var cargos = Cargo.ToList();
+            foreach (var cargo in cargos)
+                UpdateCargo(cargo.Key, cargo.Value);
+        }
+    }
+    public void SetCargo(List<CargoObject> cargoObjects)
+    {
+        if (!isServer)
+            return;
+
+        ClearCargos();
+
+        foreach (var cargo in cargoObjects)
+        {
+            UpdateCargo(cargo.Type, cargo.Amount);
+        }
+
+        //foreach (var cargo in Cargos)
+        //    UpdateCargo(cargo.Key, cargo.Value);
+    }
+
+    public Action<CargoType, float> onCargoChanged;
+    public void UpdateCargo(CargoType type, int value)
+    {
+        if (isServer)
+        {
+            if (!Cargo.ContainsKey(type))
+                Cargo.Add(type, value);
+            else
+                Cargo[type] = value;
+        }
+
+        onCargoChanged?.Invoke(type, value);
     }
 
     public void OnDestroy()
@@ -109,12 +236,9 @@ public class Entity : NetworkBehaviour
     }
     #endregion
 
-
-
-
     public void SetDisplayName(string oldValue = "", string displayName = "")
     {
-        _ui.SetName(displayName);
+        ui.SetName(displayName);
 
         if (isServer)
             this.displayName = displayName;
@@ -254,9 +378,18 @@ public class Entity : NetworkBehaviour
 
     private void UpdateLivingState(bool oldValue, bool newValue)
     {
-        if (newValue)
-            SetAlive();
-        else SetDead();
+        if (alive)
+            Respawn();
+        else OnDeath();
+    }
+
+    public void SetLanding()
+    {
+        if (isServer)
+        {
+            isLanding = true;
+            SetDead();
+        }
     }
 
     public void SetDead()
@@ -267,13 +400,37 @@ public class Entity : NetworkBehaviour
         OnDeath();
     }
 
+
+    public void Kill() 
+    {
+        CmdKillEntity();
+    }
+
+    [Command]
+    private void CmdKillEntity() 
+    {
+        alive = false;
+
+        RpcKillEntity();
+    }
+
+    [ClientRpc]
+    private void RpcKillEntity() 
+    {
+        OnKilled();
+    }
+
     public virtual void OnDeath() 
+    {
+        
+    }
+    public virtual void OnKilled() 
     {
         Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
         SoundManager.PlayExplosion(transform.position);
     }
 
-    public void SetAlive()
+    public void Respawn()
     {
         if (isServer)
             alive = true;
@@ -358,5 +515,7 @@ public class Entity : NetworkBehaviour
             OnLeaveCheckpoint?.Invoke(id);
         else OnEnterCheckpoint?.Invoke(id);
     }
+
+
     #endregion
 }

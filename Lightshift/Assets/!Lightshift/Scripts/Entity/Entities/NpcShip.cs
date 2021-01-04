@@ -15,20 +15,20 @@ public class NpcShip : Npc
 
     private void InitializeData()
     {
-        if (hull != null)
-            hull.SetImage(npcData.sprite, Color.white);
-        if (wing != null && npcData.wingImage != null)
-            wing.SetImage(npcData.wingImage, Color.white);
+        //if (hull != null)
+        //    hull.SetImage(npcData.sprite, Color.white);
+        //if (wing != null && npcData.wingImage != null)
+        //    wing.SetImage(npcData.wingImage, Color.white);
 
         SetSortingOrder(npcData.renderOrder);
     }
 
     public void SetSortingOrder(int sortingOrder)
     {
-        if (hull != null)
-            hull.SetSortingOrder(sortingOrder);
+        //if (hull != null)
+        //    hull.SetSortingOrder(sortingOrder);
 
-        if (wing != null)
-            wing.SetSortingOrder(sortingOrder);
+        //if (wing != null)
+        //    wing.SetSortingOrder(sortingOrder);
     }
 }

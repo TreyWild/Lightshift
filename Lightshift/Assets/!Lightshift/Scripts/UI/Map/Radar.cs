@@ -27,9 +27,9 @@ public class Radar : MonoBehaviour
 
         var image = icon.AddComponent<Image>();
 
-        if (entity.hasAuthority)
-            image.sprite = entity.mapIcon;
-        else image.sprite = entity.mapIcon;
+        //if (entity.hasAuthority)
+        //    image.sprite = entity.mapIcon;
+        //else image.sprite = entity.mapIcon;
         _mapIcons[entity] = icon;
     }
 

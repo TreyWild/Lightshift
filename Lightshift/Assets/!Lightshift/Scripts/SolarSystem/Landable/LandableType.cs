@@ -6,6 +6,6 @@ public enum LandableType
 {
     Recycle,
     Upgrade,
-    Hanger,
-    
+    Hangar,
+    Bank
 }

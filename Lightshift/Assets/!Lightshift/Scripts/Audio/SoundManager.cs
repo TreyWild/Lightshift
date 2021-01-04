@@ -18,7 +18,7 @@ public class SoundManager : MonoBehaviour
 
     private List<AudioObject> _audioObjects = new List<AudioObject>();
 
-    private AudioSource _musicSource;
+    private List<AudioSource> _musicSources = new List<AudioSource>();
 
     // Random pitch adjustment range.
     public float LowPitchRange = .95f;
@@ -26,6 +26,9 @@ public class SoundManager : MonoBehaviour
 
     // Singleton instance.
     public static SoundManager Instance = null;
+
+    private int _activeMusicSource = 0;
+    private AudioSource GetMusicSource() => _musicSource;
 
     // Initialize the singleton instance.
     private void Awake()
@@ -41,9 +44,14 @@ public class SoundManager : MonoBehaviour
         //Set SoundManager to DontDestroyOnLoad so that it won't be destroyed when reloading our scene.
         DontDestroyOnLoad(gameObject);
 
-        _musicSource = gameObject.GetComponent<AudioSource>();
+        for (int i = 0; i < 2; i++)
+        {
+            var source = gameObject.AddComponent<AudioSource>();
+            source.ignoreListenerVolume = true;
+            _musicSources.Add(source);
+        }
 
-        _musicSource.ignoreListenerVolume = true;
+        _musicSource = _musicSources[0];
 
         UpdateVolume();
     }
@@ -79,21 +87,43 @@ public class SoundManager : MonoBehaviour
     {
         try
         {
-            _musicSource.clip = clip;
+            GetMusicSource().clip = clip;
             UpdateVolume();
-            _musicSource.Play();
+            GetMusicSource().Play();
         }
         catch { }
     }
 
     private void Update()
     {
-        if (!_musicSource.isPlaying)
+        //if (!GetMusicSource().isPlaying)
+        //{
+        //    if (SceneManager.GetActiveScene().buildIndex == 0)
+        //        PlayTitleScreenMusic();
+        //    else
+        //        PlayRandomMusic();
+        //}
+
+        if (_oldMusicSource != null)
         {
-            if (SceneManager.GetActiveScene().buildIndex == 0)
-                PlayTitleScreenMusic();
+            if (_oldMusicSource.mute)
+                return;
+
+            if (_oldMusicSource.volume > 0)
+                _oldMusicSource.volume -= Time.deltaTime;
             else
-                PlayRandomMusic();
+            {
+                _oldMusicSource.mute = true;
+                _oldMusicSource.Stop();
+            }
+        }
+
+        if (_musicSource != null)
+        {
+            if (_musicSource.volume < Settings.musicVolume)
+            {
+                _musicSource.volume += (Settings.musicVolume) * Time.deltaTime;
+            }
         }
     }
     public void PlayRandomMusic()
@@ -105,12 +135,13 @@ public class SoundManager : MonoBehaviour
     public void UpdateVolume()
     {
         if (Settings.musicVolume > 0.05f)
-            _musicSource.mute = false;
-        else _musicSource.mute = true;
+            foreach (var source in _musicSources)
+                source.mute = false;
+        else foreach (var source in _musicSources)
+                source.mute = true;
 
-        _musicSource.volume = Settings.musicVolume;
-
-        Debug.Log(_musicSource.volume);
+        foreach (var source in _musicSources)
+            source.volume = Settings.musicVolume;
 
         foreach (var audio in _audioObjects)
             audio.UpdateVolume();
@@ -126,5 +157,18 @@ public class SoundManager : MonoBehaviour
     public void PlayTitleScreenMusic() 
     {
         PlayMusic(_titleScreenMusic[UnityEngine.Random.Range(0, _titleScreenMusic.Length)]);
+    }
+
+    private AudioSource _oldMusicSource;
+    private AudioSource _musicSource;
+    public static void PlayMusicWithFade(AudioClip music) 
+    {
+        Instance._oldMusicSource = Instance._musicSource;
+        Instance._musicSource = Instance._musicSources.FirstOrDefault(s => s != Instance._oldMusicSource);
+
+        Instance._musicSource.clip = music;
+        Instance._musicSource.volume = 0;
+        Instance._musicSource.mute = false;
+        Instance._musicSource.Play();
     }
 }

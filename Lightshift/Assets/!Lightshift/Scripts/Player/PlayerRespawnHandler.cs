@@ -23,6 +23,8 @@ public class PlayerRespawnHandler : NetworkBehaviour
     }
     public void Initialize(float respawnTime, string deathCause)
     {
+        _canRespawn = false;
+
         _timeRemaining = respawnTime;
 
         TargetRpcInit(deathCause);
@@ -33,7 +35,10 @@ public class PlayerRespawnHandler : NetworkBehaviour
     {
         _killedByLabel.text = $"Destroyed by {deathCause}";
 
-        GameUIManager.Instance.HandleRespawnScreen(true);
+        GameUIManager.Instance.ToggleAllUI(false);
+
+        if (hasAuthority)
+            GetComponent<Canvas>().enabled = true;
     }
 
     public void Update()
@@ -82,15 +87,13 @@ public class PlayerRespawnHandler : NetworkBehaviour
             //NetworkServer.Spawn(ship, connectionToClient);
 
             //player.ship = ship.GetComponent<PlayerShip>();
-            player.ship.SetAlive();
+            player.TakeOff();
 
+            // Unspawn respawn handler
             NetworkServer.UnSpawn(gameObject);
-        }
-    }
 
-    private void OnDisable()
-    {
-        GameUIManager.Instance.HandleRespawnScreen(false);
+            GetComponent<Canvas>().enabled = false;
+        }
     }
 }
 

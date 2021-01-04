@@ -15,6 +15,7 @@ namespace Lightshift
         public static KeyCode LeftKey = KeyCode.LeftArrow;
         public static KeyCode RightKey = KeyCode.RightArrow;
         public static KeyCode FireKey = KeyCode.Space;
+        public static KeyCode DockKey = KeyCode.Space;
         public static KeyCode LightLanceKey = KeyCode.F;
         public static KeyCode MiningDrillKey = KeyCode.X;
         public static KeyCode OverdriveKey = KeyCode.C;
@@ -127,6 +128,7 @@ namespace Lightshift
             Weapon3 = GetControlValue("weapon3Key", Weapon3);
             Weapon4 = GetControlValue("weapon4Key", Weapon4);
             Weapon5 = GetControlValue("weapon5Key", Weapon5);
+            DockKey = GetControlValue("dockKey", DockKey);
             SelfDestruct = GetControlValue("selfDestructKey", SelfDestruct);
             FireWithWeaponHotkeys = bool.Parse(PlayerPrefs.GetString("useWeaponHotKeys", "True"));
             AutoTarget = bool.Parse(PlayerPrefs.GetString("useAutoTarget", "False"));

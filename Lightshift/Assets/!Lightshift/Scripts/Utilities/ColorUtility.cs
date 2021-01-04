@@ -20,7 +20,7 @@ namespace Assets._Lightshift.Scripts.Utilities
 
         public static Color FromModifier(Modifier modifier) 
         {
-            Color color = Color.red;
+            Color color = FromHex("#8f4d17");
             switch (modifier)
             {
                 case Modifier.Acceleration:
@@ -46,6 +46,9 @@ namespace Assets._Lightshift.Scripts.Utilities
                     break;
                 case Modifier.Weight:
                     color = FromHex($"#FF4A6C");
+                    break;
+                case Modifier.BrakeForce:
+                    color = FromHex($"#db9430");
                     break;
             }
 

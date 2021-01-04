@@ -35,7 +35,7 @@ public class Server : MonoBehaviour
         var player = GetPlayer(connection);
         if (player != null) 
         {
-            chatMessage.username = player.GetProfile().Username;
+            chatMessage.username = player.Username;
             NetworkServer.SendToAll(chatMessage);
         }
     }

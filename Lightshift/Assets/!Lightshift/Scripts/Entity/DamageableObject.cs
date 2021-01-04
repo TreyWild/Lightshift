@@ -11,6 +11,7 @@ public class DamageableObject : NetworkBehaviour
     private Shield _shield;
     private Entity _entity;
 
+    private GameObject _respawnHandler;
     private void Awake()
     {
         _heart = GetComponent<Heart>();
@@ -49,7 +50,7 @@ public class DamageableObject : NetworkBehaviour
         if (isServer)
         {
             //Kill Entity
-            _entity.SetDead();
+            _entity.Kill();
 
             if (_entity.GetType() == typeof(PlayerShip))
             {
@@ -67,15 +68,14 @@ public class DamageableObject : NetworkBehaviour
 
                 Server.SendChatBroadcast(deathReason);
 
-                //// If player: Create Respawn Handler
-                //var respawnHandler = Server.GetPlayer(connectionToClient).RespawnHandler;
-                //if (respawnHandler == null)
-                //    respawnHandler = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerRespawnHandler>());
+                // Get Respawn Handler
+                if (_respawnHandler == null)
+                    _respawnHandler = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerRespawnHandler>());
 
-                //NetworkServer.Spawn(respawnHandler, connectionToClient);
+                NetworkServer.Spawn(_respawnHandler, connectionToClient);
 
-                //var script = respawnHandler.GetComponent<PlayerRespawnHandler>();
-                //script.Initialize(respawnTime: 5.3f, attacker.displayName);
+                var script = _respawnHandler.GetComponent<PlayerRespawnHandler>();
+                script.Initialize(respawnTime: 5.3f, attacker.displayName);
             }
             // TO DO : HANDLE DROPS
         }
@@ -132,6 +132,6 @@ public class DamageableObject : NetworkBehaviour
     [Command]
     private void CmdKillEntity()
     {
-        KillEntity($"{_entity.displayName} committed die", _entity);
+        KillEntity($"{_entity.displayName} self distructed.", _entity);
     }
 }
