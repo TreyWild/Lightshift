@@ -167,6 +167,7 @@ public class Entity : NetworkBehaviour
 
         ClearCargos();
 
+        if (cargoObjects != null)
         foreach (var cargo in cargoObjects)
         {
             UpdateCargo(cargo.Type, cargo.Amount);
@@ -397,6 +398,9 @@ public class Entity : NetworkBehaviour
         if (isServer)
             alive = false;
 
+        if (hasAuthority)
+            kinematic.velocity = Vector2.zero;
+
         OnDeath();
     }
 
@@ -426,7 +430,7 @@ public class Entity : NetworkBehaviour
     }
     public virtual void OnKilled() 
     {
-        Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
+        Instantiate(PrefabManager.Instance.deathEffectPrefab, kinematic.position, kinematic.Transform.rotation);
         SoundManager.PlayExplosion(transform.position);
     }
 
@@ -448,7 +452,7 @@ public class Entity : NetworkBehaviour
     [TargetRpc]
     private void TargetRpcSetPosition(Vector2 position) 
     {
-        transform.position = position;
+        kinematic.position = position;
     }
 
     public void SetPosition(Vector2 pos) 
@@ -457,7 +461,7 @@ public class Entity : NetworkBehaviour
         if (isServer && connectionToClient != null)
             TargetRpcSetPosition(pos);
         else if (isServer)
-            transform.position = pos;
+            kinematic.position = pos;
     }
 
     //private void OnTriggerEnter2D(Collider2D collision)

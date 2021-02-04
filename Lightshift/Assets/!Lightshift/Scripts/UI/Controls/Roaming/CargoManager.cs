@@ -1,12 +1,15 @@
-﻿using System.Collections;
+﻿using SharedModels.Models.Game;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class CargoManager : MonoBehaviour
 {
     [SerializeField] private GameObject _cargoItemPrefab;
     [SerializeField] private Transform _contentPanel;
+    [SerializeField] private TextMeshProUGUI _capacityLabel;
     private Player _player;
     private PlayerShip _ship;
 
@@ -15,6 +18,8 @@ public class CargoManager : MonoBehaviour
     {
         _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
         _ship = FindObjectsOfType<PlayerShip>().FirstOrDefault(p => p.isLocalPlayer);
+
+        UpdateCargo();
     }
 
     public void UpdateCargo() 
@@ -45,6 +50,16 @@ public class CargoManager : MonoBehaviour
 
             control.Init(cargo.Key, cargo.Value);
         }
+
+        try
+        {
+            _capacityLabel.text = $"{cargoItems.Sum(s => s.Value)}/{_ship.Modifiers[Modifier.CargoCapacity]}";
+        }
+        catch 
+        {
+            _capacityLabel.text = $"0";
+
+        }
     }
 
     public void EjectAllCargo() 
@@ -54,5 +69,10 @@ public class CargoManager : MonoBehaviour
             if (result)
                 _player.EjectAllCargo();
         });
+    }
+
+    public void Exit() 
+    {
+        GameUIManager.Instance.ToggleCargoMenu();
     }
 }

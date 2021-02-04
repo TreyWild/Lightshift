@@ -131,11 +131,10 @@ public class PlayerShip : Ship
         //HandlePowerRegen();
         //HandleShieldRegen();
         //HandleWeapons();
-        //HandleDamageQueue();
         //HandleTargetting();
 
 
-        //if (targetEntity != null && stats.lightLanceRange != 0) 
+        //if (targetEntity != null && stats.lightLanceRange != 0)
         //    lightLance.HandleLightLance(_input.LightLance, targetEntity.kinematic);
 
         bool overDrive = _input.OverDrive;

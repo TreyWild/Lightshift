@@ -145,22 +145,23 @@ public class Player : NetworkBehaviour
 
     public void SaveAccount()
     {
-        if (!isServer)
-            return;
-
-        _profile.ActiveShip = ActiveShip;
-        _profile.Username = Username;
-        _profile.Credits = Credits;
-        _profile.BankCredits = BankCredits;
-
-        _account.Profile = _profile;
-        HttpService.Get("account/save", _account,
-        delegate (Account account)
+        if (isServer)
         {
-            _account = account;
-            _profile = account.Profile;
-            Debug.Log($"Account for {_account.CaseSensitiveUsername} saved.");
-        });
+
+            _profile.ActiveShip = ActiveShip;
+            _profile.Username = Username;
+            _profile.Credits = Credits;
+            _profile.BankCredits = BankCredits;
+
+            _account.Profile = _profile;
+            HttpService.Get("account/save", _account,
+            delegate (Account account)
+            {
+                _account = account;
+                _profile = account.Profile;
+                Debug.Log($"Account for {_account.CaseSensitiveUsername} saved.");
+            });
+        }
     }
 
     [ClientRpc]
@@ -471,6 +472,7 @@ public class Player : NetworkBehaviour
 
     private void OnDestroy()
     {
+        Debug.LogError($"{isServer} {isLocalPlayer} {hasAuthority} {isClient}");
         SaveAccount();
     }
 

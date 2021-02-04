@@ -33,6 +33,10 @@ public class DialogManager : MonoBehaviour
         var dialog = obj.GetComponent<ConfirmDialog>();
         dialog.SetDisplay(message);
 
+        if (buttonText != null && buttonText != "")
+            dialog.SetButtonText(buttonText);
+        if (button2Text != null && button2Text != "")
+            dialog.SetButton2Text(button2Text);
         dialog.OnClick += (result) => callback?.Invoke(result);
     }
 

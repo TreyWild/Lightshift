@@ -118,6 +118,9 @@ public class GameUIManager : MonoBehaviour
 
             if (Input.GetKeyDown(Settings.PlayerMenuKey))
                 TogglePlayerMenu();
+
+            if (Input.GetKeyDown(Settings.CargoMenu))
+                ToggleCargoMenu();
         }
     }
 
@@ -146,6 +149,16 @@ public class GameUIManager : MonoBehaviour
     {
         _playerMenuOpen = !_playerMenuOpen;
         ToggleUI("PlayerList", _playerMenuOpen);
+    }
+
+    private bool _cargoMenuOpen = false;
+    public void ToggleCargoMenu()
+    {
+        _cargoMenuOpen = !_cargoMenuOpen;
+
+        if (_cargoMenuOpen)
+            ShowUI("CargoMenu");
+        else DestroyUI("CargoMenu");
     }
 
     public void TryUpdatePlayerMenu() 

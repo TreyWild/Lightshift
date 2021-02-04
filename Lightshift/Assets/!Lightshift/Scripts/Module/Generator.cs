@@ -54,4 +54,14 @@ public class Generator : NetworkBehaviour
                 power = maxPower;
         }
     }
+
+    public void ConsumePower(int amount) 
+    {
+        if (isServer)
+        {
+            power -= amount;
+            if (power < 0)
+                power = 0;
+        }
+    }
 }

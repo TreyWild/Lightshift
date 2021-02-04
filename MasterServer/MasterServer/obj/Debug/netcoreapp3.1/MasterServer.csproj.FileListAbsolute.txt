@@ -1,6 +1,5 @@
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\appsettings.Development.json
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\appsettings.json
-C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Properties\launchSettings.json
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\MasterServer.exe
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.csprojAssemblyReference.cache
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.AssemblyInfoInputs.cache
@@ -27,3 +26,4 @@ C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\n
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\System.Runtime.CompilerServices.Unsafe.dll
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.csproj.CoreCompileInputs.cache
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\scopedcss\bundle\MasterServer.styles.css

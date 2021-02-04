@@ -19,6 +19,13 @@ public class PlayerController : NetworkBehaviour
     public int WeaponSlot;
     public int VerticalAxis => GetAxis(Up, Down);
     public int HorizontalAxis => GetAxis(Left, Right);
+
+    private Kinematic _kinematic;
+
+    private void Awake()
+    {
+        _kinematic = GetComponent<Kinematic>();
+    }
     private int GetAxis(bool x, bool y)
     {
         if (y)
@@ -135,7 +142,7 @@ public class PlayerController : NetworkBehaviour
 
     public int GetMouseAimInput()
     {
-        var currentAngle = transform.rotation.eulerAngles.z + 90;
+        var currentAngle = _kinematic.rotation + 90;
         var targetAngle = Mathf.Atan2(Input.mousePosition.y - Screen.height * 0.5f, Input.mousePosition.x - Screen.width * 0.5f) * 57.29578f;
         var angleDiff = currentAngle - targetAngle;
 

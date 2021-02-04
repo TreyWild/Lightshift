@@ -19,7 +19,7 @@ public class LightLance : MonoBehaviour
     private void Awake()
     {
         _kinematic = GetComponent<Kinematic>();
-        _lightLance = Instantiate(PrefabManager.Instance.lightLancePrefab, transform).GetComponent<BeamToTarget>();
+        _lightLance = Instantiate(PrefabManager.Instance.lightLancePrefab, _kinematic.Transform).GetComponent<BeamToTarget>();
         _lightLance.OnFocus += OnLightLanceFocus;
         _lightLance.CancelFocus();
     }
@@ -46,7 +46,7 @@ public class LightLance : MonoBehaviour
             //_kinematic.AddForce((targetTransform.position + (transform.forward * force) - transform.position) * (force));
 
             Vector2 diffVel = target.velocity - _kinematic.velocity;
-            Vector3 diffPos = target.transform.position - _kinematic.transform.position;
+            Vector3 diffPos = target.position - _kinematic.position;
             float dist = diffPos.magnitude;
             Vector3 diffPosN = diffPos / dist;
 

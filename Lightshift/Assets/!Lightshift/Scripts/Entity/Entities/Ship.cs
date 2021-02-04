@@ -10,6 +10,7 @@ public class Ship : Entity
     public Thruster thruster;
     public ShipDesign design;
     public WeaponSystem weaponSystem;
+    public Generator generator;
 
     [Header("Stats")]
     public float acceleration;
@@ -23,6 +24,9 @@ public class Ship : Entity
         base.Awake();
 
         onModifierChanged += OnModifierChanged;
+
+        if (generator == null)
+            generator = GetComponent<Generator>();
 
         if (weaponSystem == null)
             weaponSystem = gameObject.AddComponent<WeaponSystem>();
@@ -82,7 +86,7 @@ public class Ship : Entity
         if (thrusting)
             invSpeedPercent = Mathf.Max(1 - (kinematic.velocity.magnitude / speed) * 0.33f, 0); //75% turnspeed at max speed
         else
-            invSpeedPercent = Mathf.Max(1 - (kinematic.velocity.magnitude / speed) * 0.25f, 0); //50% turnspeed at max speed
+            invSpeedPercent = Mathf.Max(1 - (kinematic.velocity.magnitude / speed) * 0.4f, 0); //50% turnspeed at max speed
 
         kinematic.SetDirection(kinematic.transform.eulerAngles.z + agility * axis * Time.fixedDeltaTime * invSpeedPercent);
     }

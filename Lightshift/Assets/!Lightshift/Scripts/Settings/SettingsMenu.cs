@@ -203,6 +203,7 @@ public class SettingsMenu : MonoBehaviour
             CreateKeyBinding("Menu", "menuKey");
             CreateKeyBinding("Player Menu", "playerMenuKey");
             CreateKeyBinding("System Map", "mapKey");
+            CreateKeyBinding("Cargo Menu", "cargoKey");
             CreateKeyBinding("Self Destruct", "selfDestructKey");
             return;
         }

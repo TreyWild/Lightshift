@@ -40,6 +40,13 @@ namespace Assets._Lightshift.Scripts.Data
                         ModuleId = "combustionEngine",
                         ModuleLocation = ModuleType.Engine
                     },
+
+                    new Item
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        ModuleId = "brandon",
+                        ModuleLocation = ModuleType.Weapon1
+                    }
                 }
             };
 

@@ -173,6 +173,20 @@ public class LoginManager : MonoBehaviour
         ShowLoading();
     }
 
+    public void ShowMenu()
+    {
+        MainMenu.SetActive(true);
+    }
+
+    public void Exit()
+    {
+        DialogManager.ShowDialog($"Are you sure that you're sure that you're sure you really want to quit?", delegate (bool result)
+        {
+            if (result)
+                Application.Quit();
+        }, "Rage Quit", "I miss clicked.");
+    }
+
     public void ConfirmAccount()
     {
         var code = _confirmCode.text;

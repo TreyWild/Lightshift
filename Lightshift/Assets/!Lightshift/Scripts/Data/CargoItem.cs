@@ -16,6 +16,9 @@ namespace Assets._Lightshift.Scripts.Data
         public string DisplayName;
         public string Lore;
         public Sprite Sprite;
+        public List<GameModifier> Modifiers;
+        public int MinimumCreditValue;
+        public int MaximumCreditValue;
     }
 
 

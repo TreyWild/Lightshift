@@ -44,6 +44,8 @@ public class Server : MonoBehaviour
         if (_players.Contains(player))
             _players.Remove(player);
 
+        player.SaveAccount();
+
         if (player.GetConnection() != null)
             NetworkServer.DestroyPlayerForConnection(player.GetConnection());
     }

@@ -34,6 +34,7 @@ namespace Lightshift
         public static KeyCode ChatKey = KeyCode.KeypadEnter;
         public static KeyCode ChatKeyAlt = KeyCode.Return;
         public static KeyCode SelfDestruct = KeyCode.R;
+        public static KeyCode CargoMenu = KeyCode.V;
         public static KeyCode DeveloperWeaponListKey = KeyCode.K;
         public static KeyCode DeveloperShipListKey = KeyCode.J;
         public static bool KeysLocked;
@@ -128,6 +129,7 @@ namespace Lightshift
             Weapon3 = GetControlValue("weapon3Key", Weapon3);
             Weapon4 = GetControlValue("weapon4Key", Weapon4);
             Weapon5 = GetControlValue("weapon5Key", Weapon5);
+            CargoMenu = GetControlValue("cargoMenu", CargoMenu);
             DockKey = GetControlValue("dockKey", DockKey);
             SelfDestruct = GetControlValue("selfDestructKey", SelfDestruct);
             FireWithWeaponHotkeys = bool.Parse(PlayerPrefs.GetString("useWeaponHotKeys", "True"));
