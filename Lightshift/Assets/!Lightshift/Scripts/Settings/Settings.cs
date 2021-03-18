@@ -43,6 +43,7 @@ namespace Lightshift
         public static bool ShowTargetMarker = false;
         public static float soundEffectVolume = .5f;
         public static float musicVolume = .5f;
+        public static float masterVolume = 1f;
         //public bool IsFullscreen = false;
         public bool ShowSkybox = true;
         public bool ShowBackgroundElements;
@@ -77,6 +78,9 @@ namespace Lightshift
             if (!PlayerPrefs.HasKey("musicVolume"))
                 PlayerPrefs.SetString("musicVolume", "50");
 
+            if (!PlayerPrefs.HasKey("masterVolume"))
+                PlayerPrefs.SetString("masterVolume", "100");
+
             if (!PlayerPrefs.HasKey("showSkybox"))
                 PlayerPrefs.SetString("showSkybox", "True");
 
@@ -93,7 +97,10 @@ namespace Lightshift
                 PlayerPrefs.SetString("showDamageText", "True");
 
             PlayerPrefs.Save();
+        }
 
+        private void Start()
+        {
             RefreshControls();
             RefreshScreen();
             RefreshSound();
@@ -183,6 +190,7 @@ namespace Lightshift
                 Screen.SetResolution((int)resolution.x, (int)resolution.y, fullScreenMode, MaxFrameRate);
             }
 
+            Application.targetFrameRate = MaxFrameRate;
 
             var backgrounds = (ShowBackgroundElements) || ShowSkybox;
             
@@ -213,10 +221,12 @@ namespace Lightshift
         {
             soundEffectVolume = float.Parse(PlayerPrefs.GetString("soundEffectVolume", "50")) * .01f;
             musicVolume = float.Parse(PlayerPrefs.GetString("musicVolume", "30")) * .01f;
-
+            masterVolume = float.Parse(PlayerPrefs.GetString("masterVolume", "30")) * .01f;
             if (SoundManager.Instance != null)
             {
-                SoundManager.Instance.UpdateVolume();
+                SoundManager.Instance.SetEffectsVolume(soundEffectVolume);
+                SoundManager.Instance.SetMusicVolume(musicVolume);
+                SoundManager.Instance.SetGlobalVolume(masterVolume);
             }
         }
     }

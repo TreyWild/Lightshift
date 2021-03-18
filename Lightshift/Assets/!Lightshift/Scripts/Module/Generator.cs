@@ -44,7 +44,7 @@ public class Generator : NetworkBehaviour
                 return;
             }
 
-            if (_entity.IsInSafezone)
+            if (_entity.isInCheckpoint)
                 power += maxPower / 10 * Time.deltaTime;
             else
                 power += powerRegen * Time.deltaTime;

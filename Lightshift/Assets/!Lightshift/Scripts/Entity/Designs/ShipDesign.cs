@@ -11,18 +11,32 @@ public class ShipDesign : MonoBehaviour
     [SerializeField] private DesignObject _leftWing;
     [SerializeField] private DesignObject _rightWing;
 
-    public List<Collider2D> Colliders = new List<Collider2D>();
-    public List<Collider2D> GenerateColliders()
+    public List<Collider2D> TriggerColliders = new List<Collider2D>();
+    public List<Collider2D> SolidColliders = new List<Collider2D>();
+    public List<Collider2D> GenerateTriggerColliders()
     {
-        Colliders.Clear();
-        Colliders.Add(_hull.GenerateCollider());
-        Colliders.Add(_leftWing.GenerateCollider());
-        Colliders.Add(_rightWing.GenerateCollider());
+        TriggerColliders.Clear();
+        TriggerColliders.Add(_hull.GenerateCollider());
+        TriggerColliders.Add(_leftWing.GenerateCollider());
+        TriggerColliders.Add(_rightWing.GenerateCollider());
 
-        foreach (var collider in Colliders)
+        foreach (var collider in TriggerColliders)
             collider.isTrigger = true;
 
-        return Colliders;
+        return TriggerColliders;
+    }
+
+    public List<Collider2D> GenerateSolidColliders()
+    {
+        SolidColliders.Clear();
+        SolidColliders.Add(_hull.GenerateCollider());
+        SolidColliders.Add(_leftWing.GenerateCollider());
+        SolidColliders.Add(_rightWing.GenerateCollider());
+
+        foreach (var collider in SolidColliders)
+            collider.isTrigger = false;
+
+        return SolidColliders;
     }
     public void SetHull(Sprite sprite)
     {

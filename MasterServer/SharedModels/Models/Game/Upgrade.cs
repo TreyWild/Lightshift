@@ -30,8 +30,7 @@ namespace SharedModels.Models.Game
     [Serializable]
     public class Upgrade
     {
-        public Modifier Type { get; set; }
-
+        public string Id { get; set; }
         public int Level { get; set; }
     }
 }

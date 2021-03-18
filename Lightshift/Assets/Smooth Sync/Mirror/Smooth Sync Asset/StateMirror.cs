@@ -177,7 +177,7 @@ namespace Smooth
     /// <remarks>
     /// This only sends and receives the parts of the StateMirror that are enabled on the SmoothSync component.
     /// </remarks>
-    public class NetworkStateMirror : NetworkMessage
+    public struct NetworkStateMirror : NetworkMessage
     {
         /// <summary>
         /// The SmoothSync object associated with this StateMirror.
@@ -186,12 +186,7 @@ namespace Smooth
         /// <summary>
         /// The StateMirror that will be sent over the network
         /// </summary>
-        public StateMirror state = new StateMirror();
-
-        /// <summary>
-        /// Default contstructor, does nothing.
-        /// </summary>
-        public NetworkStateMirror() { }
+        public StateMirror state;
 
         /// <summary>
         /// Copy the SmoothSync object to a NetworkStateMirror.
@@ -253,7 +248,7 @@ namespace Smooth
             writer.WriteByte(encodeSyncInformation(sendPosition, sendRotation, sendScale,
                 sendVelocity, sendAngularVelocity, sendAtPositionalRestTag, sendAtRotationalRestTag));
             writer.WriteNetworkIdentity(smoothSync.netID);
-            writer.WritePackedUInt32((uint)smoothSync.syncIndex);
+            writer.WriteUInt32((uint)smoothSync.syncIndex);
             writer.WriteSingle(state.ownerTimestamp);
 
             // Write position.
@@ -432,7 +427,7 @@ namespace Smooth
             // Only the server sends out owner information.
             if (smoothSync.isSmoothingAuthorityChanges && NetworkServer.active)
             {
-                writer.WriteByte((byte)smoothSync.ownerChangeIndicator); 
+                writer.WriteByte((byte)smoothSync.ownerChangeIndicator);
             }
 
             if (smoothSync.automaticallyResetTime)
@@ -450,6 +445,7 @@ namespace Smooth
         public static NetworkStateMirror Deserialize(this NetworkReader reader)
         {
             var msg = new NetworkStateMirror();
+            msg.state = new StateMirror();
             var state = msg.state;
 
             // The first received byte tells us what we need to be syncing.
@@ -466,10 +462,10 @@ namespace Smooth
             if (networkIdentity == null)
             {
                 Debug.LogWarning("Could not find target for network StateMirror message.");
-                return null;
+                return new NetworkStateMirror();
             }
             uint netID = networkIdentity.netId;
-            int syncIndex = (int)reader.ReadPackedUInt32();
+            int syncIndex = (int)reader.ReadUInt32();
             state.ownerTimestamp = reader.ReadSingle();
 
             // Find the GameObject
@@ -478,7 +474,7 @@ namespace Smooth
             if (!ob)
             {
                 Debug.LogWarning("Could not find target for network StateMirror message.");
-                return null;
+                return new NetworkStateMirror();
             }
 
             // It doesn't matter which SmoothSync is returned since they all have the same list.
@@ -487,7 +483,7 @@ namespace Smooth
             if (!msg.smoothSync)
             {
                 Debug.LogWarning("Could not find target for network StateMirror message.");
-                return null;
+                return new NetworkStateMirror();
             }
 
             // Find the correct object to sync according to the syncIndex.

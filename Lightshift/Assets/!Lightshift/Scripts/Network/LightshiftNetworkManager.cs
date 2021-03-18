@@ -17,10 +17,22 @@ using UnityEngine.SceneManagement;
 public class LightshiftNetworkManager : NetworkManager 
 {
     public bool UseTestServers;
-    public bool Invert;
+    public bool UseHostFormat = true;
+    public bool IsServer = true;
+    void Awake() 
+    {
+        base.Awake();
+
+        if (IsServer)
+            HttpService.InitGameServerAuthentication("dev-access");
+
+        if (IsServer && !UseHostFormat)
+            StartServer();
+    }
     public static GameObject GetPrefab<T>() => singleton.spawnPrefabs.FirstOrDefault(o => o.gameObject.HasType<T>());
     public override void OnStartServer()
     {
+        base.OnStartServer();
         spawnPrefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").ToList();
         gameObject.AddComponent<Server>();
         Debug.Log($"Server Started. Running on {networkAddress}.");
@@ -38,6 +50,7 @@ public class LightshiftNetworkManager : NetworkManager
     }
     public override void OnServerReady(NetworkConnection conn)
     {
+        base.OnServerReady(conn);
         Debug.Log($"Client with ID [{conn.connectionId}] connected.");
     }
 
@@ -50,12 +63,11 @@ public class LightshiftNetworkManager : NetworkManager
     public override void OnClientConnect(NetworkConnection conn)
     {
         base.OnClientConnect(conn);
-
-        gameObject.AddComponent<Game>();
     }
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
+        base.OnClientDisconnect(conn);
         //Destroy(gameObject);
         //SceneManager.LoadScene("_AUTHENTICATION_");
         singleton.StopClient();
@@ -73,39 +85,23 @@ public class LightshiftNetworkManager : NetworkManager
         var authenticator = FindObjectOfType<LightshiftAuthenticator>();
         authenticator.sessionAuthKey = key;
 
-        if (Application.isEditor || UseTestServers)
+        if (UseTestServers)
         {
             singleton.networkAddress = "localhost";
-            if (Application.isEditor && !Invert)
-            {
-                HttpService.InitGameServerAuthentication("dev-access");
-                StartHost();
-                return;
-            }
-            else if (Invert && Application.isEditor)
-            {
-                StartClient();
-                return;
-            }
-            else if (!Application.isEditor && Invert)
-            {
-                HttpService.InitGameServerAuthentication("dev-access");
-                StartHost();
-                return;
-            }
-            else 
-            {
-                StartClient();
-                return;
-            }
         }
         else singleton.networkAddress = "167.99.149.84";
 
-        StartClient();
+        if (IsServer)
+            if (UseHostFormat)
+                StartHost();
+            else
+                StartServer();
+        else StartClient();
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
+        base.OnServerDisconnect(conn);
         Server.RemovePlayer(Server.GetPlayer(conn));
     }
 }

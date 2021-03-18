@@ -180,7 +180,7 @@ public class Npc : Ship
         return _rotationMod;
     }
 
-    public bool HasTarget => targetNeutral != null && TargetDistance < trackingRange && targetNeutral.alive && !targetNeutral.IsInSafezone;
+    public bool HasTarget => targetNeutral != null && TargetDistance < trackingRange && targetNeutral.alive && !targetNeutral.isInCheckpoint;
 
     public float TargetDistance => Vector2.Distance(targetNeutral.transform.position, transform.position);
 

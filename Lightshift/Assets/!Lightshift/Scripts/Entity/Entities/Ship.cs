@@ -30,6 +30,14 @@ public class Ship : Entity
 
         if (weaponSystem == null)
             weaponSystem = gameObject.AddComponent<WeaponSystem>();
+
+        onCleanup += () =>
+        {
+            thruster = null;
+            design = null;
+            weaponSystem = null;
+            generator = null;
+        };
     }
 
     public void Brake()

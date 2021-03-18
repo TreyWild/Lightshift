@@ -36,12 +36,35 @@ public class Entity : NetworkBehaviour
 
     public EntityUI ui;
     private float _timeSinceLastTargetUpdate = 0;
+    public bool isInCheckpoint;
+    public Action onCleanup;
+    public void OnDestroy()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+    {
+        onCleanup?.Invoke();
+        onCleanup = null;
+        EntityManager.RemoveEntity(this);
+        teamId = null;
+        smoothSync = null;
+        rigidBody = null;
+        targetNeutral = null;
+        targetEntity = null;
+        kinematic = null;
+        ui = null;
+        onModifierChanged = null;
+        onLeaveCheckpoint = null;
+        onEnterCheckpoint = null;
+    }
     public void Awake()
     {
         //weaponSystem = gameObject.AddComponent<WeaponSystem>();
         rigidBody = gameObject.GetComponent<Rigidbody2D>();
         kinematic = gameObject.GetComponent<Kinematic>();
         ui = gameObject.AddComponent<EntityUI>();
+
+        onEnterCheckpoint += (checkpoint) => OnEnterCheckpoint(checkpoint);
+
+        onLeaveCheckpoint += (checkpoint) => OnLeaveCheckpoint(checkpoint);
     }
 
     public override void OnStartServer()
@@ -58,6 +81,16 @@ public class Entity : NetworkBehaviour
         ui.Init(hasAuthority, isServer);
     }
 
+    public virtual void OnEnterCheckpoint(Checkpoint checkpoint)
+    {
+        isInCheckpoint = true;
+    }
+
+    public virtual void OnLeaveCheckpoint(Checkpoint checkpoint)
+    {
+        isInCheckpoint = false;
+    }
+
     public override void OnStartClient()
     {
         base.OnStartClient();
@@ -68,8 +101,6 @@ public class Entity : NetworkBehaviour
         {
             UpdateModifier(modifier.Key, modifier.Value);
         };
-
-        Cargo.Callback += Cargo_Callback;
 
         foreach (var modifier in Modifiers)
         {
@@ -87,7 +118,7 @@ public class Entity : NetworkBehaviour
 
     public readonly SyncDictionary<Modifier, float> Modifiers = new SyncDictionary<Modifier, float>();
 
-    public void ClearModifiers() 
+    public void ClearModifiers()
     {
         if (isServer)
         {
@@ -128,7 +159,7 @@ public class Entity : NetworkBehaviour
     }
 
     public Action<Modifier, float> onModifierChanged;
-    public void UpdateModifier(Modifier type, float value) 
+    public void UpdateModifier(Modifier type, float value)
     {
         if (isServer)
         {
@@ -141,101 +172,18 @@ public class Entity : NetworkBehaviour
         onModifierChanged?.Invoke(type, value);
     }
 
-    private void Cargo_Callback(SyncIDictionary<CargoType, int>.Operation op, CargoType key, int value)
-    {
-        if (isServer)
-            return;
-
-        UpdateCargo(key, value);
-    }
-
-    public readonly SyncDictionary<CargoType, int> Cargo = new SyncDictionary<CargoType, int>();
-
-    public void ClearCargos()
-    {
-        if (isServer)
-        {
-            var cargos = Cargo.ToList();
-            foreach (var cargo in cargos)
-                UpdateCargo(cargo.Key, cargo.Value);
-        }
-    }
-    public void SetCargo(List<CargoObject> cargoObjects)
-    {
-        if (!isServer)
-            return;
-
-        ClearCargos();
-
-        if (cargoObjects != null)
-        foreach (var cargo in cargoObjects)
-        {
-            UpdateCargo(cargo.Type, cargo.Amount);
-        }
-
-        //foreach (var cargo in Cargos)
-        //    UpdateCargo(cargo.Key, cargo.Value);
-    }
-
-    public Action<CargoType, float> onCargoChanged;
-    public void UpdateCargo(CargoType type, int value)
-    {
-        if (isServer)
-        {
-            if (!Cargo.ContainsKey(type))
-                Cargo.Add(type, value);
-            else
-                Cargo[type] = value;
-        }
-
-        onCargoChanged?.Invoke(type, value);
-    }
-
-    public void OnDestroy()
-    {
-        EntityManager.RemoveEntity(this);
-    }
-
     public void FixedUpdate()
     {
         if (!isServer)
             return;
 
         _timeSinceLastTargetUpdate += Time.fixedDeltaTime;
-        if (_timeSinceLastTargetUpdate > 0.2f) 
+        if (_timeSinceLastTargetUpdate > 0.2f)
         {
             UpdateTargets();
             _timeSinceLastTargetUpdate = 0;
         }
     }
-
-
-    #region Safezone
-
-    public bool IsInSafezone;
-
-    public void HandleSafeZone() 
-    {
-        if (!IsInSafezone)
-            return;
-
-    }
-    public virtual void OnEnterSafezone(Entity entity)
-    {
-        //ClearDamageObjects();
-        IsInSafezone = true;
-
-        if (hasAuthority)
-            GameUIManager.Instance.ShowScreenText("Entering Safezone, Weapons Disabled");
-    }
-    public void OnLeaveSafezone(Entity entity)
-    {
-        IsInSafezone = false;
-        //weaponSystem.WeaponSystemDisabled = false;
-        if (hasAuthority)
-            GameUIManager.Instance.ShowScreenText("Leaving Safezone, Weapons Active");
-    }
-    #endregion
 
     public void SetDisplayName(string oldValue = "", string displayName = "")
     {
@@ -283,7 +231,7 @@ public class Entity : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcUpdateTarget(short target) 
+    private void RpcUpdateTarget(short target)
     {
         UpdateTarget(newValue: target);
     }
@@ -317,7 +265,7 @@ public class Entity : NetworkBehaviour
             if (!entities[i].alive)
                 return;
 
-            if (entities[i].IsInSafezone)
+            if (entities[i].isInCheckpoint)
                 return;
 
             var distance = (transform.position - entities[i].transform.position).sqrMagnitude;
@@ -357,7 +305,7 @@ public class Entity : NetworkBehaviour
                 _targetNeutral = targetId;
             }
         }
-    }  
+    }
 
     private List<Entity> GetNearbyEntities()
     {
@@ -405,13 +353,13 @@ public class Entity : NetworkBehaviour
     }
 
 
-    public void Kill() 
+    public void Kill()
     {
         CmdKillEntity();
     }
 
     [Command]
-    private void CmdKillEntity() 
+    private void CmdKillEntity()
     {
         alive = false;
 
@@ -419,19 +367,18 @@ public class Entity : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcKillEntity() 
+    private void RpcKillEntity()
     {
         OnKilled();
     }
 
-    public virtual void OnDeath() 
+    public virtual void OnDeath()
     {
-        
+
     }
-    public virtual void OnKilled() 
+    public virtual void OnKilled()
     {
         Instantiate(PrefabManager.Instance.deathEffectPrefab, kinematic.position, kinematic.Transform.rotation);
-        SoundManager.PlayExplosion(transform.position);
     }
 
     public void Respawn()
@@ -442,7 +389,7 @@ public class Entity : NetworkBehaviour
         OnRespawn();
     }
 
-    public virtual void OnRespawn() 
+    public virtual void OnRespawn()
     {
 
         //Respawn Effect
@@ -450,12 +397,12 @@ public class Entity : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void TargetRpcSetPosition(Vector2 position) 
+    private void TargetRpcSetPosition(Vector2 position)
     {
         kinematic.position = position;
     }
 
-    public void SetPosition(Vector2 pos) 
+    public void SetPosition(Vector2 pos)
     {
         // Set respawn position
         if (isServer && connectionToClient != null)
@@ -477,49 +424,16 @@ public class Entity : NetworkBehaviour
     //}
 
     #region Checkpoints
-    public event Action<string> OnLeaveCheckpoint;
-    public event Action<string> OnEnterCheckpoint;
+    public event Action<Checkpoint> onLeaveCheckpoint;
+    public event Action<Checkpoint> onEnterCheckpoint;
 
-    public void EnterCheckpoint(Checkpoint checkpoint) 
+    public void EnterCheckpoint(Checkpoint checkpoint)
     {
-        HandleCheckpoint(checkpoint.Id, false);
+        onEnterCheckpoint?.Invoke(checkpoint);
     }
     public void LeaveCheckpoint(Checkpoint checkpoint)
     {
-        HandleCheckpoint(checkpoint.Id, true);
+        onLeaveCheckpoint?.Invoke(checkpoint);
     }
-    public void HandleCheckpoint(string id, bool leaving) 
-    {
-        if (isLocalPlayer && hasAuthority)
-            CmdHandleCheckpoint(id, leaving);
-        else if (isServer && hasAuthority)
-        {
-            RpcHandleCheckpoint(id, leaving);
-            UpdateCheckpointCallbacks(id, leaving);
-        }
-    }
-
-    [Command]
-    private void CmdHandleCheckpoint(string id, bool leaving)
-    {
-        // Run on server
-        UpdateCheckpointCallbacks(id, leaving);
-    }
-
-    [ClientRpc]
-    private void RpcHandleCheckpoint(string id, bool leaving)
-    {
-        // Run on clients
-        UpdateCheckpointCallbacks(id, leaving);
-    }
-
-    private void UpdateCheckpointCallbacks(string id, bool leaving) 
-    {
-        if (leaving)
-            OnLeaveCheckpoint?.Invoke(id);
-        else OnEnterCheckpoint?.Invoke(id);
-    }
-
-
     #endregion
 }

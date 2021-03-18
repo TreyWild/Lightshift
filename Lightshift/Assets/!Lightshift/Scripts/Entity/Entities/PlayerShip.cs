@@ -16,12 +16,31 @@ public class PlayerShip : Ship
     private ShipObject _shipObject;
     private PlayerController _input;
     private List<Item> _equippedModules;
+    private Player _player;
+
+    private Player Player 
+    {
+        get
+        {
+            if (_player == null)
+                _player = Server.GetPlayer(connectionToClient);
+
+            return _player;
+        }
+    }
     private void Awake()
     {
         base.Awake();
 
         _input = GetComponent<PlayerController>();
         //_equips.Callback += OnEquipsChanged;
+
+        onCleanup += () =>
+        {
+            _shipObject = null;
+            _input = null;
+            _equippedModules = null;
+        };
     }
 
     public override void OnStartServer()
@@ -49,16 +68,21 @@ public class PlayerShip : Ship
         //teamId = player.connectUserId;
     }
 
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     private void Start()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         base.Start();
-        design.GenerateColliders();
+        design.GenerateSolidColliders();
+        design.GenerateTriggerColliders();
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
-        CmdInit();
+
+        if (hasAuthority)
+            CmdInit();
     }
 
     [Command]
@@ -69,11 +93,11 @@ public class PlayerShip : Ship
     public void InitShipObject(ShipObject shipObject) 
     {
         _shipObject = shipObject;
-        var stats = StatHelper.GetStatsFromShip(shipObject);
+        var stats = StatHelper.GetStatsFromShip(_player, shipObject);
 
         SetModifiers(stats);
 
-        _equippedModules = shipObject.OwnedItems.Where(s => shipObject.EquippedModules.Contains(s.Id)).ToList();
+        _equippedModules = _player.GetItems().Where(s => shipObject.EquippedModules.Contains(s.Id)).ToList();
         if (_equippedModules != null && _equippedModules.Count > 0)
         {
             InitModules(_equippedModules);
@@ -121,7 +145,9 @@ public class PlayerShip : Ship
         }
     }
 
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     private void FixedUpdate()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         if (!alive)
             return;
@@ -162,26 +188,26 @@ public class PlayerShip : Ship
 
         Turn(_input.HorizontalAxis, _input.Up);
 
-        HandleSafeZone();
-
         if (_input.Weapon)
             weaponSystem.TryFireWeapon(_input.WeaponSlot);
     }
-    public override void OnEnterSafezone(Entity entity)
-    {
-        base.OnEnterSafezone(entity);
 
-        //if (isServer)
-        //    Server.GetPlayer(connectionToClient).lastSafePosition = entity.transform.position;
+    public override void OnEnterCheckpoint(Checkpoint checkpoint)
+    {
+        if (isServer && Player != null) 
+            Player.lastCheckpointId = checkpoint.Id;
+
+        if (hasAuthority)
+            GameUIManager.Instance.ShowScreenText("Entered Safezone, Weapons Disabled.");
     }
 
-    private void OnDestroy()
+    public override void OnLeaveCheckpoint(Checkpoint checkpoint)
     {
-        //_equips.Callback -= OnEquipsChanged;
-        
-        base.OnDestroy();
-    }
+        base.OnLeaveCheckpoint(checkpoint);
 
+        if (hasAuthority)
+            GameUIManager.Instance.ShowScreenText("Leaving Safezone, Weapons Enabled.");
+    }
     public override void OnRespawn()
     {
         base.OnRespawn();

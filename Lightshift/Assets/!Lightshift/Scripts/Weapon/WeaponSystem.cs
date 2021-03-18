@@ -62,7 +62,7 @@ public class WeaponSystem : NetworkBehaviour
 
         activeWeaponSlot = weapon;
 
-        if (_entity.IsInSafezone)
+        if (_entity.isInCheckpoint)
             return;
 
         if (activeWeapon != null && activeWeapon.item != null &&  activeWeapon.timeSinceLastShot > activeWeapon.item.weaponData.refire)
@@ -87,9 +87,6 @@ public class WeaponSystem : NetworkBehaviour
 
     private void FireWeapon(Weapon weapon)
     {
-        if (weapon.ShootSound != null)
-            SoundManager.Play(weapon.ShootSound, transform.position);
-
         for (int i = 0; i < weapon.weaponData.projectileCount; i++)
         {
             Vector2 newProjVel = _kinematic.velocity * weapon.weaponData.bulletData.speed;

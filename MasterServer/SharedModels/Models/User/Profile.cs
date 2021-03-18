@@ -20,5 +20,8 @@ namespace SharedModels.Models.User
         public bool IsLanded { get; set; }
         public string ActiveShip { get; set; }
 
+        public List<ResourceObject> Resources { get; set; }
+
+        public List<ResourceObject> Bank { get; set; }
     }
 }

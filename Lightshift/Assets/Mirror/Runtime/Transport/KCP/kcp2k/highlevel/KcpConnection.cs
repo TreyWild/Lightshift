@@ -400,27 +400,27 @@ namespace kcp2k
                     }
                     case (byte)KcpChannel.Unreliable:
                     {
-                        // ideally we would queue all unreliable messages and
-                        // then process them in ReceiveNext() together with the
-                        // reliable messages, but:
-                        // -> queues/allocations/pools are slow and complex.
-                        // -> DOTSNET 10k is actually slower if we use pooled
-                        //    unreliable messages for transform messages.
-                        //
-                        //      DOTSNET 10k benchmark:
-                        //        reliable-only:         170 FPS
-                        //        unreliable queued: 130-150 FPS
-                        //        unreliable direct:     183 FPS(!)
-                        //
-                        //      DOTSNET 50k benchmark:
-                        //        reliable-only:         FAILS (queues keep growing)
-                        //        unreliable direct:     18-22 FPS(!)
-                        //
-                        // -> all unreliable messages are DATA messages anyway.
-                        // -> let's skip the magic and call OnData directly if
-                        //    the current state allows it.
-                        if (state == KcpState.Authenticated)
-                        {
+                            // ideally we would queue all unreliable messages and
+                            // then process them in ReceiveNext() together with the
+                            // reliable messages, but:
+                            // -> queues/allocations/pools are slow and complex.
+                            // -> DOTSNET 10k is actually slower if we use pooled
+                            //    unreliable messages for transform messages.
+                            //
+                            //      DOTSNET 10k benchmark:
+                            //        reliable-only:         170 FPS
+                            //        unreliable queued: 130-150 FPS
+                            //        unreliable direct:     183 FPS(!)
+                            //
+                            //      DOTSNET 50k benchmark:
+                            //        reliable-only:         FAILS (queues keep growing)
+                            //        unreliable direct:     18-22 FPS(!)
+                            //
+                            // -> all unreliable messages are DATA messages anyway.
+                            // -> let's skip the magic and call OnData directly if
+                            //    the current state allows it.
+                            if (state == KcpState.Connected || state == KcpState.Authenticated)
+                            {
                             // only process messages while not paused for Mirror
                             // scene switching etc.
                             // -> if an unreliable message comes in while

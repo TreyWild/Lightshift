@@ -4,171 +4,86 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
 
 public class SoundManager : MonoBehaviour
 {
-    public GameObject audioObjectPrefab;
+    public static SoundManager Instance;
 
-    [SerializeField] private AudioClip _explosionSoundEffect;
+    [SerializeField] private AudioMixer _mixer;
 
-    [SerializeField] private List<AudioClip> _musicClips;
+    [SerializeField] private AudioClip _menuMusic;
+    [SerializeField] private AudioSource _musicSource;
 
-    [SerializeField] private AudioClip[] _titleScreenMusic;
+    private void OnDestroy()
+    {
+        Instance = null;
+        _mixer = null;
+        _menuMusic = null;
+        _musicSource = null;
+    }
 
-    private List<AudioObject> _audioObjects = new List<AudioObject>();
-
-    private List<AudioSource> _musicSources = new List<AudioSource>();
-
-    // Random pitch adjustment range.
-    public float LowPitchRange = .95f;
-    public float HighPitchRange = 1.05f;
-
-    // Singleton instance.
-    public static SoundManager Instance = null;
-
-    private int _activeMusicSource = 0;
-    private AudioSource GetMusicSource() => _musicSource;
-
-    // Initialize the singleton instance.
     private void Awake()
     {
-        if (Instance == null)
-            Instance = this;
-        else 
+        Instance = this;
+    }
+    private void OnEnable()
+    {
+        Refresh();
+    }
+
+    public void Refresh()
+    {
+        PlayMusic();
+    }
+
+    public void PlayMusic()
+    {
+        if (SceneManager.GetActiveScene().name == "_AUTHENTICATION_")
+            PlayMusicTrack(_menuMusic);
+        else
         {
-            Destroy(gameObject);
-            return;
+            var solarSystem = SystemManager.GetSolarSystem();
+            if (solarSystem != null)
+                PlayMusicTrack(solarSystem.Music);
         }
-
-        //Set SoundManager to DontDestroyOnLoad so that it won't be destroyed when reloading our scene.
-        DontDestroyOnLoad(gameObject);
-
-        for (int i = 0; i < 2; i++)
-        {
-            var source = gameObject.AddComponent<AudioSource>();
-            source.ignoreListenerVolume = true;
-            _musicSources.Add(source);
-        }
-
-        _musicSource = _musicSources[0];
-
-        UpdateVolume();
     }
 
-    // Play a single clip through the sound effects source.
-    public static void Play(AudioClip clip, Vector2 position)
+    private void PlayMusicTrack(AudioClip clip)
     {
-        var obj = Instance.GetUsableAudio();
-        obj.gameObject.SetActive(true);
-        obj.gameObject.transform.position = position;
-        obj.PlayClip(clip);
-    }
-
-    public static void PlayExplosion(Vector2 position)
-    {
-        Play(Instance._explosionSoundEffect, position);
-    }
-
-    private AudioObject GetUsableAudio()
-    {
-        var obj = _audioObjects.FirstOrDefault(a => !a.gameObject.activeInHierarchy);
-        if (obj == null)
-        {
-            var gameObj = Instantiate(audioObjectPrefab);
-            obj = gameObj.GetComponent<AudioObject>();
-            _audioObjects.Add(obj);
-        }
-        return obj;
-    }
-
-    // Play a single clip through the music source.
-    public void PlayMusic(AudioClip clip)
-    {
-        try
-        {
-            GetMusicSource().clip = clip;
-            UpdateVolume();
-            GetMusicSource().Play();
-        }
-        catch { }
-    }
-
-    private void Update()
-    {
-        //if (!GetMusicSource().isPlaying)
-        //{
-        //    if (SceneManager.GetActiveScene().buildIndex == 0)
-        //        PlayTitleScreenMusic();
-        //    else
-        //        PlayRandomMusic();
-        //}
-
-        if (_oldMusicSource != null)
-        {
-            if (_oldMusicSource.mute)
+        if (_musicSource.clip != null)
+            if (_musicSource.clip.name == clip.name)
                 return;
 
-            if (_oldMusicSource.volume > 0)
-                _oldMusicSource.volume -= Time.deltaTime;
-            else
-            {
-                _oldMusicSource.mute = true;
-                _oldMusicSource.Stop();
-            }
-        }
-
-        if (_musicSource != null)
-        {
-            if (_musicSource.volume < Settings.musicVolume)
-            {
-                _musicSource.volume += (Settings.musicVolume) * Time.deltaTime;
-            }
-        }
-    }
-    public void PlayRandomMusic()
-    {
-        var clip = _musicClips[UnityEngine.Random.Range(0, _musicClips.Count)];
-        PlayMusic(clip);
+        _musicSource.clip = clip;
+        _musicSource.loop = true;
+        _musicSource.Play();
     }
 
-    public void UpdateVolume()
+    public void UpdateSoundSetting()
     {
-        if (Settings.musicVolume > 0.05f)
-            foreach (var source in _musicSources)
-                source.mute = false;
-        else foreach (var source in _musicSources)
-                source.mute = true;
 
-        foreach (var source in _musicSources)
-            source.volume = Settings.musicVolume;
-
-        foreach (var audio in _audioObjects)
-            audio.UpdateVolume();
     }
 
-    private void OnLevelWasLoaded(int level)
+    public void SetMusicVolume(float volume) 
     {
-        if (level > 0)
-            PlayRandomMusic();
-        else PlayTitleScreenMusic();
+        if (volume == 0)
+            volume = 0.001f;
+        _mixer.SetFloat("MusicVolume", Mathf.Log(volume) * 20);
     }
 
-    public void PlayTitleScreenMusic() 
+    public void SetEffectsVolume(float volume)
     {
-        PlayMusic(_titleScreenMusic[UnityEngine.Random.Range(0, _titleScreenMusic.Length)]);
+        if (volume == 0)
+            volume = 0.001f;
+        _mixer.SetFloat("EffectsVolume", Mathf.Log(volume) * 20);
     }
 
-    private AudioSource _oldMusicSource;
-    private AudioSource _musicSource;
-    public static void PlayMusicWithFade(AudioClip music) 
+    public void SetGlobalVolume(float volume)
     {
-        Instance._oldMusicSource = Instance._musicSource;
-        Instance._musicSource = Instance._musicSources.FirstOrDefault(s => s != Instance._oldMusicSource);
-
-        Instance._musicSource.clip = music;
-        Instance._musicSource.volume = 0;
-        Instance._musicSource.mute = false;
-        Instance._musicSource.Play();
+        if (volume == 0)
+            volume = 0.001f;
+        _mixer.SetFloat("MasterVolume", Mathf.Log(volume) * 20);
     }
 }

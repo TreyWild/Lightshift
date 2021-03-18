@@ -9,52 +9,45 @@ namespace Assets._Lightshift.Scripts.Data
 {
     public class PlayerDefaults
     {
-        public static ShipObject GetDefaultShip() 
+        public static List<ResourceObject> GetTestResources() 
         {
-            var ship = new ShipObject 
+            var list = new List<ResourceObject>();
+
+            foreach (ResourceType type in (ResourceType[])Enum.GetValues(typeof(ResourceType)))
+                list.Add(new ResourceObject { Type = type, Amount = 99999 });
+
+            return list;
+        }
+        public static List<Item> GetDefaultItems()
+        {
+            var list = new List<Item>()
             {
-                Id = Guid.NewGuid().ToString(),
-                HullId = "infernoHull",
-                OwnedItems = new List<Item>
+                // Hull
+                new Item
                 {
-                    // Hull
-                    new Item
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        ModuleId = "infernoHull",
-                        ModuleLocation = ModuleType.Hull,
-                    },
+                    Id = Guid.NewGuid().ToString(),
+                    ModuleId = "infernoHull",
+                    ModuleLocation = ModuleType.Hull,
+                },
 
-                    // Wings
-                    new Item
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        ModuleId = "aeroWings",
-                        ModuleLocation = ModuleType.PrimaryWings,
-                    },
+                // Wings
+                new Item
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ModuleId = "aeroWings",
+                    ModuleLocation = ModuleType.PrimaryWings,
+                },
 
-                    // Engine
-                    new Item
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        ModuleId = "combustionEngine",
-                        ModuleLocation = ModuleType.Engine
-                    },
-
-                    new Item
-                    {
-                        Id = Guid.NewGuid().ToString(),
-                        ModuleId = "brandon",
-                        ModuleLocation = ModuleType.Weapon1
-                    }
-                }
+                // Engine
+                new Item
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    ModuleId = "combustionEngine",
+                    ModuleLocation = ModuleType.Engine
+                },
             };
 
-            ship.EquippedModules = new List<string>();
-            foreach (var item in ship.OwnedItems)
-                ship.EquippedModules.Add(item.Id);
-
-            return ship;
+            return list;
         }
 
         public static string GetDefaultStation() => "1093c819-a7a5-41ea-8a60-f4f1bae1fc19";

@@ -58,11 +58,12 @@ public class DialogManager : MonoBehaviour
         dialog.OnConfirm += (color) => callback?.Invoke(color);
     }
 
-    public static void ShowMessage(string message)
+    public static void ShowMessage(string message, Action callback = null)
     {
         var obj = Instantiate(Instance._messageBox);
         var messageBox = obj.GetComponent<MessageBox>();
         messageBox.SetDisplay(message);
+        messageBox.onConfirm += () => callback?.Invoke();
     }
 
     public static ListView CreateListView(string title) 

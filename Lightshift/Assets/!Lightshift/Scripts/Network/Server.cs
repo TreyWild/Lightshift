@@ -12,37 +12,22 @@ public class Server : MonoBehaviour
 {
     public static Server Instance { get; set; }
 
-    private static List<Player> _players = new List<Player>();
+    private List<Player> _players;
+
+    private void OnDestroy() 
+    {
+        _players = null;
+        Instance = null;
+    }
     public void Awake()
     {
         Instance = this;
-    }
-
-    public void Start()
-    {
-        InitMessageHandlers();
-
-        NetworkServer.SpawnObjects();
-    }
-
-    public void InitMessageHandlers() 
-    {
-        NetworkServer.RegisterHandler<ChatMessage>(OnChatMessageRecieved, true) ;
-    }
-
-    private void OnChatMessageRecieved(NetworkConnection connection, ChatMessage chatMessage)
-    {
-        var player = GetPlayer(connection);
-        if (player != null) 
-        {
-            chatMessage.username = player.Username;
-            NetworkServer.SendToAll(chatMessage);
-        }
+        _players = new List<Player>();
     }
     public static void RemovePlayer(Player player)
     {
-        if (_players.Contains(player))
-            _players.Remove(player);
+        if (Instance._players.Contains(player))
+            Instance._players.Remove(player);
 
         player.SaveAccount();
 
@@ -52,13 +37,18 @@ public class Server : MonoBehaviour
 
     public static Player GetPlayer(NetworkConnection connection)
     {
-        return _players.FirstOrDefault(p => p.GetConnection() == connection);
+        return Instance._players.FirstOrDefault(p => p.GetConnection() == connection);
     }
 
     public static void AddPlayer(Player player) 
     {
-        if (!_players.Contains(player))
-            _players.Add(player);
+        if (!Instance._players.Contains(player))
+            Instance._players.Add(player);
+    }
+
+    public static List<Player> GetAllPlayers() 
+    {
+        return Instance._players;
     }
     //public static void InitPlayer(NetworkConnection connection, Account account)
     //{
@@ -88,12 +78,4 @@ public class Server : MonoBehaviour
     //    //NetworkServer.Spawn(ship, player.GetConnection());
     //}
 
-    public static void SendChatBroadcast(string message) 
-    {
-        NetworkServer.SendToAll(new ChatMessage
-        {
-            message = message,
-            username = "* SYSTEM"
-        });
-    }
 }

@@ -242,7 +242,7 @@ namespace Smooth
         /// when receiving an update. 
         /// Generally keep at default unless you have a very low send rate and expect large variance in your latencies.
         /// </remarks>
-        public float snapTimeThreshold = 3.0f;
+        public float snapTimeThreshold = .3f;
 
         /// <summary>Position sync mode</summary>
         /// <remarks>
@@ -624,7 +624,8 @@ namespace Smooth
         // This is more efficient than Mirror's netIdentity cacheing.
         bool hasCachedNetID = false;
         NetworkIdentity cachedNetIdentity;
-        new public NetworkIdentity netIdentity {
+        new public NetworkIdentity netIdentity
+        {
             get
             {
                 if (!hasCachedNetID)
@@ -636,8 +637,10 @@ namespace Smooth
             }
         }
 
-        public bool hasAuthorityOrUnownedOnServer {
-            get {
+        public bool hasAuthorityOrUnownedOnServer
+        {
+            get
+            {
                 return netIdentity.hasAuthority || (NetworkServer.active && netIdentity.connectionToClient == null);
             }
         }
@@ -680,8 +683,14 @@ namespace Smooth
 
             targetTempState = new StateMirror();
             sendingTempState = new NetworkStateMirror();
+            sendingTempState.state = new StateMirror();
 
             NetworkIdentity.clientAuthorityCallback += AssignAuthorityCallback;
+        }
+
+        public void OnDestroy()
+        {
+            NetworkIdentity.clientAuthorityCallback -= AssignAuthorityCallback;
         }
 
         public void SetObjectToSync(GameObject childObjectToSync)
@@ -737,7 +746,7 @@ namespace Smooth
                     indexToGive++;
                 }
             }
-            
+
             netID = GetComponent<NetworkIdentity>();
             rb = realObjectToSync.GetComponent<Rigidbody>();
             rb2D = realObjectToSync.GetComponent<Rigidbody2D>();
@@ -1783,6 +1792,12 @@ namespace Smooth
         /// </summary>
         void addTeleportState(StateMirror teleportState)
         {
+            if (teleportState != null)
+            {
+                teleportState.atPositionalRest = true;
+                teleportState.atRotationalRest = true;
+            }
+
             // To catch an exception where the first State received is a Teleport.
             if (stateCount == 0) approximateNetworkTimeOnOwner = teleportState.ownerTimestamp;
 
@@ -1835,11 +1850,18 @@ namespace Smooth
             var target = NetworkIdentity.spawned[theNetID.netId];
             if (target == null)
             {
-                Debug.LogError("Can not find target for authority change");
+                Debug.LogWarning("Smooth Sync: Cannot find target for authority change.");
                 return;
             }
 
-            var childObjectSmoothSyncs = target.GetComponent<SmoothSyncMirror>().childObjectSmoothSyncs;
+            var smoothSyncComponent = target.GetComponent<SmoothSyncMirror>();
+            if (smoothSyncComponent == null)
+            {
+                Debug.LogWarning("Smooth Sync: Cannot find target for authority change.");
+                return;
+            }
+
+            var childObjectSmoothSyncs = smoothSyncComponent.childObjectSmoothSyncs;
 
             // Change the owner on parent and children.
             for (int i = 0; i < childObjectSmoothSyncs.Length; i++)
@@ -2247,7 +2269,7 @@ namespace Smooth
             foreach (var kv in netID.observers)
             {
                 NetworkConnection conn = kv.Value;
-                
+
                 // Skip sending to clientAuthorityOwner since owners don't need their own State back.
                 // Also skip sending to localClient since the State was already recorded.
                 if (conn != null && (transformSource == TransformSource.Server || conn != netID.connectionToClient) && conn.GetType() == typeof(NetworkConnectionToClient) && conn.isReady)
@@ -2280,7 +2302,7 @@ namespace Smooth
             }
             else
             {
-                if (networkState != null && networkState.smoothSync != null && !networkState.smoothSync.hasControl)
+                if (networkState.smoothSync != null && !networkState.smoothSync.hasControl)
                 {
                     networkState.smoothSync.addState(networkState.state);
                     networkState.smoothSync.checkIfOwnerHasChanged(networkState.state);
@@ -2380,7 +2402,7 @@ namespace Smooth
 
             if (firstReceivedMessageZeroTime == 0)
             {
-                firstReceivedMessageZeroTime = localTime; 
+                firstReceivedMessageZeroTime = localTime;
             }
 
             float timeChangeMagnitude = Mathf.Abs(approximateNetworkTimeOnOwner - newTime);
@@ -2398,8 +2420,7 @@ namespace Smooth
                 }
                 else
                 {
-                    // Never subtract time because time should not move backwards
-                    //approximateNetworkTimeOnOwner -= timeCorrection;
+                    approximateNetworkTimeOnOwner -= timeCorrection;
                 }
             }
         }

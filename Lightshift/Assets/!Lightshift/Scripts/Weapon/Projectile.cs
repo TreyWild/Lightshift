@@ -103,9 +103,6 @@ public class Projectile : MonoBehaviour
         var damageable = collision.GetComponentInParent<DamageableObject>();
         if (damageable != null && damageable.HitObject(this))
         {
-            //Play sound Effect
-            if (weapon.HitSound != null)
-                SoundManager.Play(weapon.HitSound, _kinematic.position);
 
             if (weapon.hitEffectPrefab != null)
                 Instantiate(weapon.hitEffectPrefab, _kinematic.position, _kinematic.Transform.rotation);

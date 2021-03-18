@@ -1,4 +1,5 @@
-﻿using SharedModels.Models.User;
+﻿using SharedModels.Models.Game;
+using SharedModels.Models.User;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -15,7 +16,6 @@ namespace SharedModels
         public Profile Profile { get; set; }
         public DateTime CreationDate { get; set; }
         public DateTime LastActivity { get; set; }
-
         public int TotalSessions { get; set; }
     }
 }

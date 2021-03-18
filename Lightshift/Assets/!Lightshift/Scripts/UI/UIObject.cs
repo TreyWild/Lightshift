@@ -15,6 +15,7 @@ namespace Assets._Lightshift.Scripts.UI
         [HideInInspector]
         public GameObject MemoryStorage;
 
+        public bool ReinstiantiateOnToggle = true;
         public string Key;
     }
 }

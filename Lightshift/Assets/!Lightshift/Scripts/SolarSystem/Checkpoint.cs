@@ -10,11 +10,20 @@ public class Checkpoint : MonoBehaviour
     public string Id { get; set; } = Guid.NewGuid().ToString();
 
     private ForceField _forceField;
+
+    private void OnDestroy()
+    {
+        Id = null;
+        _forceField = null;
+        _entities.Clear();
+        _entities = null;
+    }
+
     private void Start()
     {
         _forceField = gameObject.AddComponent<ForceField>();
-        CircleCollider2D collider = gameObject.AddComponent<CircleCollider2D>();
-        collider.radius = 12.5f;
+        CircleCollider2D collider = gameObject.GetComponent<CircleCollider2D>();
+        collider.radius = 7f;
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

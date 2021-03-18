@@ -1,4 +1,5 @@
-﻿using Lightshift;
+﻿using Assets._Lightshift.Scripts.Network;
+using Lightshift;
 using Mirror;
 using System;
 using System.Diagnostics;
@@ -19,9 +20,17 @@ public class DamageableObject : NetworkBehaviour
         _entity = GetComponent<Entity>();
     }
 
+    private void OnDestroy()
+    {
+        _heart = null;
+        _shield = null;
+        _entity = null;
+        _respawnHandler = null;
+    }
+
     public bool HitObject(Projectile projectile)
     {
-        if (projectile.entity.Id == _entity.Id || _entity.IsInSafezone || !_entity.alive || _entity.teamId == projectile.entity.teamId)
+        if (projectile.entity.Id == _entity.Id || _entity.isInCheckpoint || !_entity.alive || _entity.teamId == projectile.entity.teamId)
             return false;
 
         // TO DO : Show particle effect
@@ -55,18 +64,11 @@ public class DamageableObject : NetworkBehaviour
             if (_entity.GetType() == typeof(PlayerShip))
             {
                 if (_entity.Id != attacker.Id && attacker.connectionToClient != null)
-                    attacker.connectionToClient.Send(new YouKilledEntityMessage
-                    {
-                        username = _entity.displayName
-                    });
+                    Communication.ShowUserAlert(attacker.connectionToClient, $"You killed {_entity.displayName}!", Communication.AlertType.ScreenDisplay);
 
-                _entity.connectionToClient.Send(new YouWereKilledMessage
-                {
-                    killerEntityId = attacker.Id,
-                    killerName = attacker.displayName
-                });
+                Communication.ShowUserAlert(_entity.connectionToClient, $"You were killed by {attacker.displayName}!", Communication.AlertType.ScreenDisplay);
 
-                Server.SendChatBroadcast(deathReason);
+                Communication.ShowUserAlert(_entity.connectionToClient, $"{deathReason}", Communication.AlertType.SystemMessage);
 
                 // Get Respawn Handler
                 if (_respawnHandler == null)

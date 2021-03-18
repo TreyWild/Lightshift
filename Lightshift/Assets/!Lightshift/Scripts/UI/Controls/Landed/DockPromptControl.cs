@@ -11,11 +11,12 @@ using UnityEngine;
 public class DockPromptControl : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _display;
-
+    private Canvas _canvas;
     public Landable landable;
 
     private void Start()
     {
+        _canvas = GetComponent<Canvas>();
         _display.text = $"Press [{Settings.DockKey}] to Dock";
     }
     public void Dock() 
@@ -26,6 +27,13 @@ public class DockPromptControl : MonoBehaviour
 
     private void Update()
     {
+        if (Settings.KeysLocked)
+        {
+            _canvas.enabled = false;
+            return;
+        }
+
+        _canvas.enabled = true;
         if (Input.GetKeyDown(Settings.DockKey))
         {
             Dock();

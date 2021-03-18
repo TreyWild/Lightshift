@@ -22,12 +22,22 @@ public class ItemViewStatControl : ItemViewControl
     public Item GetItem() => _item;
 
     public Action<ItemViewStatControl> onEquip;
-    public void SetShip(ShipObject shipObject) 
+
+    private void OnDestroy()
+    {
+        _statView = null;
+        _wing1 = null;
+        _wing2 = null;
+        _equipButton = null;
+        _shipObject = null;
+        _item = null;
+    }
+    public void SetShip(Player player, ShipObject shipObject) 
     {
         _shipObject = shipObject;
 
         _equipButton.buttonText = "Use this ship";
-        var equippedItems = shipObject.OwnedItems.Where(e => shipObject.EquippedModules.Contains(e.Id));
+        var equippedItems = player.GetItems().Where(e => shipObject.EquippedModules.Contains(e.Id));
         foreach (var equip in equippedItems)
         {
             var item = ItemService.GetItem(equip.ModuleId);
@@ -46,7 +56,7 @@ public class ItemViewStatControl : ItemViewControl
             }
         }
 
-        var stats = StatHelper.GetStatsFromShip(shipObject);
+        var stats = StatHelper.GetStatsFromShip(player, shipObject);
         foreach (var stat in stats)
             _statView.AddStat(stat);
     }

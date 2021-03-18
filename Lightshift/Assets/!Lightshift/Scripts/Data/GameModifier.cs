@@ -5,6 +5,8 @@ using UnityEngine;
 [Serializable]
 public class GameModifier
 {
+    [Header("Base Value")]
     public float Value;
+    [Header("Modifier Type")]
     public Modifier Type;
 }

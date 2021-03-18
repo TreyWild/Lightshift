@@ -6,19 +6,26 @@ using UnityEngine.UI;
 using SharedModels.Models.Game;
 using System.Linq;
 using Assets._Lightshift.Scripts.Utilities;
+using Mirror;
 
 public class UpgradeView : MonoBehaviour
 {
     [Header("Info")]
     [SerializeField] private TextMeshProUGUI _displayLabel;
-    [SerializeField] private TextMeshProUGUI _creditsLabel;
     [SerializeField] private TextMeshProUGUI _upgradesRemainingLabel;
 
     [Header("Content")]
     [SerializeField] private Transform _contentTransform;
 
+    [Header("Resources")]
+    [SerializeField] private Transform _resourceTransform;
+    [SerializeField] private GameObject _resourceItemControlPrefab;
+
     [Header("Control")]
     [SerializeField] private GameObject _controlPrefab;
+
+    [Header("Reset Upgrade Prefab")]
+    [SerializeField] private GameObject _resetUpgradesPrefab;
 
     private Item _item;
     private ModuleItem _gameItem;
@@ -27,17 +34,40 @@ public class UpgradeView : MonoBehaviour
 
     private Player _player;
 
+    private void OnDestroy()
+    {
+        _player = null;
+        _controls = null;
+        _item = null;
+        _controlPrefab = null;
+        _resourceItemControlPrefab = null;
+        _resourceTransform = null;
+        _displayLabel = null;
+        _upgradesRemainingLabel = null;
+        _resourceList = null;
+    }
+
     private void Awake()
     {
         _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
-
-        _creditsLabel.text = $"{_player.Credits}";
-
-        _player.onCreditsChanged += (credits) =>
+        if (_player != null)
         {
-            _creditsLabel.text = $"{credits}";
-        };
+            _player.Resources.Callback += OnResourceChanged;
+            _player.Items.Callback += OnItemsChanged;
+            LoadResources();
+        }
     }
+
+    private void OnItemsChanged(SyncIDictionary<string, Item>.Operation op, string key, Item item)
+    {
+        RefreshView();
+    }
+
+    private void OnResourceChanged(SyncIDictionary<ResourceType, int>.Operation op, ResourceType key, int item)
+    {
+        LoadResources();
+    }
+
     public void InitializeUpgrades(Item item)
     {
         _item = item;
@@ -56,23 +86,42 @@ public class UpgradeView : MonoBehaviour
         foreach (var upgradeInfo in _gameItem.Upgrades)
         {
             var script = Instantiate(_controlPrefab, _contentTransform).GetComponent<UpgradeControl>();
-            var upgrade = _item.Upgrades.FirstOrDefault(e => e.Type == upgradeInfo.Type);
+            var upgrade = _item.Upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
             if (upgrade == null)
             {
                 upgrade = new Upgrade { };
-                upgrade.Type = upgradeInfo.Type;
+                upgrade.Id = upgradeInfo.Id;
 
                 _item.Upgrades.Add(upgrade);
             }
-            script.Init(upgrade, upgradeInfo, totalUpgrades, _player.Credits, totalUpgrades >= _gameItem.MaxUpgrades);
+            script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
 
             script.OnUpgrade += OnUpgrade;
             _controls.Add(script);
         }
     }
 
+    private List<ResourceItemControl> _resourceList = new List<ResourceItemControl>();
+    private void LoadResources()
+    {
+        foreach (var resource in _resourceList)
+            Destroy(resource);
+
+        _resourceList.Clear();
+        
+        var resources = _player.GetResources();
+        foreach (var resource in resources)
+        {
+            var obj = Instantiate(_resourceItemControlPrefab, _resourceTransform);
+            var script = obj.GetComponent<ResourceItemControl>();
+            script.Init(resource.Type, resource.Amount);
+            _resourceList.Add(script);
+        }
+    }
     private void RefreshView() 
     {
+        _item = _player.GetItem(_item.Id);
+
         if (_item.Upgrades == null)
             _item.Upgrades = new List<Upgrade>();
 
@@ -82,41 +131,46 @@ public class UpgradeView : MonoBehaviour
         foreach (var upgradeInfo in _gameItem.Upgrades)
         {
             var script = _controls.FirstOrDefault(c => c.Type == upgradeInfo.Type);
-            var upgrade = _item.Upgrades.FirstOrDefault(e => e.Type == upgradeInfo.Type);
-            script.Init(upgrade, upgradeInfo, totalUpgrades, _player.Credits, totalUpgrades >= _gameItem.MaxUpgrades);
+            var upgrade = _item.Upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
+            script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
         }
     }
 
-    private void OnUpgrade(Modifier type, int cost, int upgradeLevel)
+    private void OnUpgrade(string id, List<ResourceObject> cost, int upgradeLevel, Modifier type)
     {
-        DialogManager.ShowDialog($"Are you sure you want to upgrade <#{ColorUtility.ToHtmlStringRGB(ColorHelper.FromModifier(type))}>{type}</color> to level <#ECD961>{upgradeLevel + 1}</color> and spend <#ECD961>{cost}</color> credits?", delegate (bool result)
+        _player.BuyUpgrade(_item.Id, id, delegate (string itemId)
         {
-            if (result)
-            {
-                _player.BuyUpgrade(_item.Id, type, delegate (Item item)
-                {
-                    _item = item;
-                    RefreshView();
-                });
-            }
+            _item = _player.GetItem(itemId);
+            RefreshView();
         });
-        // TO DO : Request upgrade
-
     }
 
     public void ResetUpgrades()
     {
-        DialogManager.ShowDialog($"Are you sure you want to reset ALL of your upgrades? You will get back a total of <#ECD961>{_item.SpentCredits}</color> credits!", delegate (bool result)
+        var obj = Instantiate(_resetUpgradesPrefab);
+        var script = obj.GetComponent<UpgradeResetView>();
+
+        script.Init(_item.SpentResources);
+        script.OnReset += () => 
         {
-            if (result)
+            _player.ResetUpgrades(_item.Id, delegate (string itemId)
             {
-                _player.ResetUpgrades(_item.Id, delegate (Item item)
-                {
-                    _item = item;
-                    RefreshView();
-                });
-            }
-        });
+                RefreshView();
+            });
+        };
+        // TO DO : Request upgrade
+
+        //DialogManager.ShowDialog($"Are you sure you want to reset ALL of your upgrades? You will get back a total of <#ECD961>{_item.SpentCredits}</color> credits!", delegate (bool result)
+        //{
+        //    if (result)
+        //    {
+        //        _player.ResetUpgrades(_item.Id, delegate (Item item)
+        //        {
+        //            _item = item;
+        //            RefreshView();
+        //        });
+        //    }
+        //});
     }
 
     public void Close()

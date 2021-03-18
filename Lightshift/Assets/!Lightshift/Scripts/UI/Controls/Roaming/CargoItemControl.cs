@@ -12,16 +12,25 @@ public class CargoItemControl : MonoBehaviour
     [SerializeField] TextMeshProUGUI _nameLabel;
     [SerializeField] TextMeshProUGUI _amountLabel;
 
-    public CargoType type;
+    public ResourceType type;
     public int amount;
 
     public Action<CargoItemControl> onEject;
+
+    private void OnDestroy()
+    {
+        _sprite = null;
+        _nameLabel = null;
+        _amountLabel = null;
+        onEject = null;
+    }
+
     public void Eject() 
     {
         onEject?.Invoke(this);
     }
 
-    public void Init(CargoType type, int amount) 
+    public void Init(ResourceType type, int amount) 
     {
         this.type = type;
         _nameLabel.text = $"{type}";
@@ -29,7 +38,7 @@ public class CargoItemControl : MonoBehaviour
 
         _amountLabel.text = $"{amount}";
 
-        var item = ItemService.GetCargoItem(type);
+        var item = ItemService.GetResourceItem(type);
         if (item != null)
             _sprite.sprite = item.Sprite;
         else Destroy(gameObject);

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 
 public class EntityManager : MonoBehaviour
 {
@@ -33,6 +33,13 @@ public class EntityManager : MonoBehaviour
 
         _npcData.Clear();
         _npcData = Resources.LoadAll<NpcData>("").ToList();
+
+        SceneManager.sceneLoaded += SceneManager_sceneLoaded;
+    }
+
+    private void SceneManager_sceneLoaded(Scene arg0, LoadSceneMode arg1)
+    {
+        _entities.Clear();
     }
 
     public static void AddEntity(Entity entity)
@@ -60,9 +67,6 @@ public class EntityManager : MonoBehaviour
     public static List<Entity> GetAllEntities() => Instance._entities;
 
     public static NpcData GetEntityData(string key) => Instance._npcData.FirstOrDefault(i => i.key == key);
-    public void OnLevelWasLoaded(int level)
-    {
-        _entities.Clear();
-    }
+  
 }
 

@@ -18,12 +18,12 @@ public class LightshiftAuthenticator : NetworkAuthenticator
     // set these in the inspector
     public string sessionAuthKey = "";
 
-    public class AuthRequestMessage : NetworkMessage
+    public struct AuthRequestMessage : NetworkMessage
     {
         public string sessionAuthKey;
     }
 
-    public class AuthResponseMessage : NetworkMessage
+    public struct AuthResponseMessage : NetworkMessage
     {
         public AuthenticationResponseType response;
     }

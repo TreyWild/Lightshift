@@ -1,4 +1,5 @@
-﻿using Assets._Lightshift.Scripts.UI;
+﻿using Assets._Lightshift.Scripts.Network;
+using Assets._Lightshift.Scripts.UI;
 using Lightshift;
 using Mirror;
 using SharedModels.Models.User;
@@ -28,6 +29,25 @@ public class GameUIManager : MonoBehaviour
         else if (Instance != this) Destroy(gameObject);
 
         InitUI();
+        ToggleLoadingScreen(true);
+    }
+
+    private void OnDestroy()
+    {
+        Destroy(Instance);
+        Instance = null;
+        Destroy(ShipInterface);
+        ShipInterface = null;
+        Destroy(_statsText);
+        _statsText = null;
+
+        for (int i = 0; i < _uiObjects.Count; i++)
+        {
+            Destroy(_uiObjects[i].MemoryStorage);
+            _uiObjects[i] = null;
+        }
+
+        _uiObjects = null;
     }
 
     public void InitUI() 
@@ -43,10 +63,17 @@ public class GameUIManager : MonoBehaviour
     public GameObject ShowUI(string key, bool useGameCanvas = false) 
     {
         var ui = GetUI(key);
-        if (ui.MemoryStorage != null)
+        if (ui.MemoryStorage != null && ui.ReinstiantiateOnToggle)
+        {
             Destroy(ui.MemoryStorage);
 
-        ui.MemoryStorage = Instantiate(ui.Prefab);
+            ui.MemoryStorage = Instantiate(ui.Prefab);
+        }
+        else if (ui.MemoryStorage == null)
+        {
+            ui.MemoryStorage = Instantiate(ui.Prefab);
+        }
+        else ui.MemoryStorage.SetActive(true);
 
         return ui.MemoryStorage;
     }
@@ -55,15 +82,16 @@ public class GameUIManager : MonoBehaviour
     {
         var ui = GetUI(key);
         if (ui != null)
+        {
             Destroy(ui.MemoryStorage);
+            ui.MemoryStorage = null;
+        }
     }
     public GameObject ToggleUI(string key, bool active = true, bool useGameCanvas = false)
     {
         var ui = GetUI(key);
 
-        if (ui.MemoryStorage == null)
-            ui.MemoryStorage = ShowUI(key, useGameCanvas);
-
+        ui.MemoryStorage = ShowUI(key, useGameCanvas);
         ui.MemoryStorage.SetActive(active);
 
         return ui.MemoryStorage;
@@ -88,15 +116,15 @@ public class GameUIManager : MonoBehaviour
 
     public void ShowAnnouncementText(string message) 
     {
-        var ui = ToggleUI("AnnounceText", true);
-        var text = ui.GetComponent<TextMeshProUGUI>();
+        var ui = ShowUI("AnnounceText", true);
+        var text = ui.GetComponentInChildren<TextMeshProUGUI>();
         text.text = message;
     }
 
     public void ShowScreenText(string message)
     {
-        var ui = ToggleUI("LowerText", true);
-        var text = ui.GetComponent<TextMeshProUGUI>();
+        var ui = ShowUI("LowerText", true);
+        var text = ui.GetComponentInChildren<TextMeshProUGUI>();
         text.text = message;
     }
 
@@ -107,7 +135,7 @@ public class GameUIManager : MonoBehaviour
         if (_timeSinceLastStatUpdate > .5f)
         if (_statsText != null) 
         {
-            _statsText.text = $"ping: {Game.GetPing()}, fps: {(int)(1f / Time.unscaledDeltaTime)}";
+            _statsText.text = $"ping: {Communication.GetPing()}, fps: {(int)(1f / Time.unscaledDeltaTime)}";
                 _timeSinceLastStatUpdate = 0;
         }
 
@@ -169,6 +197,11 @@ public class GameUIManager : MonoBehaviour
             var playerList = ui.MemoryStorage.GetComponent<PlayerList>();
             playerList.ShowOnlinePlayers();
         }
+    }
+
+    public void ToggleLoadingScreen(bool active) 
+    {
+        ToggleUI("LoadingScreen", active);
     }
 
     public void ShowLandable(LandableType landable) 

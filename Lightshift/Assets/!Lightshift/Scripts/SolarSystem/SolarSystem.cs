@@ -1,22 +1,24 @@
-﻿using System.Collections;
+﻿using Mirror;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class SolarSystem : MonoBehaviour
+[Serializable, CreateAssetMenu(fileName = "SolarSystem", menuName = "Create SolarSystem", order = 2)]
+public class SolarSystem : ScriptableObject
 {
-    private ParallaxManager _parallaxManager { get; set; }
+    public string Name;
 
-    private string _name;
+    public string Id;
 
-    private void Start()
-    {
-        _parallaxManager = GetComponentInChildren<ParallaxManager>();
-    }
-    public void Initialize(string name, string color)
-    {
-        _name = name;
-        Color parsedColor = (Color)System.Enum.Parse(typeof(Color), color);
+    [Scene]
+    public string Scene;
 
-        _parallaxManager.Initialize(parsedColor);
-    }
+    public AudioClip Music;
+
+    public bool Default = false;
+
+    public int Cost;
+
+    public int TravelCost;
 }

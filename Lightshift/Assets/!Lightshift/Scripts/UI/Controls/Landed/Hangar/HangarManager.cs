@@ -42,7 +42,7 @@ public class HangarManager : MonoBehaviour
 
         foreach (var equip in activeShip.EquippedModules)
         {
-            var module = activeShip.OwnedItems.FirstOrDefault(m => m.Id == equip);
+            var module = _player.GetItems().FirstOrDefault(m => m.Id == equip);
             if (module == null)
                 continue;
 
@@ -74,7 +74,7 @@ public class HangarManager : MonoBehaviour
         if (ship == null)
             return;
 
-        var stats = StatHelper.GetStatsFromShip(ship);
+        var stats = StatHelper.GetStatsFromShip(_player, ship);
 
         _statView.Clear();
         foreach (var stat in stats)
@@ -123,10 +123,13 @@ public class HangarManager : MonoBehaviour
 
         var activeShip = _player.GetActiveShip();
 
+        if (activeShip == null)
+            return;
+
         Debug.Log($"Target type is {targetType}");
 
-
-        foreach (var m in activeShip.OwnedItems)
+        var items = _player.GetItems();
+        foreach (var m in items)
         {
             var gameItem = ItemService.GetItem(m.ModuleId);
             if (gameItem == null)
@@ -144,7 +147,7 @@ public class HangarManager : MonoBehaviour
                     {
                         if (_player.isLocalPlayer)
                         {
-                            var existing = activeShip.OwnedItems.FirstOrDefault(s => s.ModuleLocation == m.ModuleLocation && activeShip.EquippedModules.Contains(s.Id));
+                            var existing = items.FirstOrDefault(s => s.ModuleLocation == m.ModuleLocation && activeShip.EquippedModules.Contains(s.Id));
                             if (existing != null)
                                 activeShip.EquippedModules.Remove(existing.Id);
 
@@ -169,7 +172,7 @@ public class HangarManager : MonoBehaviour
 
         var activeShip = _player.GetActiveShip();
 
-        foreach (var m in activeShip.OwnedItems)
+        foreach (var m in _player.GetItems())
         {
             var gameItem = ItemService.GetItem(m.ModuleId);
             if (gameItem == null)
@@ -196,18 +199,14 @@ public class HangarManager : MonoBehaviour
         var listView = DialogManager.CreateListView($"Fleet");
 
 
-        foreach (var ship in _player.GetAllShips())
+        foreach (var ship in _player.GetShipLoadouts())
         {
             var control = listView.InstantiateItem(DialogManager.GetItemViewShipControl()).GetComponent<ItemViewStatControl>();
-            control.SetShip(ship);
+            control.SetShip(_player, ship);
             control.SetButtonText("Upgrade");
             control.onClick += (viewControl) =>
             {
                 Destroy(listView.gameObject);
-
-                var shipUpgrade = ship.OwnedItems.FirstOrDefault(e => e.ModuleId == ship.HullId);
-
-                var upgradeView = DialogManager.CreateUpgradeView(shipUpgrade);
             };
 
             control.onEquip += (statControl) => 

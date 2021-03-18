@@ -9,12 +9,12 @@ namespace Assets._Lightshift.Scripts.Utilities
 {
     public class StatHelper
     {
-        public static List<GameModifier> GetStatsFromShip(ShipObject shipObject) 
+        public static List<GameModifier> GetStatsFromShip(Player player, ShipObject shipObject) 
         {
             var upgrades = new List<GameModifier>();
             var stats = new List<GameModifier>();
 
-            var equippedItems = shipObject.OwnedItems.Where(e => shipObject.EquippedModules.Contains(e.Id));
+            var equippedItems = player.GetItems().Where(e => shipObject.EquippedModules.Contains(e.Id));
             foreach (var equip in equippedItems)
             {
                 var item = ItemService.GetItem(equip.ModuleId);
@@ -22,13 +22,13 @@ namespace Assets._Lightshift.Scripts.Utilities
                 if (equip.Upgrades != null)
                     foreach (var upgrade in equip.Upgrades)
                     {
-                        var upgradeInfo = item.Upgrades.FirstOrDefault(e => e.Type == upgrade.Type);
+                        var upgradeInfo = item.Upgrades.FirstOrDefault(e => e.Id == upgrade.Id);
                         if (upgradeInfo == null)
-                            upgradeInfo = new Data.UpgradeInfo { Cost = 0, Value = 0, Type = upgrade.Type};
+                            continue;
 
                         var modifier = new GameModifier
                         {
-                            Type = upgrade.Type,
+                            Type = upgradeInfo.Type,
                             Value = (upgradeInfo.Value / 10) * upgrade.Level
                         };
 
@@ -79,13 +79,13 @@ namespace Assets._Lightshift.Scripts.Utilities
             if (item.Upgrades != null)
                 foreach (var upgrade in item.Upgrades)
                 {
-                    var upgradeInfo = module.Upgrades.FirstOrDefault(e => e.Type == upgrade.Type);
+                    var upgradeInfo = module.Upgrades.FirstOrDefault(e => e.Id == upgrade.Id);
                     if (upgradeInfo == null)
-                        upgradeInfo = new Data.UpgradeInfo { Cost = 0, Value = 0, Type = upgrade.Type };
+                        continue;
 
                     var modifier = new GameModifier
                     {
-                        Type = upgrade.Type,
+                        Type = upgradeInfo.Type,
                         Value = (upgradeInfo.Value / 10) * upgrade.Level
                     };
 

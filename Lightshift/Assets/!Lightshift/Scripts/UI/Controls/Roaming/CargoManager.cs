@@ -29,31 +29,31 @@ public class CargoManager : MonoBehaviour
             DialogManager.ShowMessage("An error occured loading your cargo.");
             return;
         }
-        var cargoItems = _ship.Cargo;
+        var cargoItems = _player.GetResources();
 
         foreach (var cargo in cargoItems)
         {
-            var control = _controls.FirstOrDefault(s => s.type == cargo.Key);
+            var control = _controls.FirstOrDefault(s => s.type == cargo.Type);
             if (control == null)
             {
                 var item = Instantiate(_cargoItemPrefab, _contentPanel);
                 control = item.GetComponent<CargoItemControl>();
                 control.onEject += (thing) =>
                 {
-                    DialogManager.ShowEjectDialog($"You have {cargo.Value} {cargo.Key}. Enter the amount you want to eject.", cargo.Value, delegate (bool result, int amount) 
+                    DialogManager.ShowEjectDialog($"You have {cargo.Amount} {cargo.Type}. Enter the amount you want to eject.", cargo.Amount, delegate (bool result, int amount) 
                     {
                         if (result)
-                            _player.EjectCargo(cargo.Key, cargo.Value);
+                            _player.EjectCargo(cargo.Type, cargo.Amount);
                     });
                 };
             }
 
-            control.Init(cargo.Key, cargo.Value);
+            control.Init(cargo.Type, cargo.Amount);
         }
 
         try
         {
-            _capacityLabel.text = $"{cargoItems.Sum(s => s.Value)}/{_ship.Modifiers[Modifier.CargoCapacity]}";
+            _capacityLabel.text = $"{cargoItems.Sum(s => s.Amount)}/{_ship.Modifiers[Modifier.CargoCapacity]}";
         }
         catch 
         {
