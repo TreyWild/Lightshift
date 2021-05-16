@@ -20,10 +20,10 @@ namespace Assets._Lightshift.Scripts.Utilities
 
         public static Color FromModifier(Modifier modifier) 
         {
-            Color color = FromHex("#8f4d17");
+            Color color = FromHex("#49f5ff");
             switch (modifier)
             {
-                case Modifier.Acceleration:
+                case Modifier.Accel:
                     color = FromHex($"#884AFF");
                     break;
                 case Modifier.Agility:
@@ -47,8 +47,14 @@ namespace Assets._Lightshift.Scripts.Utilities
                 case Modifier.Weight:
                     color = FromHex($"#FF4A6C");
                     break;
-                case Modifier.BrakeForce:
+                case Modifier.Brakes:
                     color = FromHex($"#db9430");
+                    break;
+                case Modifier.Overdrive:
+                    color = FromHex($"#ff6249");
+                    break;
+                case Modifier.Storage:
+                    color = FromHex($"#f9b95e");
                     break;
             }
 

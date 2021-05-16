@@ -171,8 +171,9 @@ public class Player : NetworkBehaviour
     {
         var items = new List<ResourceObject>();
         foreach (var item in Resources)
-            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key});
-
+        {
+            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
+        }
         return items;
     }
     public Item GetItem(string id)
@@ -220,6 +221,35 @@ public class Player : NetworkBehaviour
         }
     }
 
+    public void EjectAllResources() 
+    {
+        var resources = Resources.ToList();
+        foreach (var resource in resources)
+            EjectResource(resource.Key, resource.Value);
+    }
+
+    public void EjectResource(ResourceType type, int amount) 
+    {
+        if (amount == 0)
+            return;
+
+        var obj = Instantiate(LightshiftNetworkManager.GetPrefab<DroppedItem>());
+
+        var item = obj.GetComponent<DroppedItem>();
+        item.Init(new ResourceObject { Type = type, Amount = amount }, ship);
+
+        obj.transform.position = ship.transform.position + new Vector3(UnityEngine.Random.Range(0,5), UnityEngine.Random.Range(0, 5));
+        NetworkServer.Spawn(obj);
+
+        TakeResource(type, amount);
+    }
+
+    public void PickupResource(ResourceType type, int amount) 
+    {
+        // TO DO : Sound Effects, etc
+        AddResource(new ResourceObject { Amount = amount, Type = type });
+    }
+
     public void AddResource(ResourceObject resource) => AddResource(resource.Type, resource.Amount);
     public void AddResource(ResourceType type, int value)
     {
@@ -229,6 +259,20 @@ public class Player : NetworkBehaviour
                 Resources.Add(type, value);
             else
                 Resources[type] += value;
+        }
+    }
+
+    public void TakeResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!Resources.ContainsKey(type))
+                Resources.Add(type, value);
+            else
+                Resources[type] -= value;
+
+            if (Resources[type] < 0)
+                Resources[type] = 0;
         }
     }
 
@@ -246,18 +290,33 @@ public class Player : NetworkBehaviour
         return true;
     }
 
-    public bool SpendResources(List<ResourceObject> resources, float costMultiplier)
-    {
+    public Item SpendResources(Item item, List<ResourceObject> resources, float costMultiplier)
+    {            
+        if (item.SpentResources == null)
+            item.SpentResources = new List<ResourceObject>();
+
         foreach (var resource in resources)
         {
-            var amount = GetResource(resource.Type).Amount - (int)(resource.Amount * costMultiplier);
+            var cost = (int)(resource.Amount * costMultiplier);
+            var amount = GetResource(resource.Type).Amount - cost;
             if (amount < 0)
                 amount = 0;
 
+            Debug.LogError($"Resource Type: {resource.Type}:{resource.Amount}");
+            
             SetResource(resource.Type, amount);
+
+
+            var spentResource = item.SpentResources.FirstOrDefault(r => r.Type == resource.Type);
+            if (spentResource == null)
+            {
+                spentResource = new ResourceObject { Type = resource.Type, Amount = 0 };
+                item.SpentResources.Add(spentResource);
+            }
+            spentResource.Amount += cost;
         }
 
-        return true;
+        return item;
     }
 
     #endregion
@@ -685,6 +744,9 @@ public class Player : NetworkBehaviour
 
         var totalUpgrades = item.Upgrades.Sum(s => s.Level);
 
+        Debug.LogError($"Upgrade ID (Player): {upgradeId}");
+
+
         // NOT ALLOWED - over max upgrades
         if (totalUpgrades >= gameItem.MaxUpgrades)
             return;
@@ -695,12 +757,12 @@ public class Player : NetworkBehaviour
         if (upgradeInfo == null)
             return;
 
-        var upgrade = item.Upgrades.FirstOrDefault(e => Id == upgradeId);
+        var upgrade = item.Upgrades.FirstOrDefault(e => e.Id == upgradeId);
 
         if (upgrade == null)
         {
             upgrade = new Upgrade();
-
+            upgrade.Id = upgradeId;
             item.Upgrades.Add(upgrade);
         }
 
@@ -716,7 +778,7 @@ public class Player : NetworkBehaviour
             return;
 
         // SPEND CREDITS
-        SpendResources(upgradeInfo.ResourceCost, costMultiplier);
+        item = SpendResources(item, upgradeInfo.ResourceCost, costMultiplier);
 
         upgrade.Level++;
 
@@ -765,35 +827,4 @@ public class Player : NetworkBehaviour
                 break;
         }
     }
-
-    public void EjectCargo(ResourceType type, int amount) 
-    {
-        if (!isServer)
-        {
-            CmdEjectCargo((uint)type, amount);
-        }
-    }
-
-    public void EjectAllCargo()
-    {
-        if (!isServer)
-        {
-            CmdEjectAllCargo();
-        }
-    }
-
-    [Command]
-    private void CmdEjectAllCargo()
-    {
-
-    }
-
-    [Command]
-    private void CmdEjectCargo(uint typeId, int amount) 
-    {
-        var type = (ResourceType)typeId;
-
-    }
-
-
 }

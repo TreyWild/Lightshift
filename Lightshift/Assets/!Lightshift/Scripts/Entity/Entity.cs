@@ -97,12 +97,8 @@ public class Entity : NetworkBehaviour
 
         Modifiers.Callback += Modifiers_Callback;
 
-        foreach (var modifier in Modifiers)
-        {
-            UpdateModifier(modifier.Key, modifier.Value);
-        };
-
-        foreach (var modifier in Modifiers)
+        var modifiers = Modifiers.ToList();
+        foreach (var modifier in modifiers)
         {
             UpdateModifier(modifier.Key, modifier.Value);
         };

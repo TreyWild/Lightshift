@@ -8,7 +8,7 @@ using UnityEngine;
 
 public class ConfirmEjectDialog : BaseDialog
 {
-    private TMP_InputField _inputField;
+    [SerializeField] private TMP_InputField _inputField;
 
     public Action<bool, int> OnClick;
 
@@ -30,7 +30,7 @@ public class ConfirmEjectDialog : BaseDialog
     public int MaxValue;
     private int _currentValue;
 
-    public int GetValue() => _currentValue;
+    public int GetValue() => int.Parse(_inputField.text);
 
     public void Start()
     {
@@ -47,8 +47,8 @@ public class ConfirmEjectDialog : BaseDialog
 
             if (_currentValue > MaxValue)
                 _currentValue = MaxValue;
-            else if (_currentValue < 0)
-                _currentValue = 0;
+            else if (_currentValue < 1)
+                _currentValue = 1;
         }
         catch 
         {

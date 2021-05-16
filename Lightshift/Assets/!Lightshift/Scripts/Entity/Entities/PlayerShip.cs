@@ -18,7 +18,7 @@ public class PlayerShip : Ship
     private List<Item> _equippedModules;
     private Player _player;
 
-    private Player Player 
+    public Player Player 
     {
         get
         {
@@ -93,11 +93,11 @@ public class PlayerShip : Ship
     public void InitShipObject(ShipObject shipObject) 
     {
         _shipObject = shipObject;
-        var stats = StatHelper.GetStatsFromShip(_player, shipObject);
+        var stats = StatHelper.GetStatsFromShip(Player, shipObject);
 
         SetModifiers(stats);
 
-        _equippedModules = _player.GetItems().Where(s => shipObject.EquippedModules.Contains(s.Id)).ToList();
+        _equippedModules = Player.GetItems().Where(s => shipObject.EquippedModules.Contains(s.Id)).ToList();
         if (_equippedModules != null && _equippedModules.Count > 0)
         {
             InitModules(_equippedModules);

@@ -10,11 +10,11 @@ namespace Assets._Lightshift.Scripts.Data
     public class PlayerDefaults
     {
         public static List<ResourceObject> GetTestResources() 
-        {
+        { 
             var list = new List<ResourceObject>();
 
-            foreach (ResourceType type in (ResourceType[])Enum.GetValues(typeof(ResourceType)))
-                list.Add(new ResourceObject { Type = type, Amount = 99999 });
+            foreach (var item in ItemService.GetAllResourceItems())
+                list.Add(new ResourceObject { Type = item.Type, Amount = 99999 });
 
             return list;
         }

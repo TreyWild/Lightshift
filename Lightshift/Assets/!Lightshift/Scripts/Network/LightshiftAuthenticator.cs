@@ -45,14 +45,14 @@ public class LightshiftAuthenticator : NetworkAuthenticator
         // do nothing...wait for AuthRequestMessage from client
     }
 
-    public override void OnClientAuthenticate(NetworkConnection conn)
+    public override void OnClientAuthenticate()
     {
         AuthRequestMessage authRequestMessage = new AuthRequestMessage
         {
             sessionAuthKey = sessionAuthKey
         };
 
-        conn.Send(authRequestMessage);
+        NetworkClient.connection.Send(authRequestMessage);
     }
 
     public void Disconnect(NetworkConnection connection, AuthenticationResponseType reason) 
@@ -108,21 +108,21 @@ public class LightshiftAuthenticator : NetworkAuthenticator
         conn.Disconnect();
     }
 
-    public void OnAuthResponseMessage(NetworkConnection conn, AuthResponseMessage msg)
+    public void OnAuthResponseMessage(AuthResponseMessage msg)
     {
         Debug.Log(msg.response);
 
         if (msg.response == AuthenticationResponseType.AuthenticationSuccess)
         {
-            ClientAccept(conn);
+            ClientAccept();
             return;
         }
 
         LoginManager.Instance.HandleResponse(msg.response);
 
-        conn.isAuthenticated = false;
+        NetworkClient.connection.isAuthenticated = false;
         // disconnect the client
-        conn.Disconnect();
+        NetworkClient.connection.Disconnect();
     }
 }
 

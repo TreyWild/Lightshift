@@ -1,4 +1,5 @@
-﻿using SharedModels.Models.Game;
+﻿using Lightshift;
+using SharedModels.Models.Game;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,8 +17,10 @@ public class CargoManager : MonoBehaviour
     private List<CargoItemControl> _controls = new List<CargoItemControl>();
     void Start()
     {
+        Settings.KeysLocked = true;
+
         _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
-        _ship = FindObjectsOfType<PlayerShip>().FirstOrDefault(p => p.isLocalPlayer);
+        _ship = _player.ship;
 
         UpdateCargo();
     }
@@ -29,7 +32,8 @@ public class CargoManager : MonoBehaviour
             DialogManager.ShowMessage("An error occured loading your cargo.");
             return;
         }
-        var cargoItems = _player.GetResources();
+        var cargoItems = _player.GetResources().Where(c => c.Amount > 0);
+        cargoItems.Max(s => s.Amount);
 
         foreach (var cargo in cargoItems)
         {
@@ -43,7 +47,10 @@ public class CargoManager : MonoBehaviour
                     DialogManager.ShowEjectDialog($"You have {cargo.Amount} {cargo.Type}. Enter the amount you want to eject.", cargo.Amount, delegate (bool result, int amount) 
                     {
                         if (result)
-                            _player.EjectCargo(cargo.Type, cargo.Amount);
+                        {
+                            _player.EjectResource(cargo.Type, amount);
+                            Exit();
+                        }
                     });
                 };
             }
@@ -53,7 +60,7 @@ public class CargoManager : MonoBehaviour
 
         try
         {
-            _capacityLabel.text = $"{cargoItems.Sum(s => s.Amount)}/{_ship.Modifiers[Modifier.CargoCapacity]}";
+            _capacityLabel.text = $"{cargoItems.Sum(s => s.Amount)}/{_ship.Modifiers[Modifier.Storage]}";
         }
         catch 
         {
@@ -67,12 +74,20 @@ public class CargoManager : MonoBehaviour
         DialogManager.ShowDialog($"Are you sure you want to EJECT ALL of your cargo?", delegate (bool result)
         {
             if (result)
-                _player.EjectAllCargo();
+            {
+                _player.EjectAllResources();
+                Exit();
+            }
         });
     }
 
     public void Exit() 
     {
         GameUIManager.Instance.ToggleCargoMenu();
+    }
+
+    private void OnDestroy()
+    {
+        Settings.KeysLocked = false;
     }
 }

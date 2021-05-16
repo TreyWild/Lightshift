@@ -45,7 +45,7 @@ public class LightshiftNetworkManager : NetworkManager
 
         foreach (var prefab in prefabs)
         {
-            ClientScene.RegisterPrefab(prefab);
+            NetworkClient.RegisterPrefab(prefab);
         }
     }
     public override void OnServerReady(NetworkConnection conn)

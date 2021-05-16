@@ -27,6 +27,11 @@ public class CargoItemControl : MonoBehaviour
 
     public void Eject() 
     {
+        if (amount == 0)
+        {
+            DialogManager.ShowMessage($"You don't have any ${type}.");
+            return;
+        }
         onEject?.Invoke(this);
     }
 

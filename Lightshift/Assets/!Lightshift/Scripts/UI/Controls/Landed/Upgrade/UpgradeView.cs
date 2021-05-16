@@ -32,24 +32,21 @@ public class UpgradeView : MonoBehaviour
 
     private List<UpgradeControl> _controls = new List<UpgradeControl>();
 
-    private Player _player;
-
-    private void OnDestroy()
+    private string itemId;
+    private Player _player 
     {
-        _player = null;
-        _controls = null;
-        _item = null;
-        _controlPrefab = null;
-        _resourceItemControlPrefab = null;
-        _resourceTransform = null;
-        _displayLabel = null;
-        _upgradesRemainingLabel = null;
-        _resourceList = null;
-    }
+        get 
+        {
+            if (_playerCache == null)
+                _playerCache = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
 
+            return _playerCache;
+        }
+        set => _playerCache = value;
+    }
+    private Player _playerCache;
     private void Awake()
     {
-        _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
         if (_player != null)
         {
             _player.Resources.Callback += OnResourceChanged;
@@ -71,6 +68,7 @@ public class UpgradeView : MonoBehaviour
     public void InitializeUpgrades(Item item)
     {
         _item = item;
+        itemId = item.Id;
 
         _gameItem = ItemService.GetItem(item.ModuleId);
         if (_gameItem == null || _gameItem.Upgrades == null)
@@ -85,7 +83,12 @@ public class UpgradeView : MonoBehaviour
 
         foreach (var upgradeInfo in _gameItem.Upgrades)
         {
-            var script = Instantiate(_controlPrefab, _contentTransform).GetComponent<UpgradeControl>();
+            var script = _controls.FirstOrDefault(c => c.Type == upgradeInfo.Type);
+            if (script == null)
+            {
+                script = Instantiate(_controlPrefab, _contentTransform).GetComponent<UpgradeControl>();
+                script.OnUpgrade += OnUpgrade;
+            }
             var upgrade = _item.Upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
             if (upgrade == null)
             {
@@ -95,8 +98,6 @@ public class UpgradeView : MonoBehaviour
                 _item.Upgrades.Add(upgrade);
             }
             script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
-
-            script.OnUpgrade += OnUpgrade;
             _controls.Add(script);
         }
     }
@@ -104,11 +105,22 @@ public class UpgradeView : MonoBehaviour
     private List<ResourceItemControl> _resourceList = new List<ResourceItemControl>();
     private void LoadResources()
     {
+        if (_resourceList == null)
+            _resourceList = new List<ResourceItemControl>();
+
         foreach (var resource in _resourceList)
-            Destroy(resource);
+        {
+            if (resource == null)
+                continue;
+            if (resource.gameObject != null)
+            {
+                Destroy(resource.gameObject);
+            }
+        }
 
         _resourceList.Clear();
-        
+        _resourceList = new List<ResourceItemControl>();
+
         var resources = _player.GetResources();
         foreach (var resource in resources)
         {
@@ -120,27 +132,39 @@ public class UpgradeView : MonoBehaviour
     }
     private void RefreshView() 
     {
-        _item = _player.GetItem(_item.Id);
+        _item = _player.GetItem(itemId);
+        InitializeUpgrades(_item);
+        //if (_item == null)
+        //{
+        //    Debug.LogError("UpgradeView:RefreshView:Item is null");
+        //    return;
+        //}
 
-        if (_item.Upgrades == null)
-            _item.Upgrades = new List<Upgrade>();
+        //_gameItem = ItemService.GetItem(_item.ModuleId);
+        //if (_gameItem == null || _gameItem.Upgrades == null)
+        //    return;
 
-        var totalUpgrades = _item.Upgrades.Sum(s => s.Level);
-        _upgradesRemainingLabel.text = $"{_gameItem.MaxUpgrades - totalUpgrades}";
+        //if (_item.Upgrades == null)
+        //    _item.Upgrades = new List<Upgrade>();
 
-        foreach (var upgradeInfo in _gameItem.Upgrades)
-        {
-            var script = _controls.FirstOrDefault(c => c.Type == upgradeInfo.Type);
-            var upgrade = _item.Upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
-            script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
-        }
+        //var totalUpgrades = _item.Upgrades.Sum(s => s.Level);
+        //_upgradesRemainingLabel.text = $"{_gameItem.MaxUpgrades - totalUpgrades}";
+        //_displayLabel.text = _gameItem.DisplayName;
+
+        //foreach (var upgradeInfo in _gameItem.Upgrades)
+        //{
+        //    var script = _controls.FirstOrDefault(c => c.Type == upgradeInfo.Type);
+        //    var upgrade = _item.Upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
+        //    script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
+        //}
     }
 
     private void OnUpgrade(string id, List<ResourceObject> cost, int upgradeLevel, Modifier type)
     {
+        //Debug.LogError($"Upgrade ID (UpgradeView): {id}");
+
         _player.BuyUpgrade(_item.Id, id, delegate (string itemId)
         {
-            _item = _player.GetItem(itemId);
             RefreshView();
         });
     }

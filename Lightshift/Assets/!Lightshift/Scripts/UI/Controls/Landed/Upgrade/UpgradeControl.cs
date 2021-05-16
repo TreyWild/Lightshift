@@ -64,11 +64,13 @@ public class UpgradeControl : MonoBehaviour, IPointerExitHandler
         level = upgrade.Level;
         id = upgrade.Id;
 
+        Debug.LogError($"Upgrade ID (UpgradeControl): {id}");
+
         // Setup display
         var value = upgradeInfo.Value / 10;
         if (value > 0)
-            SetLabel($"{upgradeInfo.Type}: +{Math.Round(value, 2)}");
-        else SetLabel($"{upgradeInfo.Type}: {Math.Round(value), 2}");
+            SetLabel($"{upgradeInfo.Type}: +{Math.Round(value, 2)} x{level}");
+        else SetLabel($"{upgradeInfo.Type}: {Math.Round(value), 2} x{level}");
 
         _titleImage.color = ColorHelper.FromModifier(upgradeInfo.Type);
 
@@ -82,14 +84,21 @@ public class UpgradeControl : MonoBehaviour, IPointerExitHandler
         SetUpgradeAmount(upgrade.Level, upgradeLimit, affordable);
 
     }
+
+    private List<GameObject> _costs = new List<GameObject>();
     private void SetupCostDisplay(List<ResourceObject> resources, float multiplier) 
     {
+        foreach (var gameObj in _costs)
+            Destroy(gameObj);
+
+        _costs.Clear();
+
         _cost = new List<ResourceObject>();
         foreach (var resource in resources)
         {
             var obj = Instantiate(_resourceItemControlPrefab, _costHolderTransform);
             var script = obj.GetComponent<ResourceItemControl>();
-
+            _costs.Add(obj);
             var cost = (int)(resource.Amount * multiplier);
             script.Init(resource.Type, cost);
             _cost.Add(new ResourceObject { Type = resource.Type,  Amount = cost});
@@ -147,8 +156,15 @@ public class UpgradeControl : MonoBehaviour, IPointerExitHandler
         if (_button.enabled)
         {
             if (_button.buttonText == "CONFIRM")
+            {
                 OnUpgrade?.Invoke(id, _cost, level, Type);
-            else _button.buttonText = "CONFIRM";
+                //_buttonImage.color = ColorHelper.FromHex("#2D96E9");
+            }
+            else
+            {
+                _button.buttonText = "CONFIRM";
+                _buttonImage.color = ColorHelper.FromHex("#2DE96E");
+            }
 
             _button.UpdateUI();
         }

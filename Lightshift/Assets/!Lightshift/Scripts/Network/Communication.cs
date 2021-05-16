@@ -16,7 +16,7 @@ namespace Assets._Lightshift.Scripts.Network
             Instance = this;
         }
 
-        [Command(ignoreAuthority = true)]
+        [Command(requiresAuthority = false)]
         private void CmdSendChatMessage(string message, NetworkConnectionToClient sender = null)
         {
             SendChatMessage(sender, message);

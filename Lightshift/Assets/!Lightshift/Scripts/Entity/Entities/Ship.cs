@@ -109,16 +109,16 @@ public class Ship : Entity
             case Modifier.Weight:
                 kinematic.mass = value;
                 break;
-            case Modifier.Acceleration:
+            case Modifier.Accel:
                 acceleration = value;
                 break;
             case Modifier.Speed:
                 speed = value;
                 break;
-            case Modifier.OverdriveBoost:
+            case Modifier.Overdrive:
                 overDriveBoost = value;
                 break;
-            case Modifier.BrakeForce:
+            case Modifier.Brakes:
                 brakeForce = value;
                 break;
             case Modifier.Agility:

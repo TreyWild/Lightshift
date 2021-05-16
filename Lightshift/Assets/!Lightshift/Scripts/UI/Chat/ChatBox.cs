@@ -78,7 +78,7 @@ public class ChatBox : MonoBehaviour
 
                 if (msg != "")
                 {
-                    if (Game.Instance == null)
+                    if (!NetworkManager.singleton.isNetworkActive)
                         AddMessage(msg);
                     else
                         SendChatMessage(msg);

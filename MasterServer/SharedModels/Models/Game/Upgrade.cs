@@ -13,7 +13,7 @@ namespace SharedModels.Models.Game
         Shield,
         MaxShield,
         Weight,
-        Acceleration,
+        Accel,
         Range,
         Speed,
         Regen,
@@ -22,9 +22,9 @@ namespace SharedModels.Models.Game
         Refire,
         Power,
         MaxPower,
-        BrakeForce,
-        OverdriveBoost,
-        CargoCapacity,
+        Brakes,
+        Overdrive,
+        Storage,
     }
 
     [Serializable]

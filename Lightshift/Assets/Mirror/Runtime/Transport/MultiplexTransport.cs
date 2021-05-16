@@ -20,6 +20,38 @@ namespace Mirror
             }
         }
 
+        public override void ClientEarlyUpdate()
+        {
+            foreach (Transport transport in transports)
+            {
+                transport.ClientEarlyUpdate();
+            }
+        }
+
+        public override void ServerEarlyUpdate()
+        {
+            foreach (Transport transport in transports)
+            {
+                transport.ServerEarlyUpdate();
+            }
+        }
+
+        public override void ClientLateUpdate()
+        {
+            foreach (Transport transport in transports)
+            {
+                transport.ClientLateUpdate();
+            }
+        }
+
+        public override void ServerLateUpdate()
+        {
+            foreach (Transport transport in transports)
+            {
+                transport.ServerLateUpdate();
+            }
+        }
+
         void OnEnable()
         {
             foreach (Transport transport in transports)
@@ -192,11 +224,11 @@ namespace Mirror
             return transports[transportId].ServerGetClientAddress(baseConnectionId);
         }
 
-        public override bool ServerDisconnect(int connectionId)
+        public override void ServerDisconnect(int connectionId)
         {
             int baseConnectionId = ToBaseId(connectionId);
             int transportId = ToTransportId(connectionId);
-            return transports[transportId].ServerDisconnect(baseConnectionId);
+            transports[transportId].ServerDisconnect(baseConnectionId);
         }
 
         public override void ServerSend(int connectionId, int channelId, ArraySegment<byte> segment)

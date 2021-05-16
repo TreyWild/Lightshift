@@ -27,3 +27,6 @@ C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\n
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.csproj.CoreCompileInputs.cache
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.MvcApplicationPartsAssemblyInfo.cache
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\scopedcss\bundle\MasterServer.styles.css
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.JsonPatch.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
+C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Newtonsoft.Json.Bson.dll

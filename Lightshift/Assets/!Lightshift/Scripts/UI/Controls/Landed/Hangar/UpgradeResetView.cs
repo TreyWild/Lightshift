@@ -34,7 +34,14 @@ public class UpgradeResetView : MonoBehaviour
 
     public void Reset()
     {
-        OnReset?.Invoke();
+        DialogManager.ShowDialog("Are you sure you want to reset all your upgrades?", delegate (bool result) 
+        {
+            if (result)
+            {
+                OnReset?.Invoke();
+            }
+            Exit();
+        });
     }
     public void Exit() 
     {

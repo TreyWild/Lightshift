@@ -6,14 +6,33 @@ using System.Threading.Tasks;
 
 namespace SharedModels.Models.Game
 {
-    public enum ResourceType 
+    public enum ResourceType
     {
-        ToxicWaste,
-        MetalScrap,
-        LargeScrap,
-        DarkShard,
+        Lite,
+        Virium,
+        Tondrite,
+        Glyphic,
+        Rock,
+        Talcium,
+        Sand,
+        Armorium,
         VoidShard,
-        LightShard
+        QuantamCrystal,
+        CarbonSteel,
+        NickelAlloy,
+        Titanium,
+        Talc,
+        Gypsum,
+        Calcite,
+        Fluorite,
+        Apatite,
+        Feldspar,
+        Quartz,
+        Topaz,
+        Diamond,
+        Lonsdaleite,
+        Sapphire,
+        Gold,
     }
 
     public class ResourceCollection 

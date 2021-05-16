@@ -41,7 +41,7 @@ public class ResourceItemControl : MonoBehaviour, IPointerEnterHandler, IPointer
 
         _toolTipLabel.text = resource.DisplayName;
         _toolTipLore.text = resource.Lore;
-        
+        _toolTipPanel.SetActive(false);
     }
 
     public void ButtonClicked() 
@@ -57,5 +57,16 @@ public class ResourceItemControl : MonoBehaviour, IPointerEnterHandler, IPointer
     public void OnPointerExit(PointerEventData eventData)
     {
         _toolTipPanel.SetActive(false);
+    }
+
+    private void OnDestroy()
+    {
+        _amountLabel = null;
+        _toolTipLabel = null;
+        _toolTipLore = null;
+        _toolTipPanel = null;
+        _icon = null;
+        _button = null;
+        onClicked = null;
     }
 }
