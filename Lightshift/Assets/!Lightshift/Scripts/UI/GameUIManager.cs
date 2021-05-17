@@ -149,6 +149,9 @@ public class GameUIManager : MonoBehaviour
 
             if (Input.GetKeyDown(Settings.CargoMenu))
                 ToggleCargoMenu();
+
+            if (Input.GetKeyDown(Settings.MapKey))
+                ToggleSystemMap();
         }
     }
 
@@ -177,6 +180,13 @@ public class GameUIManager : MonoBehaviour
     {
         _playerMenuOpen = !_playerMenuOpen;
         ToggleUI("PlayerList", _playerMenuOpen);
+    }
+
+    private bool _systemMapOpen = false;
+    public void ToggleSystemMap()
+    {
+        _systemMapOpen = !_systemMapOpen;
+        ToggleUI("SystemMap", _systemMapOpen);
     }
 
     private bool _cargoMenuOpen = false;

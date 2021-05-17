@@ -44,7 +44,7 @@ public class SoundManager : MonoBehaviour
             PlayMusicTrack(_menuMusic);
         else
         {
-            var solarSystem = SystemManager.GetSolarSystem();
+            var solarSystem = GalaxyManager.GetGalaxy();
             if (solarSystem != null)
                 PlayMusicTrack(solarSystem.Music);
         }

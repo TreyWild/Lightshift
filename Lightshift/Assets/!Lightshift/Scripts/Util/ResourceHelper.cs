@@ -7,27 +7,27 @@ using UnityEngine;
 
 public class ResourceHelper : MonoBehaviour
 {
-    private static List<SolarSystem> _solarSystems;
+    private static List<Galaxy> _galaxies;
     private static bool _inititalized = false;
     private static void Initialize()
     {
-        _solarSystems = Resources.LoadAll<SolarSystem>("").ToList();
+        _galaxies = Resources.LoadAll<Galaxy>("").ToList();
         _inititalized = true;
     }
 
-    public static SolarSystem GetSolarSystem(string Id)
+    public static Galaxy GetGalaxyById(string Id)
     {
         if (!_inititalized)
             Initialize();
 
-        return _solarSystems.FirstOrDefault(i => i.Id.ToLower() == Id.ToLower());
+        return _galaxies.FirstOrDefault(i => i.Id.ToLower() == Id.ToLower());
     }
 
-    public static SolarSystem GetDefaultSolarSystem()
+    public static Galaxy GetDefaultGalaxy()
     {
         if (!_inititalized)
             Initialize();
 
-        return _solarSystems.FirstOrDefault(i => i.Default);
+        return _galaxies.FirstOrDefault(i => i.Default);
     }
 }
