@@ -13,7 +13,7 @@ using UnityEngine;
 
 public class PlayerShip : Ship
 {
-    private ShipObject _shipObject;
+    private LoadoutObject _loadoutObject;
     private PlayerController _input;
     private List<Item> _equippedModules;
     private Player _player;
@@ -37,7 +37,7 @@ public class PlayerShip : Ship
 
         onCleanup += () =>
         {
-            _shipObject = null;
+            _loadoutObject = null;
             _input = null;
             _equippedModules = null;
         };
@@ -90,14 +90,14 @@ public class PlayerShip : Ship
     {
         TargetRpcInitModules(connectionToClient, JsonConvert.SerializeObject(_equippedModules));
     }
-    public void InitShipObject(ShipObject shipObject) 
+    public void InitLoadoutObject(LoadoutObject loadoutObject) 
     {
-        _shipObject = shipObject;
-        var stats = StatHelper.GetStatsFromShip(Player, shipObject);
+        _loadoutObject = loadoutObject;
+        var stats = StatHelper.GetStatsFromShip(Player, loadoutObject);
 
         SetModifiers(stats);
 
-        _equippedModules = Player.GetItems().Where(s => shipObject.EquippedModules.Contains(s.Id)).ToList();
+        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Contains(s.Id)).ToList();
         if (_equippedModules != null && _equippedModules.Count > 0)
         {
             InitModules(_equippedModules);
@@ -214,7 +214,7 @@ public class PlayerShip : Ship
 
         _input.Locked = false;
 
-        if (hasAuthority || isServer)
+        if (hasAuthority)
             CameraFollow.Instance.SetTarget(transform);
     }
 

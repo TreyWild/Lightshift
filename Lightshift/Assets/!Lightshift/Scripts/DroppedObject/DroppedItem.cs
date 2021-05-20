@@ -66,7 +66,7 @@ public class DroppedItem : NetworkBehaviour
         if (_iconTransform != null)
             _iconTransform.Rotate(new Vector3(0, 0, 10 * Time.deltaTime));
 
-        if (!isServer)
+        if (!isServer || _players == null)
             return;
 
         _delay -= Time.deltaTime;
@@ -77,7 +77,6 @@ public class DroppedItem : NetworkBehaviour
             Destroy(gameObject);
             return;
         }
-
 
         if (_delay < 0 && _players.Count > 0 || (_delay > 4.8 && _players.Count > 0))
         {

@@ -69,6 +69,9 @@ namespace Mirror
             //Make sure connections are cleared in case any old connections references exist from previous sessions
             connections.Clear();
 
+            // reset NetworkTime
+            NetworkTime.Reset();
+
             Debug.Assert(Transport.activeTransport != null, "There was no active transport when calling NetworkServer.Listen, If you are calling Listen manually then make sure to set 'Transport.activeTransport' first");
             AddTransportHandlers();
         }
@@ -81,6 +84,8 @@ namespace Mirror
             Transport.activeTransport.OnServerError = OnError;
         }
 
+        // calls OnStartClient for all SERVER objects in host mode once.
+        // client doesn't get spawn messages for those, so need to call manually.
         public static void ActivateHostScene()
         {
             foreach (NetworkIdentity identity in NetworkIdentity.spawned.Values)
@@ -1358,6 +1363,52 @@ namespace Mirror
         static Dictionary<NetworkIdentity, Serialization> serializations =
             new Dictionary<NetworkIdentity, Serialization>();
 
+        // helper function to get an entity's serialization with caching
+        static Serialization GetEntitySerialization(NetworkIdentity identity)
+        {
+            // multiple connections might be observed by the
+            // same NetworkIdentity, but we don't want to
+            // serialize them multiple times. look it up first.
+            //
+            // IMPORTANT: don't forget to return them to pool!
+            // TODO make this easier later. for now aim for
+            //      feature parity to not break projects.
+            // TODO let the entity cache it's own serialization
+            //      and recompute only if it was dirty.
+            if (!serializations.ContainsKey(identity))
+            {
+                // serialize all the dirty components.
+                // one version for owner, one for observers.
+                PooledNetworkWriter ownerWriter = NetworkWriterPool.GetWriter();
+                PooledNetworkWriter observersWriter = NetworkWriterPool.GetWriter();
+                identity.OnSerializeAllSafely(false, ownerWriter, out int ownerWritten, observersWriter, out int observersWritten);
+                serializations[identity] = new Serialization
+                {
+                    ownerWriter = ownerWriter,
+                    observersWriter = observersWriter,
+                    ownerWritten = ownerWritten,
+                    observersWritten = observersWritten
+                };
+
+                // clear dirty bits only for the components that we serialized
+                // DO NOT clean ALL component's dirty bits, because
+                // components can have different syncIntervals and we don't
+                // want to reset dirty bits for the ones that were not
+                // synced yet.
+                // (we serialized only the IsDirty() components, or all of
+                //  them if initialState. clearing the dirty ones is enough.)
+                //
+                // NOTE: this is what we did before push->pull
+                //       broadcasting. let's keep doing this for
+                //       feature parity to not break anyone's project.
+                //       TODO make this more simple / unnecessary later.
+                identity.ClearDirtyComponentsDirtyBits();
+            }
+
+            // return the serialization
+            return serializations[identity];
+        }
+
         // NetworkLateUpdate called after any Update/FixedUpdate/LateUpdate
         // (we add this to the UnityEngine in NetworkLoop)
         internal static void NetworkLateUpdate()
@@ -1393,45 +1444,8 @@ namespace Mirror
                             //  NetworkServer.Destroy)
                             if (identity != null)
                             {
-                                // multiple connections might be observed by the
-                                // same NetworkIdentity, but we don't want to
-                                // serialize them multiple times. look it up first.
-                                //
-                                // IMPORTANT: don't forget to return them to pool!
-                                // TODO make this easier later. for now aim for
-                                //      feature parity to not break projects.
-                                if (!serializations.ContainsKey(identity))
-                                {
-                                    // serialize all the dirty components.
-                                    // one version for owner, one for observers.
-                                    PooledNetworkWriter ownerWriter = NetworkWriterPool.GetWriter();
-                                    PooledNetworkWriter observersWriter = NetworkWriterPool.GetWriter();
-                                    identity.OnSerializeAllSafely(false, ownerWriter, out int ownerWritten, observersWriter, out int observersWritten);
-                                    serializations[identity] = new Serialization
-                                    {
-                                        ownerWriter = ownerWriter,
-                                        observersWriter = observersWriter,
-                                        ownerWritten = ownerWritten,
-                                        observersWritten = observersWritten
-                                    };
-
-                                    // clear dirty bits only for the components that we serialized
-                                    // DO NOT clean ALL component's dirty bits, because
-                                    // components can have different syncIntervals and we don't
-                                    // want to reset dirty bits for the ones that were not
-                                    // synced yet.
-                                    // (we serialized only the IsDirty() components, or all of
-                                    //  them if initialState. clearing the dirty ones is enough.)
-                                    //
-                                    // NOTE: this is what we did before push->pull
-                                    //       broadcasting. let's keep doing this for
-                                    //       feature parity to not break anyone's project.
-                                    //       TODO make this more simple / unnecessary later.
-                                    identity.ClearDirtyComponentsDirtyBits();
-                                }
-
-                                // get serialization
-                                Serialization serialization = serializations[identity];
+                                // get serialization for this entity (cached)
+                                Serialization serialization = GetEntitySerialization(identity);
 
                                 // is this entity owned by this connection?
                                 bool owned = identity.connectionToClient == connection;

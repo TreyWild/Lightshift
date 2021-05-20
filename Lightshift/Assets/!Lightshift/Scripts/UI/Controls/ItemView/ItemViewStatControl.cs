@@ -16,9 +16,9 @@ public class ItemViewStatControl : ItemViewControl
     [SerializeField] ItemGraphicDisplay _wing2;
     [SerializeField] ButtonManagerBasic _equipButton;
 
-    private ShipObject _shipObject;
+    private LoadoutObject _loadoutObject;
     private Item _item;
-    public ShipObject GetShipObject() => _shipObject;
+    public LoadoutObject GetLoadoutObject() => _loadoutObject;
     public Item GetItem() => _item;
 
     public Action<ItemViewStatControl> onEquip;
@@ -29,15 +29,15 @@ public class ItemViewStatControl : ItemViewControl
         _wing1 = null;
         _wing2 = null;
         _equipButton = null;
-        _shipObject = null;
+        _loadoutObject = null;
         _item = null;
     }
-    public void SetShip(Player player, ShipObject shipObject) 
+    public void SetShip(Player player, LoadoutObject loadoutObject) 
     {
-        _shipObject = shipObject;
+        _loadoutObject = loadoutObject;
 
         _equipButton.buttonText = "Use this ship";
-        var equippedItems = player.GetItems().Where(e => shipObject.EquippedModules.Contains(e.Id));
+        var equippedItems = player.GetItems().Where(e => loadoutObject.EquippedModules.Contains(e.Id));
         foreach (var equip in equippedItems)
         {
             var item = ItemService.GetItem(equip.ModuleId);
@@ -56,7 +56,7 @@ public class ItemViewStatControl : ItemViewControl
             }
         }
 
-        var stats = StatHelper.GetStatsFromShip(player, shipObject);
+        var stats = StatHelper.GetStatsFromShip(player, loadoutObject);
         foreach (var stat in stats)
             _statView.AddStat(stat);
     }

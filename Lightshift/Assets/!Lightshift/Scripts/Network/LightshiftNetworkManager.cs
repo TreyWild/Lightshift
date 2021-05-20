@@ -19,16 +19,6 @@ public class LightshiftNetworkManager : NetworkManager
     public bool UseTestServers;
     public bool UseHostFormat = true;
     public bool IsServer = true;
-    void Awake() 
-    {
-        base.Awake();
-
-        if (IsServer)
-            HttpService.InitGameServerAuthentication("dev-access");
-
-        if (IsServer && !UseHostFormat)
-            StartServer();
-    }
     public static GameObject GetPrefab<T>() => singleton.spawnPrefabs.FirstOrDefault(o => o.gameObject.HasType<T>());
     public override void OnStartServer()
     {
@@ -60,10 +50,10 @@ public class LightshiftNetworkManager : NetworkManager
 
         Debug.Log($"Game Scene Loaded. Server Ready.");
     }
-    public override void OnClientConnect(NetworkConnection conn)
-    {
-        base.OnClientConnect(conn);
-    }
+    //public override void OnClientConnect(NetworkConnection conn)
+    //{
+    //    base.OnClientConnect(conn);
+    //}
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
@@ -72,13 +62,13 @@ public class LightshiftNetworkManager : NetworkManager
         //SceneManager.LoadScene("_AUTHENTICATION_");
         singleton.StopClient();
     }
-    public override void OnServerAddPlayer(NetworkConnection conn)
-    {
-        //Delegator.WaitForEndOfFrame(delegate 
-        //{
-            base.OnServerAddPlayer(conn);
-        //});
-    }
+    //public override void OnServerAddPlayer(NetworkConnection conn)
+    //{
+    //    Delegator.WaitForEndOfFrame(delegate
+    //    {
+    //        base.OnServerAddPlayer(conn);
+    //    });
+    //}
 
     public void Authenticate(string key)
     {
@@ -91,11 +81,16 @@ public class LightshiftNetworkManager : NetworkManager
         }
         else singleton.networkAddress = "167.99.149.84";
 
+        IsServer = Application.isEditor;
         if (IsServer)
+        {
+            HttpService.InitGameServerAuthentication("dev-access");
+
             if (UseHostFormat)
                 StartHost();
             else
                 StartServer();
+        }
         else StartClient();
     }
 

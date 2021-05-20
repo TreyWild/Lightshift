@@ -128,6 +128,8 @@ namespace Mirror
         // get all NetworkBehaviour components
         // => currently lazily initialized so tests can add components after
         //    creating a NetworkIdentity.
+        // TODO initialize them from NetworkIdentity.Awake() later, see
+        // 'componentindex' branch (still breaks tests)
         NetworkBehaviour[] _NetworkBehaviours;
         public NetworkBehaviour[] NetworkBehaviours
         {
@@ -276,7 +278,9 @@ namespace Mirror
         [SerializeField, HideInInspector] bool hasSpawned;
         public bool SpawnedFromInstantiate { get; private set; }
 
-        void Awake()
+        // Awake is only called in Play mode.
+        // internal so we can call it during unit tests too.
+        internal void Awake()
         {
             if (hasSpawned)
             {
@@ -816,7 +820,7 @@ namespace Mirror
             // (jumping back later is WAY faster than allocating a temporary
             //  writer for the payload, then writing payload.size, payload)
             int headerPosition = writer.Position;
-            writer.WriteInt32(0);
+            writer.WriteInt(0);
             int contentPosition = writer.Position;
 
             // write payload
@@ -834,7 +838,7 @@ namespace Mirror
 
             // fill in length now
             writer.Position = headerPosition;
-            writer.WriteInt32(endPosition - contentPosition);
+            writer.WriteInt(endPosition - contentPosition);
             writer.Position = endPosition;
 
             // Debug.Log("OnSerializeSafely written for object=" + comp.name + " component=" + comp.GetType() + " sceneId=" + sceneId.ToString("X") + "header@" + headerPosition + " content@" + contentPosition + " end@" + endPosition + " contentSize=" + (endPosition - contentPosition));
@@ -903,7 +907,7 @@ namespace Mirror
         void OnDeserializeSafely(NetworkBehaviour comp, NetworkReader reader, bool initialState)
         {
             // read header as 4 bytes and calculate this chunk's start+end
-            int contentSize = reader.ReadInt32();
+            int contentSize = reader.ReadInt();
             int chunkStart = reader.Position;
             int chunkEnd = reader.Position + contentSize;
 
@@ -1113,6 +1117,10 @@ namespace Mirror
             }
         }
 
+        // Reset is called when the user hits the Reset button in the
+        // Inspector's context menu or when adding the component the first time.
+        // This function is only called in editor mode.
+        //
         // Reset() seems to be called only for Scene objects.
         // we can't destroy them (they are always in the scene).
         // instead we disable them and call Reset().

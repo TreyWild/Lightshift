@@ -395,7 +395,7 @@ namespace Smooth
         public float sendRate = 30;
 
         /// <summary>The channel to send network updates on.</summary>
-        public int networkChannel = Channels.DefaultUnreliable;
+        public int networkChannel = Channels.Unreliable;
 
         /// <summary>Child object to sync</summary>
         /// <remarks>
@@ -883,12 +883,14 @@ namespace Smooth
         public void OnRemoteTimeReset()
         {
             // Also adjust owner time.
-            approximateNetworkTimeOnOwner -= stateBuffer[0].ownerTimestamp;
+            approximateNetworkTimeOnOwner -= maxLocalTime;// stateBuffer[0].ownerTimestamp;
             // Don't forget the temp state used for extrapolation
-            targetTempState.ownerTimestamp -= stateBuffer[0].ownerTimestamp;
+            targetTempState.ownerTimestamp -= maxLocalTime;// stateBuffer[0].ownerTimestamp;
+            //extrapolatedLastFrame = false;
+            //clearBuffer();
             for (int i = stateCount - 1; i >= 0; i--)
             {
-                stateBuffer[i].ownerTimestamp -= stateBuffer[0].ownerTimestamp;
+                stateBuffer[i].ownerTimestamp -= maxLocalTime;// stateBuffer[0].ownerTimestamp;
             }
         }
 
@@ -907,7 +909,7 @@ namespace Smooth
             }
 
             // We only want to send from owners who are ready and if sendRate is not 0.
-            if (!hasControl || (!NetworkServer.active && !ClientScene.ready) || sendRate == 0) return;
+            if (!hasControl || (!NetworkServer.active && !NetworkClient.ready) || sendRate == 0) return;
 
             // Resting position logic.
             if (syncPosition != SyncMode.NONE)
@@ -1383,14 +1385,40 @@ namespace Smooth
             {
                 if (syncVelocity == SyncMode.NONE && !stateBuffer[0].atPositionalRest)
                 {
-                    targetTempState.velocity = (stateBuffer[0].position - stateBuffer[1].position) / (stateBuffer[0].ownerTimestamp - stateBuffer[1].ownerTimestamp);
+                    bool foundStateToCalculateVelocity = false;
+                    for (int i = 1; i < stateCount; i++)
+                    {
+                        if (stateBuffer[0].ownerTimestamp != stateBuffer[i].ownerTimestamp)
+                        {
+                            targetTempState.velocity = (stateBuffer[0].position - stateBuffer[i].position) / (stateBuffer[0].ownerTimestamp - stateBuffer[i].ownerTimestamp);
+                            foundStateToCalculateVelocity = true;
+                            break;
+                        }
+                    }
+                    if (!foundStateToCalculateVelocity)
+                    {
+                        targetTempState.velocity = Vector3.zero;
+                    }
                 }
                 if (syncAngularVelocity == SyncMode.NONE && !stateBuffer[0].atRotationalRest)
                 {
-                    Quaternion deltaRot = stateBuffer[0].rotation * Quaternion.Inverse(stateBuffer[1].rotation);
-                    Vector3 eulerRot = new Vector3(Mathf.DeltaAngle(0, deltaRot.eulerAngles.x), Mathf.DeltaAngle(0, deltaRot.eulerAngles.y), Mathf.DeltaAngle(0, deltaRot.eulerAngles.z));
-                    Vector3 angularVelocity = eulerRot / (stateBuffer[0].ownerTimestamp - stateBuffer[1].ownerTimestamp);
-                    targetTempState.angularVelocity = angularVelocity;
+                    bool foundStateToCalculateVelocity = false;
+                    for (int i = 1; i < stateCount; i++)
+                    {
+                        if (stateBuffer[0].ownerTimestamp != stateBuffer[i].ownerTimestamp)
+                        {
+                            Quaternion deltaRot = stateBuffer[0].rotation * Quaternion.Inverse(stateBuffer[i].rotation);
+                            Vector3 eulerRot = new Vector3(Mathf.DeltaAngle(0, deltaRot.eulerAngles.x), Mathf.DeltaAngle(0, deltaRot.eulerAngles.y), Mathf.DeltaAngle(0, deltaRot.eulerAngles.z));
+                            Vector3 angularVelocity = eulerRot / (stateBuffer[0].ownerTimestamp - stateBuffer[i].ownerTimestamp);
+                            targetTempState.angularVelocity = angularVelocity;
+                            foundStateToCalculateVelocity = true;
+                            break;
+                        }
+                    }
+                    if (!foundStateToCalculateVelocity)
+                    {
+                        targetTempState.angularVelocity = Vector3.zero;
+                    }
                 }
             }
 
@@ -1432,7 +1460,10 @@ namespace Smooth
             if (hasVelocity)
             {
                 // Velocity.
-                targetTempState.position += targetTempState.velocity * timeDif;
+                if (!rb)
+                {
+                    targetTempState.position += targetTempState.velocity * timeDif;
+                }
 
                 // Gravity. Only if not at rest in the y axis.
                 if (Mathf.Abs(targetTempState.velocity.y) >= .01f)
@@ -1559,6 +1590,17 @@ namespace Smooth
         /// <summary>Set position of object based on if child or not.</summary>
         public void setPosition(Vector3 position, bool isTeleporting)
         {
+            // Ignore NAN's
+            if (position.x == float.NaN || position.y == float.NaN || position.z == float.NaN)
+            {
+                return;
+            }
+            // Ignore Infinities
+            if (float.IsInfinity(position.x) || float.IsInfinity(position.y) || float.IsInfinity(position.z))
+            {
+                return;
+            }
+
             if (isSyncingChild || useLocalTransformOnly)
             {
                 realObjectToSync.transform.localPosition = position;
@@ -1582,6 +1624,16 @@ namespace Smooth
         /// <summary>Set rotation of object based on if child or not.</summary>
         public void setRotation(Quaternion rotation, bool isTeleporting)
         {
+            // Ignore NAN's
+            if (rotation.x == float.NaN || rotation.y == float.NaN || rotation.z == float.NaN || rotation.w == float.NaN)
+            {
+                return;
+            }
+            // Ignore Infinities
+            if (float.IsInfinity(rotation.x) || float.IsInfinity(rotation.y) || float.IsInfinity(rotation.z) || float.IsInfinity(rotation.w))
+            {
+                return;
+            }
             if (isSyncingChild || useLocalTransformOnly)
             {
                 realObjectToSync.transform.localRotation = rotation;
@@ -1815,17 +1867,27 @@ namespace Smooth
             // Check the rest of the States to see where the teleport State belongs.
             else
             {
-                for (int i = stateBuffer.Length - 2; i >= 0; i--)
+                if (stateCount == stateBuffer.Length && stateBuffer[stateCount-1].ownerTimestamp > teleportState.ownerTimestamp)
+                {
+                    // The oldest state in the buffer is newer than the teleport state
+                    // and the buffer is full, so just drop the state, it's super old anyway
+                    return;
+                }
+                for (int i = stateCount - 1; i >= 0; i--)
                 {
                     if (stateBuffer[i].ownerTimestamp > teleportState.ownerTimestamp)
                     {
                         // Shift the buffer from where the teleport State should be and add the new State.
-                        for (int j = stateBuffer.Length - 1; j >= 1; j--)
+                        // Notice we don't shift the state at i, only the states after it, since the
+                        // state at i is the oldest state that is NEWER than the teleport state.
+                        for (int j = stateBuffer.Length - 1; j > i + 1; j--)
                         {
-                            if (j == i) break;
                             stateBuffer[j] = stateBuffer[j - 1];
                         }
+
+                        // Insert the teleport state
                         stateBuffer[i + 1] = teleportState;
+
                         break;
                     }
                 }

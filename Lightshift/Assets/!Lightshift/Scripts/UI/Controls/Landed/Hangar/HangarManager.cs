@@ -12,6 +12,9 @@ public class HangarManager : MonoBehaviour
     [SerializeField] private GameObject _overViewPanel;
     [SerializeField] private GameObject _modulePanel;
     [SerializeField] private StatView _statView;
+    [SerializeField] private GameObject _loadoutPanel;
+    [SerializeField] private GameObject _loadoutPrefab;
+
 
     private Player _player;
 
@@ -35,7 +38,7 @@ public class HangarManager : MonoBehaviour
         if (_player == null)
             return;
 
-        var activeShip = _player.GetActiveShip();
+        var activeShip = _player.GetActiveLoadout();
 
         if (activeShip == null)
             return;
@@ -63,6 +66,7 @@ public class HangarManager : MonoBehaviour
         {
             _timeSinceLastRefresh = 0;
             RefreshStats();
+            RefreshLoadouts();
         }
     }
     private void RefreshStats() 
@@ -70,7 +74,7 @@ public class HangarManager : MonoBehaviour
         if (_player == null)
             return;
 
-        var ship = _player.GetActiveShip();
+        var ship = _player.GetActiveLoadout();
         if (ship == null)
             return;
 
@@ -79,6 +83,31 @@ public class HangarManager : MonoBehaviour
         _statView.Clear();
         foreach (var stat in stats)
             _statView.AddStat(stat);
+    }
+
+    private List<LoadoutObject> _loadouts = new List<LoadoutObject>();
+    private void RefreshLoadouts() 
+    {
+        if (_player.GetShipLoadouts().Count != _loadouts.Count)
+        {
+            foreach (var loadout in _player.GetShipLoadouts())
+            {
+                var existing = _loadouts.FirstOrDefault(l => l.Id == loadout.Id);
+                if (existing == null)
+                    AddLoadout(loadout);
+            }
+        }
+    }
+    private void AddLoadout(LoadoutObject loadout) 
+    {
+        var control = Instantiate(_loadoutPrefab, _loadoutPanel.transform).GetComponent<LoadoutControl>();
+        control.Init(_player, loadout);
+        _loadouts.Add(loadout);
+    }
+
+    public void BuyLoadout() 
+    {
+        DialogManager.ShowMessage("Method not implemented.");
     }
 
     private void OnModuleClicked(ModuleItemControl item)
@@ -90,7 +119,7 @@ public class HangarManager : MonoBehaviour
                 targetType = ItemType.Engine;
                 break;
             case ModuleType.Hull:
-                ShowFleet();
+                targetType = ItemType.Hull;
                 return;
             case ModuleType.PrimaryWings:
                 targetType = ItemType.Wing;
@@ -121,7 +150,7 @@ public class HangarManager : MonoBehaviour
         Debug.Log($"Opening {item.ModuleType} equip list");
         var listView = DialogManager.CreateListView($"Select: {item.ModuleType}");
 
-        var activeShip = _player.GetActiveShip();
+        var activeShip = _player.GetActiveLoadout();
 
         if (activeShip == null)
             return;
@@ -151,7 +180,7 @@ public class HangarManager : MonoBehaviour
                             if (existing != null)
                                 activeShip.EquippedModules.Remove(existing.Id);
 
-                            _player.GetActiveShip().EquippedModules.Add(moduleId);
+                            _player.GetActiveLoadout().EquippedModules.Add(moduleId);
                         }
 
                         RefreshHangar();
@@ -165,12 +194,13 @@ public class HangarManager : MonoBehaviour
     public void ShowWings() => ShowModuleList(ItemType.Wing, "Wings");
     public void ShowWeapons() => ShowModuleList(ItemType.Weapon, "Weapons");
     public void ShowEngines() => ShowModuleList(ItemType.Engine, "Engines");
+    public void ShowHulls() => ShowModuleList(ItemType.Hull, "Engines");
 
     public void ShowModuleList(ItemType type, string title) 
     {
         var listView = DialogManager.CreateListView($"{title}");
 
-        var activeShip = _player.GetActiveShip();
+        var activeShip = _player.GetActiveLoadout();
 
         foreach (var m in _player.GetItems())
         {
@@ -191,32 +221,6 @@ public class HangarManager : MonoBehaviour
                     var upgradeView = DialogManager.CreateUpgradeView(m);
                 };
             }
-        }
-    }
-
-    public void ShowFleet() 
-    {
-        var listView = DialogManager.CreateListView($"Fleet");
-
-
-        foreach (var ship in _player.GetShipLoadouts())
-        {
-            var control = listView.InstantiateItem(DialogManager.GetItemViewShipControl()).GetComponent<ItemViewStatControl>();
-            control.SetShip(_player, ship);
-            control.SetButtonText("Upgrade");
-            control.onClick += (viewControl) =>
-            {
-                Destroy(listView.gameObject);
-            };
-
-            control.onEquip += (statControl) => 
-            {
-                _player.ChangeShip(ship.Id, delegate (string shipId)
-                {
-                    RefreshHangar();
-                    listView.Close();
-                });
-            };
         }
     }
 

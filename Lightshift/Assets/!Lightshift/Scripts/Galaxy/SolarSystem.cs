@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class SolarSystem : MonoBehaviour
 {
+    public Color mapColor = Color.white;
     public float OrbitalSpeed;
 
     [HideInInspector]

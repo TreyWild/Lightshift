@@ -97,6 +97,7 @@ public class LightshiftAuthenticator : NetworkAuthenticator
             else 
             {
                 conn.authenticationData = json;
+                Debug.Log($"{conn.connectionId}");
                 LoginSuccess(conn);
             }
         });
@@ -120,9 +121,7 @@ public class LightshiftAuthenticator : NetworkAuthenticator
 
         LoginManager.Instance.HandleResponse(msg.response);
 
-        NetworkClient.connection.isAuthenticated = false;
-        // disconnect the client
-        NetworkClient.connection.Disconnect();
+        ClientReject();
     }
 }
 

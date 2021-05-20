@@ -18,7 +18,7 @@ namespace SharedModels.Models.User
         public string LastCheckPointId { get; set; }
         public string LandedLocationId { get; set; }
         public bool IsLanded { get; set; }
-        public string ActiveShip { get; set; }
+        public string ActiveLoadout { get; set; }
 
         public List<ResourceObject> Resources { get; set; }
 

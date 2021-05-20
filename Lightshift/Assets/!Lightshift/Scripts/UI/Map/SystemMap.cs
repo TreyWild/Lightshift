@@ -12,19 +12,26 @@ public class SystemMap : MonoBehaviour
     [SerializeField] private GameObject _mapItemPrefab;
     [SerializeField] private GameObject _mapOrbitPrefab;
     [SerializeField] private Transform _playerIcon;
+    [SerializeField] private Slider _zoomSlider;
+
     private List<MapObjectData> _objects = new List<MapObjectData>();
     private List<SolarSystemMapData> _solarObjects = new List<SolarSystemMapData>();
 
     public float Zoom = 10;
 
-    private PlayerShip _ship;
+    private Transform _target;
 
     
 
     private void Awake()
     {
-        var player = FindObjectOfType<Player>();
-        _ship = player.ship;
+        _zoomSlider.value = PlayerPrefs.GetFloat("systemMapZoom", 8.5f);
+        _zoomSlider.onValueChanged.AddListener(delegate (float value) 
+        {
+            PlayerPrefs.SetFloat("systemMapZoom", value);
+            Zoom = value;
+            PlayerPrefs.Save();
+        });
 
         var solarSystems = FindObjectsOfType<SolarSystem>();
         if (solarSystems != null)
@@ -46,7 +53,8 @@ public class SystemMap : MonoBehaviour
                     var rect = mapOrbit.GetComponent<RectTransform>();
                     rect.sizeDelta = new Vector2((orbit * 2) / Zoom, (orbit * 2) / Zoom);
                     mapOrbit.transform.position = new Vector2((solarSystem.transform.position.x) / Zoom + (Screen.width / 2), (solarSystem.transform.position.y) / Zoom + (Screen.height / 2));
-
+                    var image = mapOrbit.GetComponent<Image>();
+                    image.color = solarSystem.mapColor;
                     solarMap.uiObjects.Add(rect);
                 }
 
@@ -60,6 +68,8 @@ public class SystemMap : MonoBehaviour
                 var item = Instantiate(_mapItemPrefab, _contentPanel);
                 var uiObj = item.GetComponent<UIMapObject>();
 
+                var rect = uiObj.GetComponent<RectTransform>();
+                rect.sizeDelta = obj.IconSize;
                 uiObj.transform.position = new Vector2((obj.transform.position.x) / Zoom + (Screen.width / 2), (obj.transform.position.y) / Zoom + (Screen.height / 2));
                 uiObj.Init(obj);
 
@@ -72,9 +82,11 @@ public class SystemMap : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        _playerIcon.transform.eulerAngles = new Vector3(0, 0, _ship.kinematic.rotation);
+        _target = CameraFollow.Instance.target;
 
-        _coordinateLabel.text = $"{Mathf.Round(_ship.kinematic.Transform.position.x)}, {Mathf.Round(_ship.kinematic.Transform.position.y)}";
+        _playerIcon.transform.eulerAngles = new Vector3(0, 0, _target.rotation.z);
+
+        _coordinateLabel.text = $"{Mathf.Round(_target.position.x)}, {Mathf.Round(_target.position.y)}";
 
         foreach (var obj in _objects)
             obj.uiMapObject.transform.position = new Vector2((obj.mapObject.transform.position.x - GetLocalPosition().x) / Zoom + (Screen.width / 2), (obj.mapObject.transform.position.y - GetLocalPosition().y) / Zoom + (Screen.height / 2));
@@ -96,7 +108,7 @@ public class SystemMap : MonoBehaviour
         }
     }
 
-    private Vector2 GetLocalPosition() => _ship.kinematic.position;
+    private Vector2 GetLocalPosition() => _target.position;
     public void Exit()
     {
         GameUIManager.Instance.ToggleSystemMap();

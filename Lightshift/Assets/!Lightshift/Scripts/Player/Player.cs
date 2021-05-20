@@ -21,8 +21,8 @@ public class Player : NetworkBehaviour
     [SyncVar(hook = nameof(OnCreditsChanged))] public int Credits;
     [SyncVar(hook = nameof(OnBankCreditsChanged))] public int BankCredits;
     [SyncVar] public string Username;
-    [SyncVar(hook = nameof(OnActiveShipChanged))]
-    public string ActiveShip;
+    [SyncVar(hook = nameof(OnActiveLoadoutChanged))]
+    public string ActiveLoadout;
     [SyncVar] public string Id;
     private void OnCreditsChanged(int oldValue, int newValue)
     {
@@ -33,14 +33,14 @@ public class Player : NetworkBehaviour
         onBankCreditsChanged?.Invoke(newValue);
     }
 
-    private void OnActiveShipChanged(string oldValue, string newValue)
+    private void OnActiveLoadoutChanged(string oldValue, string newValue)
     {
         _onShipChanged?.Invoke(newValue);
     }
 
     public readonly SyncDictionary<ResourceType, int> Resources = new SyncDictionary<ResourceType, int>();
     public readonly SyncDictionary<string, Item> Items = new SyncDictionary<string, Item>();
-    private readonly SyncDictionary<string, ShipObject> ShipLoadouts = new SyncDictionary<string, ShipObject>();
+    private readonly SyncDictionary<string, LoadoutObject> ShipLoadouts = new SyncDictionary<string, LoadoutObject>();
 
 
     public PlayerShip ship { get; set; }
@@ -106,9 +106,9 @@ public class Player : NetworkBehaviour
                     SetupAccount();
 
                     // Ensure ship is selected
-                    if (ActiveShip == null || GetActiveShip() == null)
+                    if (ActiveLoadout == null || GetActiveLoadout() == null)
                     {
-                        ActiveShip = ShipLoadouts.First().Key;
+                        ActiveLoadout = ShipLoadouts.First().Key;
                     }
 
                     Debug.Log($"{Username} initialized.");
@@ -127,12 +127,12 @@ public class Player : NetworkBehaviour
 
     private IEnumerator Init()
     {
-        var proceed = GetActiveShip() != null;
+        var proceed = GetActiveLoadout() != null;
         while (!proceed)
         {
             yield return new WaitForSeconds(1f);
 
-            proceed = GetActiveShip() != null;
+            proceed = GetActiveLoadout() != null;
         }
 
         CmdInit();
@@ -151,9 +151,9 @@ public class Player : NetworkBehaviour
         GameUIManager.Instance.ToggleLoadingScreen(false);
     }
 
-    public List<ShipObject> GetShipLoadouts()
+    public List<LoadoutObject> GetShipLoadouts()
     {
-        var items = new List<ShipObject>();
+        var items = new List<LoadoutObject>();
         foreach (var item in ShipLoadouts)
             items.Add(item.Value);
 
@@ -184,7 +184,7 @@ public class Player : NetworkBehaviour
 
     }
 
-    public ShipObject GetShipLoadout(string id)
+    public LoadoutObject GetShipLoadout(string id)
     {
         if (!ShipLoadouts.ContainsKey(id))
             return null;
@@ -359,7 +359,7 @@ public class Player : NetworkBehaviour
             // Init Pre-play Fields
             Credits = _profile.Credits;
             Username = _profile.Username;
-            ActiveShip = _profile.ActiveShip;
+            ActiveLoadout = _profile.ActiveLoadout;
             lastCheckpointId = _profile.LastCheckPointId;
             Id = account.Id;
 
@@ -375,17 +375,17 @@ public class Player : NetworkBehaviour
             return connectionToServer;
     }
 
-    public void AddShip(ShipObject ship) 
+    public void AddShip(LoadoutObject ship) 
     {
-        _profile.ActiveShip = ship.Id;
+        _profile.ActiveLoadout = ship.Id;
         _profile.IsLanded = true;
         ShipLoadouts.Add(ship.Id, ship);
 
         Debug.Log($"New ship built for {_account.Profile.Username}.");
 
-        SaveShip(ship);
+        SaveLoadout(ship);
     }
-    public void SaveShip(ShipObject ship, Action callback = null)
+    public void SaveLoadout(LoadoutObject ship, Action callback = null)
     {
         if (!isServer)
             return;
@@ -394,7 +394,7 @@ public class Player : NetworkBehaviour
 
         ShipLoadouts[ship.Id] = ship;
 
-        HttpService.Get("game/saveship", ship,
+        HttpService.Get("game/saveloadout", ship,
         delegate (bool result)
         {
             if (result)
@@ -441,7 +441,7 @@ public class Player : NetworkBehaviour
         {
 
             _profile.LastCheckPointId = lastCheckpointId;
-            _profile.ActiveShip = ActiveShip;
+            _profile.ActiveLoadout = ActiveLoadout;
             _profile.Username = Username;
             _profile.Credits = Credits;
             _profile.BankCredits = BankCredits;
@@ -519,8 +519,8 @@ public class Player : NetworkBehaviour
 
             ship.kinematic.rotation = UnityEngine.Random.Range(0, 360);
 
-            ship.InitShipObject(GetActiveShip());
-            //ship.SetCargo(GetActiveShip().Cargo);
+            ship.InitLoadoutObject(GetActiveLoadout());
+            //ship.SetCargo(GetActiveLoadout().Cargo);
             ship.Respawn();
 
             _profile.IsLanded = false;
@@ -536,8 +536,8 @@ public class Player : NetworkBehaviour
             return;
 
         _account.Profile = _profile;
-        HttpService.Get("game/getships", new JsonString { Value = _account.Id },
-        delegate (List<ShipObject> ships)
+        HttpService.Get("game/getloadouts", new JsonString { Value = _account.Id },
+        delegate (List<LoadoutObject> ships)
         {
             foreach (var ship in ships)
             {
@@ -569,7 +569,7 @@ public class Player : NetworkBehaviour
             }
 
             // Add new ship object
-            var newShip = new ShipObject();
+            var newShip = new LoadoutObject();
             newShip.Id = Guid.NewGuid().ToString();
             newShip.EquippedModules = new List<string>();
 
@@ -606,28 +606,52 @@ public class Player : NetworkBehaviour
         });
     }
 
-    public ShipObject GetActiveShip() 
+    public LoadoutObject GetActiveLoadout() 
     {
-        return GetShipLoadout(ActiveShip);
+        return GetShipLoadout(ActiveLoadout);
     }
 
-    public void ChangeShip(string ship, Action<string> callback = null)
+    public void ChangeLoadout(string ship, Action<string> callback = null)
     {
+        if (ActiveLoadout == ship)
+            return;
+
         if (isLocalPlayer)
         {
             _onShipChanged = callback;
-            CmdChangeShip(ship);
+            CmdChangeLoadout(ship);
         }
     }
 
     [Command]
-    private void CmdChangeShip(string id) 
+    private void CmdChangeLoadout(string id) 
     {
         //Ensure loadout exists
         if (!ShipLoadouts.ContainsKey(id))
             return;
 
-        ActiveShip = id;
+        ActiveLoadout = id;
+    }
+
+    public void RenameLoadout(string loadoutId, string name)
+    {
+        if (isLocalPlayer)
+        {
+            CmdRenameLoadout(loadoutId, name);
+        }
+    }
+
+    [Command]
+    private void CmdRenameLoadout(string id, string name)
+    {
+        //Ensure loadout exists
+        if (!ShipLoadouts.ContainsKey(id))
+            return;
+
+        var shipLoadout = ShipLoadouts[id];
+        shipLoadout.Name = name;
+
+        SaveLoadout(shipLoadout);
     }
 
     public void EquipModule(string id, ModuleType location, Action<string> callback = null)
@@ -644,7 +668,7 @@ public class Player : NetworkBehaviour
     {
         // Short for location
         var loc = (ModuleType)location;
-        var ship = GetActiveShip();
+        var ship = GetActiveLoadout();
         if (ship == null)
             return;
 
@@ -666,7 +690,7 @@ public class Player : NetworkBehaviour
 
         ship.EquippedModules.Add(module.Id);
 
-        SaveShip(GetActiveShip());
+        SaveLoadout(GetActiveLoadout());
 
         TargetRpcEquipModule(module.Id);
     }

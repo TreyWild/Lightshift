@@ -80,6 +80,7 @@ namespace Mirror
 
         NetworkIdentity netIdentityCache;
         /// <summary>Returns the NetworkIdentity of this object</summary>
+        // TODO cache, or let NetworkIdentity.Awake or OnValidate set it
         public NetworkIdentity netIdentity
         {
             get
@@ -98,17 +99,27 @@ namespace Mirror
         }
 
         /// <summary>Returns the index of the component on this object</summary>
+        // TODO initialize from NetworkIdentity.Awake() later, see
+        // 'componentindex' branch (still breaks tests)
+        int? _ComponentIndex;
         public int ComponentIndex
         {
             get
             {
+                // use cache if available
+                if (_ComponentIndex.HasValue)
+                    return _ComponentIndex.Value;
+
                 // note: FindIndex causes allocations, we search manually instead
                 // TODO this is not fast at runtime uhh
                 for (int i = 0; i < netIdentity.NetworkBehaviours.Length; i++)
                 {
                     NetworkBehaviour component = netIdentity.NetworkBehaviours[i];
                     if (component == this)
+                    {
+                        _ComponentIndex = i;
                         return i;
+                    }
                 }
 
                 // this should never happen
@@ -535,6 +546,7 @@ namespace Mirror
             return false;
         }
 
+        // true if syncInterval elapsed and any SyncVar or SyncObject is dirty
         public bool IsDirty()
         {
             if (Time.time - lastSyncTime >= syncInterval)
@@ -640,7 +652,7 @@ namespace Mirror
         {
             bool dirty = false;
             // write the mask
-            writer.WriteUInt64(DirtyObjectBits());
+            writer.WriteULong(DirtyObjectBits());
             // serializable objects, such as synclists
             for (int i = 0; i < syncObjects.Count; i++)
             {
@@ -665,7 +677,7 @@ namespace Mirror
 
         internal void DeSerializeObjectsDelta(NetworkReader reader)
         {
-            ulong dirty = reader.ReadUInt64();
+            ulong dirty = reader.ReadULong();
             for (int i = 0; i < syncObjects.Count; i++)
             {
                 SyncObject syncObject = syncObjects[i];

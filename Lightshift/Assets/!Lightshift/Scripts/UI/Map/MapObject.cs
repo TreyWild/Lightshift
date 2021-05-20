@@ -13,4 +13,5 @@ public class MapObject : MonoBehaviour
     public string Lore;
 
     public Sprite Icon;
+    public Vector2 IconSize = new Vector2(24,24);
 }

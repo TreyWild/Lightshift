@@ -9,13 +9,13 @@ namespace Assets._Lightshift.Scripts.Utilities
 {
     public class StatHelper
     {
-        public static List<GameModifier> GetStatsFromShip(Player player, ShipObject shipObject) 
+        public static List<GameModifier> GetStatsFromShip(Player player, LoadoutObject loadoutObject) 
         {
             var upgrades = new List<GameModifier>();
             var stats = new List<GameModifier>();
             var items = player.GetItems();
 
-            var equippedItems = items.Where(e => shipObject.EquippedModules.Contains(e.Id));
+            var equippedItems = items.Where(e => loadoutObject.EquippedModules.Contains(e.Id));
             foreach (var equip in equippedItems)
             {
                 var item = ItemService.GetItem(equip.ModuleId);

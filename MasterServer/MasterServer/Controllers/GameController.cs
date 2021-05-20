@@ -16,22 +16,22 @@ namespace MasterServer.Controllers
     [ApiController]
     public class GameController : ControllerBase
     {
-        [HttpPost("getship")]
-        public ActionResult<ShipObject> GetShip(JsonString json)
+        [HttpPost("getloadout")]
+        public ActionResult<LoadoutObject> GetLoadout(JsonString json)
         {
             if (!AuthenticationService.ValidateGameServerFromRequest(Request))
                 return null;
 
-            return DB.Context.NewSession().Query<ShipObject>().FirstOrDefault(s => s.Id == json.Value);
+            return DB.Context.NewSession().Query<LoadoutObject>().FirstOrDefault(s => s.Id == json.Value);
         }
 
-        [HttpPost("getships")]
-        public ActionResult<List<ShipObject>> GetShips(JsonString json)
+        [HttpPost("getloadouts")]
+        public ActionResult<List<LoadoutObject>> GetLoadouts(JsonString json)
         {
             if (!AuthenticationService.ValidateGameServerFromRequest(Request))
                 return null;
 
-            return DB.Context.NewSession().Query<ShipObject>().Where(s => s.UserId == json.Value).ToList();
+            return DB.Context.NewSession().Query<LoadoutObject>().Where(s => s.UserId == json.Value).ToList();
         }
 
         [HttpPost("getitems")]
@@ -63,13 +63,13 @@ namespace MasterServer.Controllers
         }
 
 
-        [HttpPost("saveship")]
-        public ActionResult<bool> SaveShip(ShipObject ship)
+        [HttpPost("saveloadout")]
+        public ActionResult<bool> SaveLoadout(LoadoutObject loadout)
         {
             if (!AuthenticationService.ValidateGameServerFromRequest(Request))
                 return false;
 
-            DB.Context.SaveDocument(ship);
+            DB.Context.SaveDocument(loadout);
             return true;
         }
     }
