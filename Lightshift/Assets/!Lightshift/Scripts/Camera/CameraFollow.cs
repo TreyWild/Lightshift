@@ -23,20 +23,27 @@ public class CameraFollow : MonoBehaviour
 	}
 	void LateUpdate()
 	{
+		if (target == null)
+			return;
 
-		var zoom = Input.GetAxis("Mouse ScrollWheel") * 20;
+		if (!Settings.KeysLocked)
+		{
+			var zoom = Input.GetAxis("Mouse ScrollWheel") * 20;
 
-		if (offset.z > -5)
-		{
-			zoom = 0;
-			offset = new Vector3(offset.x, offset.y, -5f);
-		}else if (offset.z < -100)
-		{
-			zoom = 0;
-			offset = new Vector3(offset.x, offset.y, -100f);
-		}else 
-		{
-			offset = new Vector3(offset.x, offset.y, offset.z += zoom);
+			if (offset.z > -5)
+			{
+				zoom = 0;
+				offset = new Vector3(offset.x, offset.y, -5f);
+			}
+			else if (offset.z < -100)
+			{
+				zoom = 0;
+				offset = new Vector3(offset.x, offset.y, -100f);
+			}
+			else
+			{
+				offset = new Vector3(offset.x, offset.y, offset.z += zoom);
+			}
 		}
 
 

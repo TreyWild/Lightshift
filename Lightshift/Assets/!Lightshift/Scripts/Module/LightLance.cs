@@ -5,25 +5,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-public class LightLance : NetworkBehaviour
+public class LightLance : MonoBehaviour
 {
-    [SyncVar]
     public float pullForce;
-
-    [SyncVar(hook = nameof(SetMaxRange))]
     public float maxRange;
-
-    [SyncVar]
     public float powerCost;
-
     private float minimumDistance = 2;
+
+    public bool hasAuthority;
 
     private Kinematic _kinematic;
     private BeamToTarget _lightLance;
     private void Awake()
     {
         _kinematic = GetComponent<Kinematic>();
-        _lightLance = Instantiate(PrefabManager.Instance.lightLancePrefab, transform).GetComponent<BeamToTarget>();
+        _lightLance = Instantiate(PrefabManager.Instance.lightLancePrefab, _kinematic.Transform).GetComponent<BeamToTarget>();
         _lightLance.OnFocus += OnLightLanceFocus;
         _lightLance.CancelFocus();
     }
@@ -50,7 +46,7 @@ public class LightLance : NetworkBehaviour
             //_kinematic.AddForce((targetTransform.position + (transform.forward * force) - transform.position) * (force));
 
             Vector2 diffVel = target.velocity - _kinematic.velocity;
-            Vector3 diffPos = target.transform.position - _kinematic.transform.position;
+            Vector3 diffPos = target.position - _kinematic.position;
             float dist = diffPos.magnitude;
             Vector3 diffPosN = diffPos / dist;
 

@@ -15,6 +15,7 @@ namespace Lightshift
         public static KeyCode LeftKey = KeyCode.LeftArrow;
         public static KeyCode RightKey = KeyCode.RightArrow;
         public static KeyCode FireKey = KeyCode.Space;
+        public static KeyCode DockKey = KeyCode.Space;
         public static KeyCode LightLanceKey = KeyCode.F;
         public static KeyCode MiningDrillKey = KeyCode.X;
         public static KeyCode OverdriveKey = KeyCode.C;
@@ -33,6 +34,7 @@ namespace Lightshift
         public static KeyCode ChatKey = KeyCode.KeypadEnter;
         public static KeyCode ChatKeyAlt = KeyCode.Return;
         public static KeyCode SelfDestruct = KeyCode.R;
+        public static KeyCode CargoMenu = KeyCode.V;
         public static KeyCode DeveloperWeaponListKey = KeyCode.K;
         public static KeyCode DeveloperShipListKey = KeyCode.J;
         public static bool KeysLocked;
@@ -41,6 +43,7 @@ namespace Lightshift
         public static bool ShowTargetMarker = false;
         public static float soundEffectVolume = .5f;
         public static float musicVolume = .5f;
+        public static float masterVolume = 1f;
         //public bool IsFullscreen = false;
         public bool ShowSkybox = true;
         public bool ShowBackgroundElements;
@@ -75,6 +78,9 @@ namespace Lightshift
             if (!PlayerPrefs.HasKey("musicVolume"))
                 PlayerPrefs.SetString("musicVolume", "50");
 
+            if (!PlayerPrefs.HasKey("masterVolume"))
+                PlayerPrefs.SetString("masterVolume", "100");
+
             if (!PlayerPrefs.HasKey("showSkybox"))
                 PlayerPrefs.SetString("showSkybox", "True");
 
@@ -91,7 +97,10 @@ namespace Lightshift
                 PlayerPrefs.SetString("showDamageText", "True");
 
             PlayerPrefs.Save();
+        }
 
+        private void Start()
+        {
             RefreshControls();
             RefreshScreen();
             RefreshSound();
@@ -127,6 +136,8 @@ namespace Lightshift
             Weapon3 = GetControlValue("weapon3Key", Weapon3);
             Weapon4 = GetControlValue("weapon4Key", Weapon4);
             Weapon5 = GetControlValue("weapon5Key", Weapon5);
+            CargoMenu = GetControlValue("cargoMenu", CargoMenu);
+            DockKey = GetControlValue("dockKey", DockKey);
             SelfDestruct = GetControlValue("selfDestructKey", SelfDestruct);
             FireWithWeaponHotkeys = bool.Parse(PlayerPrefs.GetString("useWeaponHotKeys", "True"));
             AutoTarget = bool.Parse(PlayerPrefs.GetString("useAutoTarget", "False"));
@@ -179,6 +190,7 @@ namespace Lightshift
                 Screen.SetResolution((int)resolution.x, (int)resolution.y, fullScreenMode, MaxFrameRate);
             }
 
+            Application.targetFrameRate = MaxFrameRate;
 
             var backgrounds = (ShowBackgroundElements) || ShowSkybox;
             
@@ -209,10 +221,12 @@ namespace Lightshift
         {
             soundEffectVolume = float.Parse(PlayerPrefs.GetString("soundEffectVolume", "50")) * .01f;
             musicVolume = float.Parse(PlayerPrefs.GetString("musicVolume", "30")) * .01f;
-
+            masterVolume = float.Parse(PlayerPrefs.GetString("masterVolume", "30")) * .01f;
             if (SoundManager.Instance != null)
             {
-                SoundManager.Instance.UpdateVolume();
+                SoundManager.Instance.SetEffectsVolume(soundEffectVolume);
+                SoundManager.Instance.SetMusicVolume(musicVolume);
+                SoundManager.Instance.SetGlobalVolume(masterVolume);
             }
         }
     }

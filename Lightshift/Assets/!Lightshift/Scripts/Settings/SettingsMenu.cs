@@ -33,6 +33,21 @@ public class SettingsMenu : MonoBehaviour
     private bool _saved = false;
     private bool _fullScreen;
 
+    private void OnDestroy()
+    {
+        keybindings = null;
+        toggleOptions = null;
+        sliderOptions = null;
+        pickerItems = null;
+        contentPanel = null;
+        keyBindingPrefab = null;
+        toggleItemPrefab = null;
+        sliderItemPrefab = null;
+        dividerItemPrefab = null;
+        pickerItemPrefab = null;
+        _saveButton = null;
+    }
+
     private SettingsType _mode;
     public void Init(SettingsType mode = default)
     {
@@ -147,9 +162,12 @@ public class SettingsMenu : MonoBehaviour
         if (mode == SettingsType.Sound || mode == SettingsType.None)
         {
             CreateDivider("Volume Control");
-            CreateSliderItem("Music Volume", "musicVolume");
-            CreateSliderItem("Sound Volume", "soundEffectVolume");
-
+            var master = CreateSliderItem("Master", "masterVolume");
+            var music = CreateSliderItem("Music", "musicVolume");
+            var sound = CreateSliderItem("Sound", "soundEffectVolume");
+            music.onSliderChanged += (volume) => SoundManager.Instance.SetMusicVolume(volume * .01f);
+            sound.onSliderChanged += (volume) => SoundManager.Instance.SetEffectsVolume(volume * .01f);
+            master.onSliderChanged += (volume) => SoundManager.Instance.SetGlobalVolume(volume * .01f);
             return;
         }
 
@@ -198,12 +216,13 @@ public class SettingsMenu : MonoBehaviour
             CreateKeyBinding("Weapon 5", "weapon5Key");
             CreateDivider("Hotkeys");
             CreateKeyBinding("Respawn", "respawnKey");
-            CreateKeyBinding("Toggle Inventory", "inventoryKey");
+            CreateKeyBinding("Dock", "dockKey");
+            //CreateKeyBinding("Toggle Inventory", "inventoryKey");
             CreateKeyBinding("Menu", "menuKey");
             CreateKeyBinding("Player Menu", "playerMenuKey");
             CreateKeyBinding("System Map", "mapKey");
+            CreateKeyBinding("Cargo Menu", "cargoKey");
             CreateKeyBinding("Self Destruct", "selfDestructKey");
-
             return;
         }
     }
@@ -220,7 +239,7 @@ public class SettingsMenu : MonoBehaviour
         toggleOptions.Add(script);
     }
 
-    public void CreateSliderItem(string desc, string saveCode)
+    public SliderItem CreateSliderItem(string desc, string saveCode)
     {
         var item = Instantiate(sliderItemPrefab, contentPanel.transform);
         var script = item.GetComponent<SliderItem>();
@@ -230,6 +249,8 @@ public class SettingsMenu : MonoBehaviour
         script.slider.value = val;
 
         sliderOptions.Add(script);
+
+        return script;
     }
 
     public void CreateDivider(string desc)

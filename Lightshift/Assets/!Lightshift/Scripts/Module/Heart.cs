@@ -34,7 +34,7 @@ public class Heart : NetworkBehaviour
                 return;
             }
 
-            if (_entity.IsInSafezone)
+            if (_entity.isInCheckpoint)
                 health += maxHealth / 10 * Time.deltaTime;
             else health += healthRegen * Time.deltaTime;
 

@@ -72,7 +72,7 @@ public class Shield : NetworkBehaviour
                 return;
             }
 
-            if (_entity.IsInSafezone)
+            if (_entity.isInCheckpoint)
                 shield += maxShield / 10 * Time.deltaTime;
             shield += shieldRegen * Time.deltaTime;
 

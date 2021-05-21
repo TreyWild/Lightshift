@@ -12,6 +12,13 @@ public class ShipInterface : MonoBehaviour
     [SerializeField] private ProgressBar _powerBar;
     [SerializeField] private Image _panicIndicator;
 
+    private void OnDestroy()
+    {
+        _healthBar = null;
+        _shieldBar = null;
+        _powerBar = null;
+        _panicIndicator = null;
+    }
     public void SetHealth(float value, float maxValue) 
     {
         float percentile = (1 - value / (maxValue / 4)) * .2f;

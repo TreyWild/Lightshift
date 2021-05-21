@@ -1,4 +1,10 @@
-﻿using Mirror;
+﻿using Assets._Lightshift.Scripts;
+using Assets._Lightshift.Scripts.Web;
+using MasterServer;
+using Mirror;
+using PlayerIOClient;
+using SharedModels;
+using SharedModels.WebRequestObjects;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,9 +16,13 @@ using UnityEngine.SceneManagement;
 
 public class LightshiftNetworkManager : NetworkManager 
 {
+    public bool UseTestServers;
+    public bool UseHostFormat = true;
+    public bool IsServer = true;
     public static GameObject GetPrefab<T>() => singleton.spawnPrefabs.FirstOrDefault(o => o.gameObject.HasType<T>());
     public override void OnStartServer()
     {
+        base.OnStartServer();
         spawnPrefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").ToList();
         gameObject.AddComponent<Server>();
         Debug.Log($"Server Started. Running on {networkAddress}.");
@@ -25,11 +35,12 @@ public class LightshiftNetworkManager : NetworkManager
 
         foreach (var prefab in prefabs)
         {
-            ClientScene.RegisterPrefab(prefab);
+            NetworkClient.RegisterPrefab(prefab);
         }
     }
     public override void OnServerReady(NetworkConnection conn)
     {
+        base.OnServerReady(conn);
         Debug.Log($"Client with ID [{conn.connectionId}] connected.");
     }
 
@@ -39,31 +50,52 @@ public class LightshiftNetworkManager : NetworkManager
 
         Debug.Log($"Game Scene Loaded. Server Ready.");
     }
-
-    public override void OnClientConnect(NetworkConnection conn)
-    {
-        base.OnClientConnect(conn);
-
-        gameObject.AddComponent<Game>();
-    }
+    //public override void OnClientConnect(NetworkConnection conn)
+    //{
+    //    base.OnClientConnect(conn);
+    //}
 
     public override void OnClientDisconnect(NetworkConnection conn)
     {
-        Destroy(gameObject);
-        SceneManager.LoadScene("_AUTHENTICATION_");
+        base.OnClientDisconnect(conn);
+        //Destroy(gameObject);
+        //SceneManager.LoadScene("_AUTHENTICATION_");
+        singleton.StopClient();
     }
+    //public override void OnServerAddPlayer(NetworkConnection conn)
+    //{
+    //    Delegator.WaitForEndOfFrame(delegate
+    //    {
+    //        base.OnServerAddPlayer(conn);
+    //    });
+    //}
 
-    public static void Authenticate(string connectUserId, string authKey) 
+    public void Authenticate(string key)
     {
         var authenticator = FindObjectOfType<LightshiftAuthenticator>();
-        authenticator.userId = connectUserId;
-        authenticator.authKey = authKey;
+        authenticator.sessionAuthKey = key;
 
-        singleton.StartClient();
+        if (UseTestServers)
+        {
+            singleton.networkAddress = "localhost";
+        }
+        else singleton.networkAddress = "167.99.149.84";
+
+        if (IsServer)
+        {
+            HttpService.InitGameServerAuthentication("dev-access");
+
+            if (UseHostFormat)
+                StartHost();
+            else
+                StartServer();
+        }
+        else StartClient();
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)
     {
+        base.OnServerDisconnect(conn);
         Server.RemovePlayer(Server.GetPlayer(conn));
     }
 }

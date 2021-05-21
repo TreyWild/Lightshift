@@ -8,8 +8,10 @@ public class Kinematic : MonoBehaviour
     public float drag = 0.99f;
     public float mass = 1;
 
+    private Transform _transform { get; set; }
     public void Awake()
     {
+        _transform = transform;
         KinematicManager.AddObject(gameObject);
     }
     private void OnDestroy()
@@ -20,7 +22,7 @@ public class Kinematic : MonoBehaviour
     void Update()
     {
         if (velocity != Vector2.zero)
-            transform.position += new Vector3(velocity.x, velocity.y, 0) * Time.deltaTime;
+            _transform.position += new Vector3(velocity.x, velocity.y, 0) * Time.deltaTime;
 
     }
 
@@ -41,7 +43,7 @@ public class Kinematic : MonoBehaviour
     }
     public void SetDirection(float angle)
     {
-        transform.eulerAngles = new Vector3(transform.eulerAngles.x,transform.eulerAngles.y, angle);
+        _transform.eulerAngles = new Vector3(_transform.eulerAngles.x, _transform.eulerAngles.y, angle);
     }
 
     public void AddForce(Vector2 force) 
@@ -51,13 +53,15 @@ public class Kinematic : MonoBehaviour
 
     public float rotation
     {
-        get { return transform.eulerAngles.z; }
-        set { transform.eulerAngles = new Vector3(transform.eulerAngles.x, transform.eulerAngles.y, value); }
+        get { return _transform.eulerAngles.z; }
+        set { _transform.eulerAngles = new Vector3(_transform.eulerAngles.x, _transform.eulerAngles.y, value); }
     }
 
     public Vector2 position
     {
-        get { return new Vector2(transform.position.x, transform.position.y); }
-        set { transform.position = new Vector3(value.x, value.y, transform.position.z); }
+        get { return new Vector2(_transform.position.x, _transform.position.y); }
+        set { _transform.position = new Vector3(value.x, value.y, _transform.position.z); }
     }
+
+    public Transform Transform => _transform;
 }

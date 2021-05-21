@@ -1,5 +1,8 @@
-﻿using Lightshift;
+﻿using Assets._Lightshift.Scripts.Utilities;
+using Lightshift;
 using Mirror;
+using Newtonsoft.Json;
+using SharedModels.Models.Game;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,200 +13,141 @@ using UnityEngine;
 
 public class PlayerShip : Ship
 {
-    private readonly SyncListEquip _equips = new SyncListEquip();
-    private Player player;
-
+    private LoadoutObject _loadoutObject;
     private PlayerController _input;
+    private List<Item> _equippedModules;
+    private Player _player;
 
-    [SyncVar(hook = nameof(InitPlayer))]
-    private PlayerData _playerData;
+    public Player Player 
+    {
+        get
+        {
+            if (_player == null)
+                _player = Server.GetPlayer(connectionToClient);
 
-    [SyncVar(hook = nameof(OnStarshipChanged))]
-    private string _starshipDataKey;
-
+            return _player;
+        }
+    }
     private void Awake()
     {
         base.Awake();
 
         _input = GetComponent<PlayerController>();
-        _equips.Callback += OnEquipsChanged;
+        //_equips.Callback += OnEquipsChanged;
+
+        onCleanup += () =>
+        {
+            _loadoutObject = null;
+            _input = null;
+            _equippedModules = null;
+        };
     }
+
     public override void OnStartServer()
     {
         base.OnStartServer();
 
-        player = Server.GetPlayer(connectionToClient);
+        //player.InventoryManager.onEquipChanged += OnEquipChanged;
 
-        player.InventoryManager.onEquipChanged += OnEquipChanged;
+        //if (player != null)
+        //    SetDisplayName(displayName: player.Username);
+        //else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
 
-        if (player != null)
-            SetDisplayName(displayName: player.Username);
-        else SetDisplayName(displayName: $"Player {connectionToClient.connectionId}");
+        //_playerData = new PlayerData
+        //{
+        //    userId = player.connectUserId,
+        //    username = player.Username,
+        //};
 
-        _playerData = new PlayerData
-        {
-            userId = player.connectUserId,
-            username = player.Username,
-        };
+        //UpdateStarship(player.GetStarship().key);
 
-        UpdateStarship(player.GetStarship().key);
+        //LoadEquips();
 
-        LoadEquips();
+        //trackingRange = 100;
 
-        trackingRange = 100;
+        //teamId = player.connectUserId;
+    }
 
-        teamId = player.connectUserId;
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
+    private void Start()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+    {
+        base.Start();
+        design.GenerateSolidColliders();
+        design.GenerateTriggerColliders();
     }
 
     public override void OnStartClient()
     {
         base.OnStartClient();
 
-        LoadEquips();
+        if (hasAuthority)
+            CmdInit();
     }
-    private void LoadEquips() 
-    {
-        if (isServer)
-        {
-            _equips.Clear();
-            var equips = player.InventoryManager.GetAllEquips();
-            foreach (var equip in equips)
-                _equips.Add(equip);
-        }
-        else 
-        {
-            for (int i = 0; i < _equips.Count; i++)
-            {
-                OnEquipsChanged(default, i, null, _equips[i]);
-            }
-        }
-    }
-    private void OnStarshipChanged(string oldValue, string newValue)
-    {
-        UpdateStarship(newValue);
-    }
-    private void UpdateStarship(string key)
-    {
-        if (isServer)
-        {
-            _starshipDataKey = key;
-        }
 
-        var starship = ItemManager.GetStarship(key);
-        if (starship == null)
+    [Command]
+    private void CmdInit()
+    {
+        TargetRpcInitModules(connectionToClient, JsonConvert.SerializeObject(_equippedModules));
+    }
+    public void InitLoadoutObject(LoadoutObject loadoutObject) 
+    {
+        _loadoutObject = loadoutObject;
+        var stats = StatHelper.GetStatsFromShip(Player, loadoutObject);
+
+        SetModifiers(stats);
+
+        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Contains(s.Id)).ToList();
+        if (_equippedModules != null && _equippedModules.Count > 0)
+        {
+            InitModules(_equippedModules);
+            RpcInitModules(JsonConvert.SerializeObject(_equippedModules));
+        }
+    }
+
+    [TargetRpc]
+    private void TargetRpcInitModules(NetworkConnection target, string json) 
+    {
+        var modules = JsonConvert.DeserializeObject<List<Item>>(json);
+        InitModules(modules);
+    }
+
+    [ClientRpc]
+    private void RpcInitModules(string json)
+    {
+        var modules = JsonConvert.DeserializeObject<List<Item>>(json);
+        InitModules(modules);
+    }
+
+    private void InitModules(List<Item> equippedModules) 
+    {
+        if (equippedModules == null)
             return;
 
-        hull.SetImage(starship.Sprite, starship.color);
-        wing.SetImage(null, Color.white);
-
-        stats = starship.data;
-
-        UpdateStats(true);
-    }
-
-    public void OnEquipChanged(InventorySlot slot)
-    {
-        for (int i = 0; i < _equips.Count; i++)
+        foreach (var module in equippedModules)
         {
-            if (_equips[i].slot == slot.slotId)
+            if (module == null)
+                continue;
+
+            var item = ItemService.GetItem(module.ModuleId);
+            if (item == null)
+                continue;
+
+            switch (item.Type)
             {
-                //if (_starshipData != null)
-                //    //Remove stats for this equip
-                //    _starshipData.data -= _equips[i].data;
-
-                _equips.Remove(_equips[i]);
-                break;
-            }
-        }
-
-        if (slot.item != null)
-            _equips.Add(Equip.GetEquipFromItemSlot(slot));
-    }
-
-    private void OnEquipsChanged(SyncList<Equip>.Operation op, int itemIndex, Equip oldItem, Equip newItem)
-    {
-        Debug.LogError($"{oldItem?.itemKey} {newItem?.itemKey}");
-        /* REMOVE ITEM */
-        if (oldItem != null)
-        {
-            stats -= oldItem.data;
-            Debug.Log(oldItem.data.ToString());
-            var item = ItemManager.GetItem(oldItem.itemKey);
-            switch (item.type)
-            {
-                case ItemType.Engine:
-                    //_engine.SetColor(Color.white);
-                    Debug.Log($"Engine Removed: {item.name}");
-                    break;
-                case ItemType.Generator:
-                    Debug.Log($"Generator Removed: {item.name}");
-                    break;
                 case ItemType.Wing:
-                    wing.SetImage(null, Color.white);
-                    Debug.Log($"Wing Removed: {item.name}");
+                    SetWings(item.Sprite);
                     break;
-                case ItemType.Weapon:
-                    weaponSystem.RemoveWeapon(oldItem.slot);
-                    Debug.Log($"Weapon Removed: {item.name}");
-                    break;
-                case ItemType.Shield:
-                    Debug.Log($"Shield Removed: {item.name}");
-                    break;
-                case ItemType.LightLance:
-                    lightLance.SetColor(default);
-                    Debug.Log($"Lightlance Removed: {item.name}");
-                    break; 
-                case ItemType.MiningDrill:
-                    Debug.Log($"Mining Drill Removed: {item.name}");
+                case ItemType.Hull:
+                    SetHull(item.Sprite);
                     break;
             }
         }
-        else if (newItem != null && newItem.itemKey == null || newItem != null && newItem.itemKey == "")
-        {
-            wing.SetImage(null, Color.white);
-        }
-        /* ADD ITEM */
-        else if (newItem != null)
-        {
-            stats += newItem.data;
-
-            var item = ItemManager.GetItem(newItem.itemKey);
-
-            Debug.Log(newItem.data.ToString());
-            switch (item.type)
-            {
-                case ItemType.Engine:
-                    engine.SetColor(item.color);
-                    Debug.Log($"Engine Added: {item.name}");
-                    break;
-                case ItemType.Generator:
-                    Debug.Log($"Generator Added: {item.name}");
-                    break;
-                case ItemType.Wing:
-                    wing.SetImage(item.Sprite, item.color);
-                    Debug.Log($"Wing Added: {item.name}");
-                    break;
-                case ItemType.Weapon:
-                    weaponSystem.AddWeapon(item as Weapon, newItem.slot);
-                    Debug.Log($"Weapon Added: {item.name}");
-                    break;
-                case ItemType.Shield:
-                    Debug.Log($"Shield Added: {item.name}");
-                    break;
-                case ItemType.LightLance:
-                    lightLance.SetColor(item.color);
-                    Debug.Log($"LightLance Added: {item.name}");
-                    break;
-                case ItemType.MiningDrill:
-                    Debug.Log($"Mining Drill Removed: {item.name}");
-                    break;
-            }
-        }
-
-        UpdateStats();
     }
 
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     private void FixedUpdate()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         if (!alive)
             return;
@@ -213,72 +157,85 @@ public class PlayerShip : Ship
         //HandlePowerRegen();
         //HandleShieldRegen();
         //HandleWeapons();
-        //HandleDamageQueue();
         //HandleTargetting();
 
 
-        if (targetEntity != null && stats.lightLanceRange != 0) 
-            lightLance.HandleLightLance(_input.LightLance, targetEntity.kinematic);
+        //if (targetEntity != null && stats.lightLanceRange != 0)
+        //    lightLance.HandleLightLance(_input.LightLance, targetEntity.kinematic);
 
-        if (Settings.Steering == Settings.SteeringMode.Axis)
+        bool overDrive = _input.OverDrive;
+        if (_input.Up)
         {
-            if (wing.AxisAlignedAim())
-                engine.Move(1, _input.OverDrive);
-            else engine.Move(-1, false);
+            if (hasAuthority)
+                Thrust(overDrive);
+
+            thruster.StartThruster(overDrive);
         }
-        else
+        else 
         {
-            wing.Turn(_input.HorizontalAxis);
-            engine.Move(_input.VerticalAxis, _input.OverDrive);
+            thruster.StopThruster();
+
+            if (hasAuthority)
+            {
+                if (_input.Down)
+                    Brake();
+
+                if (_input.Drifting)
+                    kinematic.drag = 0.999f;
+                else kinematic.drag = 0.99f;
+            }
         }
 
-        HandleSafeZone();
+        Turn(_input.HorizontalAxis, _input.Up);
 
         if (_input.Weapon)
             weaponSystem.TryFireWeapon(_input.WeaponSlot);
-
-
     }
 
-    private void InitPlayer(PlayerData oldData, PlayerData newData)
+    public override void OnEnterCheckpoint(Checkpoint checkpoint)
     {
-        SetDisplayName(displayName: newData.username);
+        if (isServer && Player != null) 
+            Player.lastCheckpointId = checkpoint.Id;
+
+        if (hasAuthority)
+            GameUIManager.Instance.ShowScreenText("Entered Safezone, Weapons Disabled.");
     }
 
-    public override void OnEnterSafezone(Entity entity)
+    public override void OnLeaveCheckpoint(Checkpoint checkpoint)
     {
-        base.OnEnterSafezone(entity);
+        base.OnLeaveCheckpoint(checkpoint);
 
-        if (isServer)
-            Server.GetPlayer(connectionToClient).lastSafePosition = entity.transform.position;
+        if (hasAuthority)
+            GameUIManager.Instance.ShowScreenText("Leaving Safezone, Weapons Enabled.");
     }
-
-    private void OnDestroy()
-    {
-        _equips.Callback -= OnEquipsChanged;
-        
-        base.OnDestroy();
-    }
-
-    private bool hasDied = false;
     public override void OnRespawn()
     {
         base.OnRespawn();
 
-        // Enable Children
-
         _input.Locked = false;
 
-        if (isServer)
-            SetPosition(Server.GetPlayer(connectionToClient).lastSafePosition);
-
-        if (hasAuthority || isServer)
+        if (hasAuthority)
             CameraFollow.Instance.SetTarget(transform);
+    }
 
-        if (hasDied)
-            UpdateStats(true);
-        else hasDied = true;
+    private string _currentStationDock;
+    public void EnterStationDock(Landable landable) 
+    {
+        _currentStationDock = landable.Id;
 
+        if (hasAuthority)
+        {
+            GameUIManager.Instance.ShowDockingPrompt(landable);
+        }
+    }
+
+    public void LeaveStationDock()
+    {
+        _currentStationDock = "";
+        if (hasAuthority)
+        {
+            GameUIManager.Instance.HideDockPromot();
+        }
     }
 
     public override void OnDeath()

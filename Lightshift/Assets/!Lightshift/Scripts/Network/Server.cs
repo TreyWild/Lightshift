@@ -7,97 +7,75 @@ using System.Linq;
 using PlayerIOClient;
 using Mirror.Authenticators;
 using static LightshiftAuthenticator;
-
+using SharedModels;
 public class Server : MonoBehaviour
 {
-    public static DatabaseConnection Database;
     public static Server Instance { get; set; }
 
-    private static List<Player> _players = new List<Player>();
+    private List<Player> _players;
+
+    private void OnDestroy() 
+    {
+        _players = null;
+        Instance = null;
+    }
     public void Awake()
     {
-        if (Instance != null)
-            Destroy(Instance.gameObject);
-
         Instance = this;
-
-        DontDestroyOnLoad(gameObject);
-    }
-    public void Start()
-    {
-        InitMessageHandlers();
-
-        Database = new DatabaseConnection();
-
-        NetworkServer.SpawnObjects();
-    }
-
-    public void InitMessageHandlers() 
-    {
-        NetworkServer.RegisterHandler<ChatMessage>(OnChatMessageRecieved, true);
-    }
-
-    private void OnChatMessageRecieved(NetworkConnection connection, ChatMessage chatMessage)
-    {
-        var player = GetPlayer(connection);
-        if (player != null) 
-        {
-            chatMessage.username = player.Username;
-            NetworkServer.SendToAll(chatMessage);
-        }
+        _players = new List<Player>();
     }
     public static void RemovePlayer(Player player)
     {
-        if (_players.Contains(player))
-            _players.Remove(player);
+        if (Instance._players.Contains(player))
+            Instance._players.Remove(player);
 
-        if (player.connection != null)
-            NetworkServer.DestroyPlayerForConnection(player.connection);
+        player.SaveAccount();
+
+        if (player.GetConnection() != null)
+            NetworkServer.DestroyPlayerForConnection(player.GetConnection());
     }
 
     public static Player GetPlayer(NetworkConnection connection)
     {
-        return _players.FirstOrDefault(p => p.connection == connection);
+        return Instance._players.FirstOrDefault(p => p.GetConnection() == connection);
     }
 
-    private static void AddPlayer(Player player) 
+    public static void AddPlayer(Player player) 
     {
-        if (!_players.Contains(player))
-            _players.Add(player);
+        if (!Instance._players.Contains(player))
+            Instance._players.Add(player);
     }
-    public static void InitPlayer(NetworkConnection connection, AuthRequestMessage msg, DatabaseObject playerObject)
+
+    public static List<Player> GetAllPlayers() 
     {
-        //Create Player
-        var player = Instantiate(LightshiftNetworkManager.GetPrefab<Player>()).GetComponent<Player>();
-
-        // Init Player
-        player.connection = connection;
-        player.connectUserId = msg.userId;
-        player.PlayerObject = playerObject;
-        player.ConsumeAuthKey();
-        player.InitPlayer();
-
-        AddPlayer(player);
-
-        NetworkServer.AddPlayerForConnection(connection, player.gameObject);
-        
-        // Create Inventory
-        var inventory = Instantiate(LightshiftNetworkManager.GetPrefab<InventoryManager>());
-        player.InventoryManager = inventory.GetComponent<InventoryManager>();
-        NetworkServer.Spawn(inventory, player.connection);
-
-        // Create Ship
-        var ship = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerShip>());
-        player.ship = ship.GetComponent<PlayerShip>();
-        NetworkServer.Spawn(ship, player.connection);
+        return Instance._players;
     }
+    //public static void InitPlayer(NetworkConnection connection, Account account)
+    //{
+    //    //Create Player
+    //    var player = Instantiate(LightshiftNetworkManager.GetPrefab<Player>()).GetComponent<Player>();
 
-    public static void SendChatBroadcast(string message) 
-    {
-        NetworkServer.SendToAll(new ChatMessage
-        {
-            message = message,
-            username = "* SYSTEM"
-        });
-    }
+
+
+    //    NetworkServer.AddPlayerForConnection(connection, player.gameObject);
+
+    //    //// Init Player
+    //    //player.InitPlayer(connection, account);
+
+    //    AddPlayer(player);
+
+    //    Debug.LogError($"Ready: {connection.isReady}");
+
+
+    //    // Create Inventory
+    //    //var inventory = Instantiate(LightshiftNetworkManager.GetPrefab<InventoryManager>());
+    //    ////player.InventoryManager = inventory.GetComponent<InventoryManager>();
+    //    //NetworkServer.Spawn(inventory, player.GetConnection());
+
+    //    // Create Ship
+    //    //var ship = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerShip>());
+    //    //player.ship = ship.GetComponent<PlayerShip>();
+    //    //NetworkServer.Spawn(ship, player.GetConnection());
+    //}
+
 }

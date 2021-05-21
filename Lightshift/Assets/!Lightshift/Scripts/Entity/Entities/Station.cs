@@ -2,77 +2,37 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Station : Entity
+public class Station : Landable
 {
-    [Header("Requires ForceField Componant")]
-    public bool HasSafeZone = true;
+    [Header("Image")]
+    [SerializeField] private Sprite _stationSprite;
+    [Header("Blink image")]
+    [SerializeField] private Sprite _blinkSprite;
 
-    [Header("Normal Image")]
-    public Sprite stationImage;
-
-    [Header("Blink Image")]
-    public Sprite stationBlinkImage;
-
-
-    public StationType stationType;
     private SpriteRenderer _renderer;
-    private List<PlayerShip> _safeZonedShips = new List<PlayerShip>();
-    private ForceField _forceField;
     private void Start()
     {
         _renderer = GetComponent<SpriteRenderer>();
+        _renderer.sprite = _stationSprite;
         _renderer.sortingOrder = SortingOrders.STATION;
-
-        _forceField = GetComponent<ForceField>();
     }
 
     private float _nextBlinkTime = 0;
     private float _timeSinceLastBlink = 0;
     private void FixedUpdate()
     {
+        if (_blinkSprite == null)
+            return;
+
         _timeSinceLastBlink += Time.deltaTime;
-        if (_timeSinceLastBlink > _nextBlinkTime) 
+        if (_timeSinceLastBlink > _nextBlinkTime)
         {
             _nextBlinkTime = Random.Range(0.5f, 10f);
             _timeSinceLastBlink = 0;
 
-            if (_renderer.sprite == stationBlinkImage)
-                _renderer.sprite = stationImage;
-            else _renderer.sprite = stationBlinkImage;
+            if (_renderer.sprite == _blinkSprite)
+                _renderer.sprite = _stationSprite;
+            else _renderer.sprite = _blinkSprite;
         }
     }
-
-    private void OnTriggerEnter2D(Collider2D collision)
-    {
-        if (!HasSafeZone)
-            return;
-
-        var ship = collision.GetComponentInParent<PlayerShip>();
-        if (ship)
-        {
-            if (!_safeZonedShips.Contains(ship))
-            {
-                _safeZonedShips.Add(ship);
-                ship.OnEnterSafezone(this);
-            }
-        }
-    }
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        if (!HasSafeZone)
-            return;
-
-        var ship = collision.GetComponentInParent<PlayerShip>();
-        if (ship)
-        {
-            if (_safeZonedShips.Contains(ship))
-            {
-                _safeZonedShips.Remove(ship);
-                ship.OnLeaveSafezone(this);
-            }
-        }
-    }
-
-
-
 }

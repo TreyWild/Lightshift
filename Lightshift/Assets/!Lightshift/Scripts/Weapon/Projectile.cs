@@ -15,7 +15,7 @@ public class Projectile : MonoBehaviour
     private TrailRenderer _trailRenderer;
     private SpriteRenderer _renderer;
     private BoxCollider2D _collider;
-    private Transform _target;
+    private Kinematic _target;
     private void Awake()
     {
         _kinematic = gameObject.AddComponent<Kinematic>();
@@ -27,7 +27,7 @@ public class Projectile : MonoBehaviour
     public void Initialize(Vector2 velocity, BulletData data, Sprite sprite, Color color, Color trailColor) 
     {
         if (entity != null && entity.targetNeutral != null)
-            _target = entity.targetNeutral.transform;
+            _target = entity.targetNeutral.kinematic;
 
         if (_collider == null)
             _collider = gameObject.AddComponent<BoxCollider2D>();
@@ -80,13 +80,13 @@ public class Projectile : MonoBehaviour
 
     public void Move()
     {
-        _kinematic.AddForce(transform.up * data.speed * Time.deltaTime);
+        _kinematic.AddForce(_kinematic.Transform.up * data.speed * Time.deltaTime);
     }
 
     private void RotateTowardsTarget() 
     {
         var targetAngle = GetTargetAngle();
-        _kinematic.SetDirection(_kinematic.transform.eulerAngles.z + data.agility * targetAngle * Time.fixedDeltaTime);
+        _kinematic.SetDirection(_kinematic.rotation + data.agility * targetAngle * Time.fixedDeltaTime);
     }
 
     private void SetAsDead() 
@@ -103,12 +103,9 @@ public class Projectile : MonoBehaviour
         var damageable = collision.GetComponentInParent<DamageableObject>();
         if (damageable != null && damageable.HitObject(this))
         {
-            //Play sound Effect
-            if (weapon.HitSound != null)
-                SoundManager.Play(weapon.HitSound, transform.position);
 
             if (weapon.hitEffectPrefab != null)
-                Instantiate(weapon.hitEffectPrefab, transform.position, transform.rotation);
+                Instantiate(weapon.hitEffectPrefab, _kinematic.position, _kinematic.Transform.rotation);
 
             if (--_remainingHits == 0)
                 SetAsDead();
@@ -122,7 +119,7 @@ public class Projectile : MonoBehaviour
             return 0;
 
         var currentAngle = _kinematic.rotation + 90;
-        var targetAngle = Mathf.Atan2(target.transform.position.y - transform.position.y, target.transform.position.x - transform.position.x) * 57.29578f;
+        var targetAngle = Mathf.Atan2(target.position.y - _kinematic.position.y, target.position.x - _kinematic.position.x) * 57.29578f;
         var angleDiff = currentAngle - targetAngle;
 
         for (int i = 0; i < 2; i++)

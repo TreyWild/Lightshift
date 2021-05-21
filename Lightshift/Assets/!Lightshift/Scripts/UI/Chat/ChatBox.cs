@@ -1,4 +1,5 @@
-﻿using Lightshift;
+﻿using Assets._Lightshift.Scripts.Network;
+using Lightshift;
 using Mirror;
 using System;
 using System.Collections;
@@ -18,29 +19,47 @@ public class ChatBox : MonoBehaviour
     void Awake() 
     {
         if (Instance != null)
+        {
             Destroy(Instance);
-        else Instance = this;
+        }
+        
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        Instance = null;
+        ChatBoxTextbox = null;
+        ChatInputBox = null;
+        ChatInput = null;
+        _chatMessages = null;
     }
 
     private void Start()
     {
-        ChatBoxTextbox.verticalScrollbar.value = 1;
-        for (int i = 0; i < 20; i++) 
-        {
-            AddMessage(Environment.NewLine);
-        }
-
-        ChatBoxTextbox.verticalScrollbar.onValueChanged.AddListener(OnValueChanged);
+        ChatBoxTextbox.text = "";
+        ChatBoxTextbox.verticalScrollbar.SetDirection(Scrollbar.Direction.TopToBottom, true);
+        FixScrollbar();
     }
 
     private void OnValueChanged(float newValue)
     {
-        if (newValue == 0)
-            ChatBoxTextbox.verticalScrollbar.value = 1;
+        FixScrollbar();
     }
 
     private void OnEnable()
     {
+        FixScrollbar();
+    }
+
+    private void FixScrollbar()
+    {
+        StartCoroutine(FixScrollBar());
+    }
+
+    IEnumerator FixScrollBar() 
+    {
+        yield return new WaitForEndOfFrame();
         ChatBoxTextbox.verticalScrollbar.value = 1;
     }
 
@@ -59,7 +78,7 @@ public class ChatBox : MonoBehaviour
 
                 if (msg != "")
                 {
-                    if (Game.Instance == null)
+                    if (!NetworkManager.singleton.isNetworkActive)
                         AddMessage(msg);
                     else
                         SendChatMessage(msg);
@@ -86,7 +105,7 @@ public class ChatBox : MonoBehaviour
 
         ChatInput.text = "";
 
-        NetworkClient.Send(new ChatMessage {message = message });
+        Communication.SendChatMessage(message: message);
     }
 
     public void AddMessage(string message)
@@ -94,9 +113,15 @@ public class ChatBox : MonoBehaviour
         _chatMessages.Add(message);
         if (_chatMessages.Count > 100)
             _chatMessages.Remove(_chatMessages[0]);
-        ChatBoxTextbox.text = "";
+
+        string text = "";
         foreach (var m in _chatMessages)
-            ChatBoxTextbox.text += $"{Environment.NewLine}{m}";
+            if (text == "")
+                text += $"{m}";
+            else text += $"{Environment.NewLine}{m}";
+
+        ChatBoxTextbox.text = (text);
+        FixScrollbar();
     }
 
 }

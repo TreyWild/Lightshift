@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,10 +10,11 @@ namespace Mirror
     /// <para>Any object with this component on it will only be visible to other objects in the same scene</para>
     /// <para>This would be used when the server has multiple additive subscenes loaded to isolate players to their respective subscenes</para>
     /// </summary>
+    [Obsolete(NetworkVisibilityObsoleteMessage.Message)]
     [DisallowMultipleComponent]
     [AddComponentMenu("Network/NetworkSceneChecker")]
     [RequireComponent(typeof(NetworkIdentity))]
-    [HelpURL("https://mirror-networking.com/docs/Components/NetworkSceneChecker.html")]
+    [HelpURL("https://mirror-networking.gitbook.io/docs/components/network-scene-checker")]
     public class NetworkSceneChecker : NetworkVisibility
     {
         /// <summary>
@@ -31,7 +33,7 @@ namespace Mirror
         void Awake()
         {
             currentScene = gameObject.scene;
-            if (LogFilter.Debug) Debug.Log($"NetworkSceneChecker.Awake currentScene: {currentScene}");
+            // Debug.Log($"NetworkSceneChecker.Awake currentScene: {currentScene}");
         }
 
         public override void OnStartServer()
@@ -40,6 +42,12 @@ namespace Mirror
                 sceneCheckerObjects.Add(currentScene, new HashSet<NetworkIdentity>());
 
             sceneCheckerObjects[currentScene].Add(netIdentity);
+        }
+
+        public override void OnStopServer()
+        {
+            if (sceneCheckerObjects.ContainsKey(currentScene) && sceneCheckerObjects[currentScene].Remove(netIdentity))
+                RebuildSceneObservers();
         }
 
         [ServerCallback]

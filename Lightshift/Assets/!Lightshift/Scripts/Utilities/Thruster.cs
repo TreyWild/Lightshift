@@ -40,7 +40,7 @@ public class Thruster : MonoBehaviour
         _audioSource.Play();
     }
 
-    public void StartThruster(bool overDrive)
+    public void StartThruster(bool overDrive = false)
     {
         _isActive = true;
         _overDriveActive = overDrive;

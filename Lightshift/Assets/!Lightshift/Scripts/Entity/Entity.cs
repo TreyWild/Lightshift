@@ -1,5 +1,7 @@
-﻿using Lightshift;
+﻿using Assets._Lightshift.Scripts.Data;
+using Lightshift;
 using Mirror;
+using SharedModels.Models.Game;
 using Smooth;
 using System;
 using System.Collections;
@@ -15,57 +17,155 @@ public class Entity : NetworkBehaviour
     [HideInInspector]
     [SyncVar(hook = nameof(UpdateLivingState))] public bool alive;
 
-    [HideInInspector]
-    public Sprite mapIcon;
+    [SyncVar] private bool isLanding;
 
     [SyncVar]
     public short Id;
-
-    public float TargetCheckSpeed = 0.5f;
 
     [SyncVar(hook = nameof(SetDisplayName))]
     public string displayName;
 
     [SyncVar]
     public string teamId;
+    public SmoothSyncMirror smoothSync;
+    public Rigidbody2D rigidBody;
+    public Entity targetNeutral;
+    public Entity targetEntity;
 
-    [HideInInspector]
-    public SmoothSyncMirror smoothSync { get; set; }
-    [HideInInspector]
-    public Rigidbody2D rigidBody { get; set; }
-
-
-    public Entity targetNeutral { get; set; }
-    public Entity targetEntity { get; set; }
-
-    [HideInInspector]
     public Kinematic kinematic;
 
-    private EntityUI _ui;
+    public EntityUI ui;
     private float _timeSinceLastTargetUpdate = 0;
+    public bool isInCheckpoint;
+    public Action onCleanup;
+    public void OnDestroy()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+    {
+        onCleanup?.Invoke();
+        onCleanup = null;
+        EntityManager.RemoveEntity(this);
+        teamId = null;
+        smoothSync = null;
+        rigidBody = null;
+        targetNeutral = null;
+        targetEntity = null;
+        kinematic = null;
+        ui = null;
+        onModifierChanged = null;
+        onLeaveCheckpoint = null;
+        onEnterCheckpoint = null;
+    }
     public void Awake()
     {
         //weaponSystem = gameObject.AddComponent<WeaponSystem>();
         rigidBody = gameObject.GetComponent<Rigidbody2D>();
         kinematic = gameObject.GetComponent<Kinematic>();
-        _ui = GetComponent<EntityUI>();
+        ui = gameObject.AddComponent<EntityUI>();
+
+        onEnterCheckpoint += (checkpoint) => OnEnterCheckpoint(checkpoint);
+
+        onLeaveCheckpoint += (checkpoint) => OnLeaveCheckpoint(checkpoint);
     }
 
     public override void OnStartServer()
     {
         base.OnStartServer();
 
-        SetAlive();
+        //SetAlive();
     }
 
     public void Start()
     {
         EntityManager.AddEntity(this);
+
+        ui.Init(hasAuthority, isServer);
     }
 
-    public void OnDestroy()
+    public virtual void OnEnterCheckpoint(Checkpoint checkpoint)
     {
-        EntityManager.RemoveEntity(this);
+        isInCheckpoint = true;
+    }
+
+    public virtual void OnLeaveCheckpoint(Checkpoint checkpoint)
+    {
+        isInCheckpoint = false;
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
+        Modifiers.Callback += Modifiers_Callback;
+
+        var modifiers = Modifiers.ToList();
+        foreach (var modifier in modifiers)
+        {
+            UpdateModifier(modifier.Key, modifier.Value);
+        };
+    }
+
+    private void Modifiers_Callback(SyncIDictionary<Modifier, float>.Operation op, Modifier key, float value)
+    {
+        if (isServer)
+            return;
+
+        UpdateModifier(key, value);
+    }
+
+    public readonly SyncDictionary<Modifier, float> Modifiers = new SyncDictionary<Modifier, float>();
+
+    public void ClearModifiers()
+    {
+        if (isServer)
+        {
+            var modifiers = Modifiers.ToList();
+            foreach (var modifier in modifiers)
+                UpdateModifier(modifier.Key, modifier.Value);
+        }
+    }
+    public void SetModifiers(List<GameModifier> modifiers)
+    {
+        if (!isServer)
+            return;
+
+        ClearModifiers();
+
+        foreach (var modifier in modifiers)
+        {
+            UpdateModifier(modifier.Type, modifier.Value);
+
+            switch (modifier.Type)
+            {
+                case Modifier.MaxHealth:
+                    UpdateModifier(Modifier.Health, modifier.Value);
+                    break;
+
+                case Modifier.MaxShield:
+                    UpdateModifier(Modifier.Shield, modifier.Value);
+                    break;
+
+                case Modifier.MaxPower:
+                    UpdateModifier(Modifier.Power, modifier.Value);
+                    break;
+            }
+        }
+
+        //foreach (var modifier in Modifiers)
+        //    UpdateModifier(modifier.Key, modifier.Value);
+    }
+
+    public Action<Modifier, float> onModifierChanged;
+    public void UpdateModifier(Modifier type, float value)
+    {
+        if (isServer)
+        {
+            if (!Modifiers.ContainsKey(type))
+                Modifiers.Add(type, value);
+            else
+                Modifiers[type] = value;
+        }
+
+        onModifierChanged?.Invoke(type, value);
     }
 
     public void FixedUpdate()
@@ -74,47 +174,16 @@ public class Entity : NetworkBehaviour
             return;
 
         _timeSinceLastTargetUpdate += Time.fixedDeltaTime;
-        if (_timeSinceLastTargetUpdate > 0.2f) 
+        if (_timeSinceLastTargetUpdate > 0.2f)
         {
             UpdateTargets();
             _timeSinceLastTargetUpdate = 0;
         }
     }
 
-
-    #region Safezone
-
-    public bool IsInSafezone;
-
-    public void HandleSafeZone() 
-    {
-        if (!IsInSafezone)
-            return;
-
-    }
-    public virtual void OnEnterSafezone(Entity entity)
-    {
-        //ClearDamageObjects();
-        IsInSafezone = true;
-
-        if (hasAuthority)
-            GameUIManager.Instance.ShowScreenText("Entering Safezone, Weapons Disabled");
-    }
-    public void OnLeaveSafezone(Entity entity)
-    {
-        IsInSafezone = false;
-        //weaponSystem.WeaponSystemDisabled = false;
-        if (hasAuthority)
-            GameUIManager.Instance.ShowScreenText("Leaving Safezone, Weapons Active");
-    }
-    #endregion
-
-
-
-
     public void SetDisplayName(string oldValue = "", string displayName = "")
     {
-        _ui.SetName(displayName);
+        ui.SetName(displayName);
 
         if (isServer)
             this.displayName = displayName;
@@ -158,7 +227,7 @@ public class Entity : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcUpdateTarget(short target) 
+    private void RpcUpdateTarget(short target)
     {
         UpdateTarget(newValue: target);
     }
@@ -192,7 +261,7 @@ public class Entity : NetworkBehaviour
             if (!entities[i].alive)
                 return;
 
-            if (entities[i].IsInSafezone)
+            if (entities[i].isInCheckpoint)
                 return;
 
             var distance = (transform.position - entities[i].transform.position).sqrMagnitude;
@@ -232,7 +301,7 @@ public class Entity : NetworkBehaviour
                 _targetNeutral = targetId;
             }
         }
-    }  
+    }
 
     private List<Entity> GetNearbyEntities()
     {
@@ -254,9 +323,18 @@ public class Entity : NetworkBehaviour
 
     private void UpdateLivingState(bool oldValue, bool newValue)
     {
-        if (newValue)
-            SetAlive();
-        else SetDead();
+        if (alive)
+            Respawn();
+        else OnDeath();
+    }
+
+    public void SetLanding()
+    {
+        if (isServer)
+        {
+            isLanding = true;
+            SetDead();
+        }
     }
 
     public void SetDead()
@@ -264,16 +342,42 @@ public class Entity : NetworkBehaviour
         if (isServer)
             alive = false;
 
+        if (hasAuthority)
+            kinematic.velocity = Vector2.zero;
+
         OnDeath();
     }
 
-    public virtual void OnDeath() 
+
+    public void Kill()
     {
-        Instantiate(PrefabManager.Instance.deathEffectPrefab, transform.position, transform.rotation);
-        SoundManager.PlayExplosion(transform.position);
+        CmdKillEntity();
     }
 
-    public void SetAlive()
+    [Command]
+    private void CmdKillEntity()
+    {
+        alive = false;
+
+        RpcKillEntity();
+    }
+
+    [ClientRpc]
+    private void RpcKillEntity()
+    {
+        OnKilled();
+    }
+
+    public virtual void OnDeath()
+    {
+
+    }
+    public virtual void OnKilled()
+    {
+        Instantiate(PrefabManager.Instance.deathEffectPrefab, kinematic.position, kinematic.Transform.rotation);
+    }
+
+    public void Respawn()
     {
         if (isServer)
             alive = true;
@@ -281,7 +385,7 @@ public class Entity : NetworkBehaviour
         OnRespawn();
     }
 
-    public virtual void OnRespawn() 
+    public virtual void OnRespawn()
     {
 
         //Respawn Effect
@@ -289,18 +393,18 @@ public class Entity : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void TargetRpcSetPosition(Vector2 position) 
+    private void TargetRpcSetPosition(Vector2 position)
     {
-        transform.position = position;
+        kinematic.position = position;
     }
 
-    public void SetPosition(Vector2 pos) 
+    public void SetPosition(Vector2 pos)
     {
         // Set respawn position
         if (isServer && connectionToClient != null)
             TargetRpcSetPosition(pos);
         else if (isServer)
-            transform.position = pos;
+            kinematic.position = pos;
     }
 
     //private void OnTriggerEnter2D(Collider2D collision)
@@ -311,7 +415,21 @@ public class Entity : NetworkBehaviour
 
     //    if (isServer && connectionToClient == null || hasAuthority) 
     //    {
-            
+
     //    } 
     //}
+
+    #region Checkpoints
+    public event Action<Checkpoint> onLeaveCheckpoint;
+    public event Action<Checkpoint> onEnterCheckpoint;
+
+    public void EnterCheckpoint(Checkpoint checkpoint)
+    {
+        onEnterCheckpoint?.Invoke(checkpoint);
+    }
+    public void LeaveCheckpoint(Checkpoint checkpoint)
+    {
+        onLeaveCheckpoint?.Invoke(checkpoint);
+    }
+    #endregion
 }

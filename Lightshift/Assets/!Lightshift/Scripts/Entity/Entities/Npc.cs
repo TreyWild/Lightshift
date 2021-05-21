@@ -23,12 +23,16 @@ public class Npc : Ship
     public Action onDataLoaded;
 
     private List<NpcBehavior> _behaviors = new List<NpcBehavior>();
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     public void Awake()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         base.Awake();
     }
 
+#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
     public void Start()
+#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
         base.Start();
     }
@@ -67,7 +71,7 @@ public class Npc : Ship
 
         SetName(npcData.Name);
         SetWeapons(npcData.weapons);
-        stats = npcData.data;
+        //stats = npcData.data;
         SetFaction(npcData.faction);
         LoadBehaviors(npcData.Behavior);
 
@@ -75,7 +79,7 @@ public class Npc : Ship
             transform.localScale = new Vector3(1, 1, 1);
         transform.localScale = new Vector3(npcData.scale.x, npcData.scale.y, 1);
 
-        UpdateStats(true);
+        //UpdateStats(true);
         onDataLoaded?.Invoke();
     }
 
@@ -113,8 +117,8 @@ public class Npc : Ship
 
     public void RunBasicFollowAI() 
     {
-        MoveForwards(stats.maxSpeed);
-        RotateTowardsTarget(stats.agility);
+        //MoveForwards(stats.maxSpeed);
+        //RotateTowardsTarget(stats.agility);
         RunAIChecks();
     }
 
@@ -176,7 +180,7 @@ public class Npc : Ship
         return _rotationMod;
     }
 
-    public bool HasTarget => targetNeutral != null && TargetDistance < trackingRange && targetNeutral.alive && !targetNeutral.IsInSafezone;
+    public bool HasTarget => targetNeutral != null && TargetDistance < trackingRange && targetNeutral.alive && !targetNeutral.isInCheckpoint;
 
     public float TargetDistance => Vector2.Distance(targetNeutral.transform.position, transform.position);
 
@@ -184,7 +188,7 @@ public class Npc : Ship
     public override void OnDeath()
     {
         base.OnDeath();
-        stats = new ModuleData { };
+        //stats = new ModuleData { };
         onDeath?.Invoke(this);
     }
 }

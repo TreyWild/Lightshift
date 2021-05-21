@@ -1,29 +1,31 @@
-﻿using Mirror;
+﻿using Assets._Lightshift.Scripts.Web;
+using JetBrains.Annotations;
+using MasterServer;
+using Mirror;
 using PlayerIOClient;
+using SharedModels;
+using SharedModels.WebRequestObjects;
+using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
-
+using UnityEngine.Rendering;
 
 public class LightshiftAuthenticator : NetworkAuthenticator
 {
-    [Header("Custom Properties")]
+    [Header("Authentication")]
 
     // set these in the inspector
-    public string userId;
-    public string authKey;
+    public string sessionAuthKey = "";
 
-    public class AuthRequestMessage : MessageBase
+    public struct AuthRequestMessage : NetworkMessage
     {
-        // use whatever credentials make sense for your game
-        // for example, you might want to pass the accessToken if using oauth
-        public string userId;
-        public string authKey;
+        public string sessionAuthKey;
     }
 
-    public class AuthResponseMessage : MessageBase
+    public struct AuthResponseMessage : NetworkMessage
     {
-        public byte code;
-        public string message;
+        public AuthenticationResponseType response;
     }
 
     public override void OnStartServer()
@@ -43,61 +45,60 @@ public class LightshiftAuthenticator : NetworkAuthenticator
         // do nothing...wait for AuthRequestMessage from client
     }
 
-    public override void OnClientAuthenticate(NetworkConnection conn)
+    public override void OnClientAuthenticate()
     {
         AuthRequestMessage authRequestMessage = new AuthRequestMessage
         {
-            authKey = authKey,
-            userId = userId
+            sessionAuthKey = sessionAuthKey
         };
 
-        conn.Send(authRequestMessage);
+        NetworkClient.connection.Send(authRequestMessage);
     }
 
-    public void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage msg)
+    public void Disconnect(NetworkConnection connection, AuthenticationResponseType reason) 
     {
-        Debug.LogFormat("Authentication Request: {0} {1}", msg.userId, msg.authKey);
-
-        // check the credentials by calling your web server, database table, playfab api, or any method appropriate.
-
-        Server.Database.GetPlayerObject(msg.userId, delegate (DatabaseObject o)
+        Debug.LogError($"Auth Failed: [{reason}]");
+        AuthResponseMessage authResponseMessage = new AuthResponseMessage
         {
-            if (o != null)
+            response = reason
+        };
+        connection.Send(authResponseMessage);
+        connection.isAuthenticated = false;
+        StartCoroutine(DelayedDisconnect(connection, 1));
+        return;
+    }
+
+    public void LoginSuccess(NetworkConnection connection)
+    {
+        // create and send msg to client so it knows to proceed
+        AuthResponseMessage authResponseMessage = new AuthResponseMessage
+        {
+            response = AuthenticationResponseType.AuthenticationSuccess
+        };
+
+        ServerAccept(connection);
+
+        connection.Send(authResponseMessage);
+
+        Debug.Log($"{((JsonString)connection.authenticationData).Value} was authenticated.");
+
+        return;
+    }
+
+    public void OnAuthRequestMessage(NetworkConnection conn, AuthRequestMessage message)
+    {
+        HttpService.Get("account/authenticate", new JsonString {Value = message.sessionAuthKey },
+        delegate (JsonString json)
+        {
+            if (json.Value == null)
             {
-                var authKey = o.GetString("authKey", "");
-
-                if (authKey == msg.authKey && authKey != "")
-                {
-
-                    // create and send msg to client so it knows to proceed
-                    AuthResponseMessage authResponseMessage = new AuthResponseMessage
-                    {
-                        code = 100,
-                        message = "Success"
-                    };
-
-                    conn.Send(authResponseMessage);
-
-                    // Invoke the event to complete a successful authentication
-                    OnServerAuthenticated.Invoke(conn);
-
-                    Server.InitPlayer(conn, msg, o);
-                }
+                Disconnect(conn, AuthenticationResponseType.AuthenticationFail);
             }
-            else
+            else 
             {
-
-                // create and send msg to client so it knows to disconnect
-                AuthResponseMessage authResponseMessage = new AuthResponseMessage
-                {
-                    code = 200,
-                    message = "Invalid Credentials"
-                };
-                conn.Send(authResponseMessage);
-                // must set NetworkConnection isAuthenticated = false
-                conn.isAuthenticated = false;
-                // disconnect the client after 1 second so that response message gets delivered
-                StartCoroutine(DelayedDisconnect(conn, 1));
+                conn.authenticationData = json;
+                Debug.Log($"{conn.connectionId}");
+                LoginSuccess(conn);
             }
         });
     }
@@ -108,25 +109,19 @@ public class LightshiftAuthenticator : NetworkAuthenticator
         conn.Disconnect();
     }
 
-    public void OnAuthResponseMessage(NetworkConnection conn, AuthResponseMessage msg)
+    public void OnAuthResponseMessage(AuthResponseMessage msg)
     {
-        if (msg.code == 100)
+        Debug.Log(msg.response);
+
+        if (msg.response == AuthenticationResponseType.AuthenticationSuccess)
         {
-            Debug.LogFormat("Authentication Response: {0}", msg.message);
-
-            // Invoke the event to complete a successful authentication
-            OnClientAuthenticated.Invoke(conn);
+            ClientAccept();
+            return;
         }
-        else
-        {
-            Debug.LogErrorFormat("Authentication Response: {0}", msg.message);
 
-            // Set this on the client for local reference
-            conn.isAuthenticated = false;
+        LoginManager.Instance.HandleResponse(msg.response);
 
-            // disconnect the client
-            conn.Disconnect();
-        }
+        ClientReject();
     }
 }
 
