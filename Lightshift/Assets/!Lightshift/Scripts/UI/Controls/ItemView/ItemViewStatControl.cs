@@ -47,11 +47,14 @@ public class ItemViewStatControl : ItemViewControl
                 case ItemType.Wing:
                     _wing1.InitializeGraphic(item.Sprite);
                     _wing2.InitializeGraphic(item.Sprite);
+                    _wing2.SetColor(ColorHelper.FromHex(equip.Color));
+                    _wing1.SetColor(ColorHelper.FromHex(equip.Color));
+
                     break;
                 case ItemType.Hull:
                     SetSprite(item.Sprite);
-                    SetLore(item.Lore);
                     SetDisplayName(item.DisplayName);
+                    SetColor(ColorHelper.FromHex(equip.Color));
                     break;
             }
         }
@@ -69,7 +72,7 @@ public class ItemViewStatControl : ItemViewControl
 
         SetSprite(gameItem.Sprite);
         SetDisplayName(gameItem.DisplayName);
-        SetLore(gameItem.Lore);
+        SetColor(ColorHelper.FromHex(item.Color));
 
         //_equipButton.buttonText = "Use this module";
 

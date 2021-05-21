@@ -8,6 +8,7 @@ namespace SharedModels.Models.Game
 {
     public enum Modifier
     {
+        None,
         MaxHealth,
         Health,
         Shield,

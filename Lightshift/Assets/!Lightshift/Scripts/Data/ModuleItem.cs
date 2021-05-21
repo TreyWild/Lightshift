@@ -18,7 +18,6 @@ public enum ItemType
     Shield,
     MiningDrill,
     Hull,
-    Ship
 }
 
 [CreateAssetMenu(fileName = "Module", menuName = "Lightshift/Create Module", order = 2)]

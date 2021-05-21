@@ -6,17 +6,32 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+using SharedModels.Models.Game;
+using Assets._Lightshift.Scripts.Utilities;
 
 public class ItemViewControl : MonoBehaviour
 {
     [SerializeField] private ItemGraphicDisplay _graphicDisplay;
-    [SerializeField] private TextMeshProUGUI _lore;
     [SerializeField] private TextMeshProUGUI _title;
     [SerializeField] private ButtonManagerBasic _button;
     public Action<ItemViewControl> onClick;
+    public Action<ItemViewControl> onClickInfo;
     public void Click() 
     {
         onClick?.Invoke(this);
+    }
+
+    public void Init(Item item)
+    {
+        var gameItem = ItemService.GetItem(item.ModuleId);
+        SetDisplayName(gameItem.DisplayName);
+        SetSprite(gameItem.Sprite);
+        SetColor(item.Color);
+    }
+
+    public void ClickInfo()
+    {
+        onClickInfo?.Invoke(this);
     }
 
     public void SetButtonText(string text) 
@@ -29,11 +44,6 @@ public class ItemViewControl : MonoBehaviour
         _title.text = display;
     }
 
-    public void SetLore(string lore)
-    {
-        _lore.text = lore;
-    }
-
     public void SetSprite(Sprite sprite) 
     {
         _graphicDisplay.InitializeGraphic(sprite);
@@ -42,5 +52,10 @@ public class ItemViewControl : MonoBehaviour
     public void SetColor(Color color)
     {
         _graphicDisplay.SetColor(color);
+    }
+
+    public void SetColor(string color)
+    {
+        _graphicDisplay.SetColor(ColorHelper.FromHex(color));
     }
 }

@@ -13,11 +13,8 @@ public class DialogManager : MonoBehaviour
     [SerializeField] GameObject _listView;
     [SerializeField] GameObject _upgradeView;
     [SerializeField] GameObject _inputDialog;
-    [Header("Controls")]
-    [SerializeField] GameObject _itemViewControl;
-    [SerializeField] GameObject _itemViewStatControl;
-    [SerializeField] GameObject _itemViewShipControl;
-    [SerializeField] GameObject _itemViewModuleControl;
+    [SerializeField] GameObject _modifierDialog;
+    [SerializeField] GameObject _itemViewDialog;
     public static DialogManager Instance { get; set; }
 
     public void Awake()
@@ -66,6 +63,19 @@ public class DialogManager : MonoBehaviour
         messageBox.onConfirm += () => callback?.Invoke();
     }
 
+    public static void ShowModifierDialog(Action<Modifier> callback = null, Action<bool> clearAction = null)
+    {
+        var obj = Instantiate(Instance._modifierDialog);
+        var messageBox = obj.GetComponent<SortByModifierDialog>();
+        messageBox.onConfirm += (modifier) => callback?.Invoke(modifier);
+        messageBox.onBackClicked += () => clearAction?.Invoke(true);
+    }
+    public static ItemView ShowItemViewDialog()
+    {
+        var obj = Instantiate(Instance._itemViewDialog);
+        var messageBox = obj.GetComponent<ItemView>();
+        return messageBox;
+    }
     public static void ShowInput(string message, string defaultValue, Action<string> callback = null)
     {
         var obj = Instantiate(Instance._inputDialog);
@@ -91,8 +101,4 @@ public class DialogManager : MonoBehaviour
             view.InitializeUpgrades(item);
         return view;
     }
-
-    public static GameObject GetDefaultItemViewControl() => Instance._itemViewControl;
-    public static GameObject GetItemViewShipControl() => Instance._itemViewShipControl;
-    public static GameObject GetItemViewModuleControl() => Instance._itemViewModuleControl;
 }

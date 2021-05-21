@@ -42,6 +42,8 @@ public class LoginManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
+        Debug.Log($"Login Manager ready");
     }
 
     private void Start()

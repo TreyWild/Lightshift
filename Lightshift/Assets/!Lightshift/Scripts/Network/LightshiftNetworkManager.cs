@@ -81,7 +81,6 @@ public class LightshiftNetworkManager : NetworkManager
         }
         else singleton.networkAddress = "167.99.149.84";
 
-        IsServer = Application.isEditor;
         if (IsServer)
         {
             HttpService.InitGameServerAuthentication("dev-access");

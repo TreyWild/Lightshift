@@ -120,7 +120,7 @@ public class HangarManager : MonoBehaviour
                 break;
             case ModuleType.Hull:
                 targetType = ItemType.Hull;
-                return;
+                break;
             case ModuleType.PrimaryWings:
                 targetType = ItemType.Wing;
                 break;
@@ -147,9 +147,6 @@ public class HangarManager : MonoBehaviour
                 break;
         }
 
-        Debug.Log($"Opening {item.ModuleType} equip list");
-        var listView = DialogManager.CreateListView($"Select: {item.ModuleType}");
-
         var activeShip = _player.GetActiveLoadout();
 
         if (activeShip == null)
@@ -157,71 +154,58 @@ public class HangarManager : MonoBehaviour
 
         Debug.Log($"Target type is {targetType}");
 
-        var items = _player.GetItems();
-        foreach (var m in items)
+        var items = _player.GetItems().Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).Type == targetType).ToList();
+
+        var itemView = DialogManager.ShowItemViewDialog();
+
+        itemView.onEquip += (item) =>
         {
-            var gameItem = ItemService.GetItem(m.ModuleId);
-            if (gameItem == null)
-                continue;
-
-            if (gameItem.Type == targetType)
+            _player.EquipModule(item.Id, item.ModuleLocation, delegate (string moduleId)
             {
-                var control = listView.InstantiateItem(DialogManager.GetDefaultItemViewControl()).GetComponent<ItemViewControl>();
-                control.SetDisplayName(gameItem.DisplayName);
-                control.SetSprite(gameItem.Sprite);
-                control.SetButtonText("Equip");
-                control.onClick += (id) =>
+                if (_player.isLocalPlayer)
                 {
-                    _player.EquipModule(m.Id, m.ModuleLocation, delegate (string moduleId) 
-                    {
-                        if (_player.isLocalPlayer)
-                        {
-                            var existing = items.FirstOrDefault(s => s.ModuleLocation == m.ModuleLocation && activeShip.EquippedModules.Contains(s.Id));
-                            if (existing != null)
-                                activeShip.EquippedModules.Remove(existing.Id);
+                    var existing = items.FirstOrDefault(s => s.ModuleLocation == item.ModuleLocation && activeShip.EquippedModules.Contains(s.Id));
+                    if (existing != null)
+                        _player.GetActiveLoadout().EquippedModules.Remove(existing.Id);
 
-                            _player.GetActiveLoadout().EquippedModules.Add(moduleId);
-                        }
+                    _player.GetActiveLoadout().EquippedModules.Add(moduleId);
+                }
 
-                        RefreshHangar();
-                        listView.Close();
-                    });
-                };
-            }
-        }
+                RefreshHangar();
+                itemView.Exit();
+            });
+        };
+
+        itemView.Init(items, $"Module Select: {targetType}");
+
     }
-
-    public void ShowWings() => ShowModuleList(ItemType.Wing, "Wings");
-    public void ShowWeapons() => ShowModuleList(ItemType.Weapon, "Weapons");
-    public void ShowEngines() => ShowModuleList(ItemType.Engine, "Engines");
-    public void ShowHulls() => ShowModuleList(ItemType.Hull, "Engines");
 
     public void ShowModuleList(ItemType type, string title) 
     {
-        var listView = DialogManager.CreateListView($"{title}");
+        //var listView = DialogManager.CreateListView($"{title}");
 
-        var activeShip = _player.GetActiveLoadout();
+        //var activeShip = _player.GetActiveLoadout();
 
-        foreach (var m in _player.GetItems())
-        {
-            var gameItem = ItemService.GetItem(m.ModuleId);
-            if (gameItem == null)
-                continue;
+        //foreach (var m in _player.GetItems())
+        //{
+        //    var gameItem = ItemService.GetItem(m.ModuleId);
+        //    if (gameItem == null)
+        //        continue;
 
-            if (gameItem.Type == type)
-            {
-                var control = listView.InstantiateItem(DialogManager.GetItemViewModuleControl()).GetComponent<ItemViewStatControl>();
-                control.SetItem(m);
-                control.SetButtonText("Upgrade");
+        //    if (gameItem.Type == type)
+        //    {
+        //        var control = listView.InstantiateItem(DialogManager.GetItemViewModuleControl()).GetComponent<ItemViewStatControl>();
+        //        control.SetItem(m);
+        //        control.SetButtonText("Upgrade");
 
-                control.onClick += (viewControl) =>
-                {
-                    Destroy(listView.gameObject);
+        //        control.onClick += (viewControl) =>
+        //        {
+        //            Destroy(listView.gameObject);
 
-                    var upgradeView = DialogManager.CreateUpgradeView(m);
-                };
-            }
-        }
+        //            var upgradeView = DialogManager.CreateUpgradeView(m);
+        //        };
+        //    }
+        //}
     }
 
     public void LeaveHangar() 
