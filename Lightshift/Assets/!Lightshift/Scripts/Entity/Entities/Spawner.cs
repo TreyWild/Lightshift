@@ -15,7 +15,7 @@ public struct SpawnData
 public class Spawner : NpcEntity
 {
     public SpawnData[] spawnData;
-    private void FixedUpdate()
+    private new void FixedUpdate()
     {
         base.FixedUpdate();
 

@@ -1,4 +1,5 @@
 ﻿using Assets._Lightshift.Scripts.Data;
+using Assets._Lightshift.Scripts.Utilities;
 using Lightshift;
 using Mirror;
 using SharedModels.Models.Game;
@@ -25,7 +26,7 @@ public class Entity : NetworkBehaviour
     [SyncVar(hook = nameof(SetDisplayName))]
     public string displayName;
 
-    [SyncVar]
+    [SyncVar(hook = nameof(UpdateTeamId))]
     public string teamId;
     public SmoothSyncMirror smoothSync;
     public Rigidbody2D rigidBody;
@@ -38,6 +39,8 @@ public class Entity : NetworkBehaviour
     private float _timeSinceLastTargetUpdate = 0;
     public bool isInCheckpoint;
     public Action onCleanup;
+    public MapObject mapObject;
+
     public void OnDestroy()
 #pragma warning restore CS0108 // Member hides inherited member; missing new keyword
     {
@@ -54,6 +57,7 @@ public class Entity : NetworkBehaviour
         onModifierChanged = null;
         onLeaveCheckpoint = null;
         onEnterCheckpoint = null;
+        mapObject = null;
     }
     public void Awake()
     {
@@ -61,7 +65,7 @@ public class Entity : NetworkBehaviour
         rigidBody = gameObject.GetComponent<Rigidbody2D>();
         kinematic = gameObject.GetComponent<Kinematic>();
         ui = gameObject.AddComponent<EntityUI>();
-
+        mapObject = GetComponent<MapObject>();
         onEnterCheckpoint += (checkpoint) => OnEnterCheckpoint(checkpoint);
 
         onLeaveCheckpoint += (checkpoint) => OnLeaveCheckpoint(checkpoint);
@@ -77,8 +81,7 @@ public class Entity : NetworkBehaviour
     public void Start()
     {
         EntityManager.AddEntity(this);
-
-        ui.Init(hasAuthority, isServer);
+        ui.Init(hasAuthority, isServer, displayName);
     }
 
     public virtual void OnEnterCheckpoint(Checkpoint checkpoint)
@@ -187,6 +190,33 @@ public class Entity : NetworkBehaviour
 
         if (isServer)
             this.displayName = displayName;
+
+        if (!hasAuthority)
+            mapObject.Name = displayName;
+
+    }
+
+    public static string LocalTeamId;
+    private void UpdateTeamId(string oldValue, string newValue)
+    {
+        LocalTeamId = newValue;
+
+        if (!hasAuthority)
+        {
+            if (teamId != LocalTeamId)
+            {
+                mapObject.iconColor = ColorHelper.GetEnemyColor();
+            }
+            else mapObject.iconColor = ColorHelper.GetTeamColor();
+
+        }
+        else
+        {
+            mapObject.IconSize = new Vector2(32, 32);
+            mapObject.iconColor = Color.white;
+        }
+
+        ui?.SetTeam(teamId == LocalTeamId);
     }
 
     //#region Collision

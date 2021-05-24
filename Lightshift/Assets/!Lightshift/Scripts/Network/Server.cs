@@ -30,9 +30,6 @@ public class Server : MonoBehaviour
             Instance._players.Remove(player);
 
         player.SaveAccount();
-
-        if (player.GetConnection() != null)
-            NetworkServer.DestroyPlayerForConnection(player.GetConnection());
     }
 
     public static Player GetPlayer(NetworkConnection connection)

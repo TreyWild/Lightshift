@@ -60,5 +60,15 @@ namespace Assets._Lightshift.Scripts.Utilities
 
             return color;
         }
+
+        public static Color GetTeamColor() 
+        {
+            return FromHex($"#57E35B");
+        }
+
+        public static Color GetEnemyColor()
+        {
+            return FromHex($"#E35757");
+        }
     }
 }

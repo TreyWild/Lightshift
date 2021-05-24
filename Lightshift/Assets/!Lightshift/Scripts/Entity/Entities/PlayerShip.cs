@@ -17,7 +17,7 @@ public class PlayerShip : Ship
     private PlayerController _input;
     private List<Item> _equippedModules;
     private Player _player;
-
+    private bool _inited;
     public Player Player 
     {
         get
@@ -28,7 +28,7 @@ public class PlayerShip : Ship
             return _player;
         }
     }
-    private void Awake()
+    private new void Awake()
     {
         base.Awake();
 
@@ -37,7 +37,6 @@ public class PlayerShip : Ship
 
         onCleanup += () =>
         {
-            _loadoutObject = null;
             _input = null;
             _equippedModules = null;
         };
@@ -80,18 +79,20 @@ public class PlayerShip : Ship
     public override void OnStartClient()
     {
         base.OnStartClient();
-
-        if (hasAuthority)
-            CmdInit();
+        
+        CmdInit();
     }
 
-    [Command]
-    private void CmdInit()
+    [Command(requiresAuthority = false)]
+    private void CmdInit(NetworkConnectionToClient sender = null)
     {
-        TargetRpcInitModules(connectionToClient, JsonConvert.SerializeObject(_equippedModules));
+        if (_inited) 
+            TargetInitModules(sender, JsonConvert.SerializeObject(_equippedModules));
     }
     public void InitLoadoutObject(LoadoutObject loadoutObject) 
     {
+        displayName = Player.Username;
+
         _loadoutObject = loadoutObject;
         var stats = StatHelper.GetStatsFromShip(Player, loadoutObject);
 
@@ -102,18 +103,19 @@ public class PlayerShip : Ship
         {
             InitModules(_equippedModules);
             RpcInitModules(JsonConvert.SerializeObject(_equippedModules));
+            _inited = true;
         }
     }
 
-    [TargetRpc]
-    private void TargetRpcInitModules(NetworkConnection target, string json) 
+    [ClientRpc]
+    private void RpcInitModules(string json) 
     {
         var modules = JsonConvert.DeserializeObject<List<Item>>(json);
         InitModules(modules);
     }
 
-    [ClientRpc]
-    private void RpcInitModules(string json)
+    [TargetRpc]
+    private void TargetInitModules(NetworkConnection target, string json)
     {
         var modules = JsonConvert.DeserializeObject<List<Item>>(json);
         InitModules(modules);

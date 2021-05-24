@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
+using System.Linq;
 
 public class SystemMap : MonoBehaviour
 {
@@ -11,7 +12,6 @@ public class SystemMap : MonoBehaviour
     [SerializeField] private Transform _contentPanel;
     [SerializeField] private GameObject _mapItemPrefab;
     [SerializeField] private GameObject _mapOrbitPrefab;
-    [SerializeField] private Transform _playerIcon;
     [SerializeField] private Slider _zoomSlider;
 
     private List<MapObjectData> _objects = new List<MapObjectData>();
@@ -19,14 +19,13 @@ public class SystemMap : MonoBehaviour
 
     public float Zoom = 10;
 
-    private Transform _target;
-
-    
+    private PlayerShip _playerShip;
 
     private void Awake()
     {
         _zoomSlider.value = PlayerPrefs.GetFloat("systemMapZoom", 8.5f);
-        _zoomSlider.onValueChanged.AddListener(delegate (float value) 
+        Zoom = _zoomSlider.value;
+        _zoomSlider.onValueChanged.AddListener(delegate (float value)
         {
             PlayerPrefs.SetFloat("systemMapZoom", value);
             Zoom = value;
@@ -49,10 +48,8 @@ public class SystemMap : MonoBehaviour
                 foreach (var orbit in orbits)
                 {
                     var mapOrbit = Instantiate(_mapOrbitPrefab, _contentPanel);
-                    mapOrbit.transform.position = solarSystem.transform.position / Zoom;
                     var rect = mapOrbit.GetComponent<RectTransform>();
                     rect.sizeDelta = new Vector2((orbit * 2) / Zoom, (orbit * 2) / Zoom);
-                    mapOrbit.transform.position = new Vector2((solarSystem.transform.position.x) / Zoom + (Screen.width / 2), (solarSystem.transform.position.y) / Zoom + (Screen.height / 2));
                     var image = mapOrbit.GetComponent<Image>();
                     image.color = solarSystem.mapColor;
                     solarMap.uiObjects.Add(rect);
@@ -61,35 +58,58 @@ public class SystemMap : MonoBehaviour
                 _solarObjects.Add(solarMap);
             }
         }
-        var mapObjects = FindObjectsOfType<MapObject>();
-        if (mapObjects != null)
-            foreach (var obj in mapObjects)
-            {
-                var item = Instantiate(_mapItemPrefab, _contentPanel);
-                var uiObj = item.GetComponent<UIMapObject>();
-
-                var rect = uiObj.GetComponent<RectTransform>();
-                rect.sizeDelta = obj.IconSize;
-                uiObj.transform.position = new Vector2((obj.transform.position.x) / Zoom + (Screen.width / 2), (obj.transform.position.y) / Zoom + (Screen.height / 2));
-                uiObj.Init(obj);
-
-                _objects.Add(new MapObjectData
-                {
-                    mapObject = obj,
-                    uiMapObject = uiObj,
-                });
-            }
     }
+
+    private void OnEnable()
+    {
+        _playerShip = FindObjectsOfType<PlayerShip>().ToList().Where(s => s.hasAuthority).FirstOrDefault();
+
+        var mapObjects = FindObjectsOfType<MapObject>().ToList();
+
+        foreach (var obj in _objects.ToList())
+        {
+            obj.uiMapObject.Init(obj.mapObject);
+
+            // Destroy removed objects
+            if (!mapObjects.Contains(obj.mapObject))
+            {
+                Destroy(obj.uiMapObject);
+                Destroy(obj.mapObject);
+
+                _objects.Remove(obj);
+            }
+            else mapObjects.Remove(obj.mapObject);
+        }
+
+        foreach (var obj in mapObjects)
+        {
+            var item = Instantiate(_mapItemPrefab, _contentPanel);
+            var uiObj = item.GetComponent<UIMapObject>();
+
+            uiObj.Init(obj);
+
+            _objects.Add(new MapObjectData
+            {
+                mapObject = obj,
+                uiMapObject = uiObj,
+            });
+        }
+    }
+
     private void FixedUpdate()
     {
-        _target = CameraFollow.Instance.target;
+        if (_playerShip == null)
+            return;
 
-        _playerIcon.transform.eulerAngles = new Vector3(0, 0, _target.rotation.z);
-
-        _coordinateLabel.text = $"{Mathf.Round(_target.position.x)}, {Mathf.Round(_target.position.y)}";
+        _coordinateLabel.text = $"{Mathf.Round(GetLocalPosition().x)}, {Mathf.Round(GetLocalPosition().y)}";
 
         foreach (var obj in _objects)
+        {
             obj.uiMapObject.transform.position = new Vector2((obj.mapObject.transform.position.x - GetLocalPosition().x) / Zoom + (Screen.width / 2), (obj.mapObject.transform.position.y - GetLocalPosition().y) / Zoom + (Screen.height / 2));
+            obj.uiMapObject.SetRotation(obj.mapObject.transform.eulerAngles.z);
+            obj.uiMapObject.SetSize(new Vector2((obj.mapObject.IconSize.x) / ((Zoom)/ 4), (obj.mapObject.IconSize.y) / ((Zoom) / 4)));
+            obj.uiMapObject.Init(obj.mapObject);
+        }
 
         foreach (var obj in _solarObjects)
         {
@@ -103,12 +123,18 @@ public class SystemMap : MonoBehaviour
                 var ui = obj.uiObjects[i];
 
                 ui.sizeDelta = new Vector2((orbits[i] * 2) / Zoom, (orbits[i] * 2) / Zoom);
-                ui.transform.position = new Vector2((obj.solarSystem.transform.position.x - GetLocalPosition().x) / Zoom + (Screen.width / 2), (obj.solarSystem.transform.position.y - GetLocalPosition().y) / Zoom + (Screen.height / 2));
+                ui.transform.position = new Vector2((obj.solarSystem.transform.position.x - GetLocalPosition().x) / Zoom + (Screen.width / 2), (obj.solarSystem.transform.position.y - GetLocalPosition().y) / Zoom + (Screen.height/2));
             }
         }
     }
 
-    private Vector2 GetLocalPosition() => _target.position;
+    private Vector2 GetLocalPosition()
+    {
+        if (_playerShip == null)
+            return Vector2.zero;
+        else return _playerShip.kinematic.position;
+    }
+
     public void Exit()
     {
         GameUIManager.Instance.ToggleSystemMap();

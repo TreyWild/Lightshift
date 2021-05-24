@@ -23,6 +23,13 @@ public class SortByModifierDialog : BaseDialog
     {
         foreach (Modifier modifier in Enum.GetValues(typeof(Modifier)))
         {
+            if (modifier == Modifier.MaxHealth)
+                continue;
+            if (modifier == Modifier.MaxPower)
+                continue;
+            if (modifier == Modifier.MaxShield)
+                continue;
+
             var button = Instantiate(_itemPrefab, _contentPanel).GetComponent<ButtonManagerBasic>();
             button.buttonText = modifier.ToString();
 

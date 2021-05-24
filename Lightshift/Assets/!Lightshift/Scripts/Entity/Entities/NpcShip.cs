@@ -7,7 +7,7 @@ using UnityEngine;
 
 public class NpcShip : Npc
 {
-    public void Awake()
+    public new void Awake()
     {
         base.Awake();
         onDataLoaded += InitializeData;

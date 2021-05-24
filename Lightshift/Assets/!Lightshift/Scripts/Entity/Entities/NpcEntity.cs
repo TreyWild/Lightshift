@@ -9,7 +9,7 @@ public class NpcEntity : Npc
 {
     private SpriteRenderer _renderer;
     private PolygonCollider2D _polyCollider;
-    public void Awake()
+    public new void Awake()
     {
         base.Awake();
 

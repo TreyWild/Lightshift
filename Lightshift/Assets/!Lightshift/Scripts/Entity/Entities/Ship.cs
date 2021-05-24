@@ -19,7 +19,7 @@ public class Ship : Entity
     public float overDriveBoost;
     public float agility;
 
-    public void Awake()
+    public new void Awake()
     {
         base.Awake();
 

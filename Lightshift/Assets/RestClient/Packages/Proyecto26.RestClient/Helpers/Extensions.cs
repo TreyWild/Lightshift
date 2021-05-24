@@ -23,6 +23,7 @@ namespace Proyecto26.Common
         /// <param name="request">An UnityWebRequest object.</param>
         /// <param name="options">The options of the request.</param>
         /// <returns>A boolean that indicates if the request is valid.</returns>
+        [System.Obsolete]
         public static bool IsValidRequest(this UnityWebRequest request, RequestHelper options)
         {
             return request.isDone &&

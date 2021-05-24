@@ -16,14 +16,13 @@ using UnityEngine.SceneManagement;
 
 public class LightshiftNetworkManager : NetworkManager 
 {
-    public bool UseTestServers;
-    public bool UseHostFormat = true;
-    public bool IsServer = true;
+    public bool DevMode = true;
+    public bool IsServerBuild = false;
     public static GameObject GetPrefab<T>() => singleton.spawnPrefabs.FirstOrDefault(o => o.gameObject.HasType<T>());
     public override void OnStartServer()
     {
         base.OnStartServer();
-        spawnPrefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").ToList();
+        spawnPrefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").Where(s => s.GetComponent<Player>() == null).ToList();
         gameObject.AddComponent<Server>();
         Debug.Log($"Server Started. Running on {networkAddress}.");
     }
@@ -31,66 +30,42 @@ public class LightshiftNetworkManager : NetworkManager
     public override void OnStartClient()
     {
         base.OnStartClient();
-        var prefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").ToList();
+        var prefabs = Resources.LoadAll<GameObject>("Prefabs/Networked").Where(s => s.GetComponent<Player>() == null).ToList();
 
         foreach (var prefab in prefabs)
         {
             NetworkClient.RegisterPrefab(prefab);
         }
     }
-    public override void OnServerReady(NetworkConnection conn)
-    {
-        base.OnServerReady(conn);
-        Debug.Log($"Client with ID [{conn.connectionId}] connected.");
-    }
-
-    public override void OnServerSceneChanged(string sceneName)
-    {
-        base.OnServerSceneChanged(sceneName);
-
-        Debug.Log($"Game Scene Loaded. Server Ready.");
-    }
-    //public override void OnClientConnect(NetworkConnection conn)
-    //{
-    //    base.OnClientConnect(conn);
-    //}
-
-    public override void OnClientDisconnect(NetworkConnection conn)
-    {
-        base.OnClientDisconnect(conn);
-        //Destroy(gameObject);
-        //SceneManager.LoadScene("_AUTHENTICATION_");
-        singleton.StopClient();
-    }
-    //public override void OnServerAddPlayer(NetworkConnection conn)
-    //{
-    //    Delegator.WaitForEndOfFrame(delegate
-    //    {
-    //        base.OnServerAddPlayer(conn);
-    //    });
-    //}
-
     public void Authenticate(string key)
     {
         var authenticator = FindObjectOfType<LightshiftAuthenticator>();
         authenticator.sessionAuthKey = key;
 
-        if (UseTestServers)
+        if (DevMode)
         {
             singleton.networkAddress = "localhost";
-        }
-        else singleton.networkAddress = "167.99.149.84";
+            var selector = DialogManager.ShowNetworkClientSelector();
+            selector.OnClickClient += () => StartClient();
+            selector.OnClickHost += () =>
+            {
+                HttpService.InitGameServerAuthentication("dev-access");
 
-        if (IsServer)
-        {
-            HttpService.InitGameServerAuthentication("dev-access");
-
-            if (UseHostFormat)
                 StartHost();
-            else
+            };
+            selector.OnClickServer += () =>
+            {
+                HttpService.InitGameServerAuthentication("dev-access");
+
                 StartServer();
+            };
         }
-        else StartClient();
+        else if (!IsServerBuild)
+        {
+            singleton.networkAddress = "167.99.149.84";
+            StartClient();
+        }
+        else StartServer();
     }
 
     public override void OnServerDisconnect(NetworkConnection conn)

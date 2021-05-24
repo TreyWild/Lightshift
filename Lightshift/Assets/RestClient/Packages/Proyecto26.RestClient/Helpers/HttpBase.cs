@@ -59,6 +59,7 @@ namespace Proyecto26
             }
         }
 
+        [Obsolete]
         private static RequestException CreateException(RequestHelper options, UnityWebRequest request)
         {
             return new RequestException(request.error, request.isHttpError, request.isNetworkError, request.responseCode, options.ParseResponseBody ? request.downloadHandler.text : "body not parsed");

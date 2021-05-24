@@ -93,7 +93,7 @@ public class HangarManager : MonoBehaviour
             foreach (var loadout in _player.GetShipLoadouts())
             {
                 var existing = _loadouts.FirstOrDefault(l => l.Id == loadout.Id);
-                if (existing == null)
+                if (!_loadouts.Contains(loadout))
                     AddLoadout(loadout);
             }
         }
@@ -164,11 +164,15 @@ public class HangarManager : MonoBehaviour
             {
                 if (_player.isLocalPlayer)
                 {
+                    var equips = _player.GetActiveLoadout().EquippedModules.ToList();
+
                     var existing = items.FirstOrDefault(s => s.ModuleLocation == item.ModuleLocation && activeShip.EquippedModules.Contains(s.Id));
                     if (existing != null)
-                        _player.GetActiveLoadout().EquippedModules.Remove(existing.Id);
+                        equips.Remove(existing.Id);
 
-                    _player.GetActiveLoadout().EquippedModules.Add(moduleId);
+                    equips.Add(moduleId);
+
+                    activeShip.EquippedModules = equips.ToArray();
                 }
 
                 RefreshHangar();

@@ -15,6 +15,7 @@ public class DialogManager : MonoBehaviour
     [SerializeField] GameObject _inputDialog;
     [SerializeField] GameObject _modifierDialog;
     [SerializeField] GameObject _itemViewDialog;
+    [SerializeField] GameObject _networkClientSelectorDialog;
     public static DialogManager Instance { get; set; }
 
     public void Awake()
@@ -93,12 +94,18 @@ public class DialogManager : MonoBehaviour
         return listView;
     }
 
-    public static UpgradeView CreateUpgradeView(Item item = null)
+    public static NetworkClientSelectionDialog ShowNetworkClientSelector()
+    {
+        var obj = Instantiate(Instance._networkClientSelectorDialog);
+        var listView = obj.GetComponent<NetworkClientSelectionDialog>();
+        return listView;
+    }
+
+    public static UpgradeView CreateUpgradeView(Item item)
     {
         var obj = Instantiate(Instance._upgradeView);
         var view = obj.GetComponent<UpgradeView>();
-        if (item != null)
-            view.InitializeUpgrades(item);
+        view.InitializeUpgrades(item);
         return view;
     }
 }

@@ -37,13 +37,13 @@ namespace SharedModels.Models.Game
 
     public class ResourceCollection 
     {
-        public string Id { get; set; }
+        public string Id;
 
-        public List<ResourceObject> Collection { get; set; }
+        public List<ResourceObject> Collection;
     }
 
     [Serializable]
-    public class ResourceObject
+    public struct ResourceObject
     {
         public int Amount;
         public ResourceType Type;

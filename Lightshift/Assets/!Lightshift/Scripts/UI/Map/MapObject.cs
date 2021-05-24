@@ -14,4 +14,6 @@ public class MapObject : MonoBehaviour
 
     public Sprite Icon;
     public Vector2 IconSize = new Vector2(24,24);
+
+    public bool hasLayoutPriority;
 }

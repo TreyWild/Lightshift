@@ -1,4 +1,5 @@
-﻿using Mirror;
+﻿using Assets._Lightshift.Scripts.Utilities;
+using Mirror;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,5 +38,12 @@ public class EntityUIControl : MonoBehaviour
 
 
     public void SetHealth(float currentHealth = 0, float maxHealth = 0) => healthBar.value = (currentHealth / maxHealth) * 1.0f;
+
+    public void SetTeam(bool isTeam) 
+    {
+        if (isTeam)
+            nameTag.color = ColorHelper.GetTeamColor();
+        else nameTag.color = ColorHelper.GetEnemyColor();
+    }
 }
 

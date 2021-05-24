@@ -29,8 +29,6 @@ public class ItemViewStatControl : ItemViewControl
         _wing1 = null;
         _wing2 = null;
         _equipButton = null;
-        _loadoutObject = null;
-        _item = null;
     }
     public void SetShip(Player player, LoadoutObject loadoutObject) 
     {

@@ -7,11 +7,31 @@ using System.Threading.Tasks;
 namespace SharedModels.Models.Game
 {
     [Serializable]
-    public class LoadoutObject
+    public struct LoadoutObject
     {
-        public string Name { get; set; } = "Default Loadout";
-        public string Id { get; set; }
-        public string UserId { get; set; }
-        public List<string> EquippedModules { get; set; }
+        public string Name;
+        public string Id;
+        public string UserId;
+        public string[] EquippedModules;
+
+        public static bool operator ==(LoadoutObject obj, LoadoutObject obj2)
+        {
+            return obj.Equals(obj2);
+        }
+        public static bool operator !=(LoadoutObject obj, LoadoutObject obj2)
+        {
+            return !obj.Equals(obj2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public static LoadoutObject Empty() => new LoadoutObject();
     }
 }

@@ -8,20 +8,38 @@ using System.Threading.Tasks;
 namespace SharedModels.Models.User
 {
     [Serializable]
-    public class Profile
+    public struct Profile
     {
-        public string Username { get; set; }
-        public int Credits { get; set; }
-        public int BankCredits { get; set; }
-        public int Level { get; set; }
-        public int XP { get; set; }
-        public string LastCheckPointId { get; set; }
-        public string LandedLocationId { get; set; }
-        public bool IsLanded { get; set; }
-        public string ActiveLoadout { get; set; }
+        public string Username;
+        public int Credits;
+        public int BankCredits;
+        public int Level;
+        public int XP;
+        public string LastCheckPointId;
+        public string LandedLocationId;
+        public bool IsLanded;
+        public string ActiveLoadout;
 
-        public List<ResourceObject> Resources { get; set; }
+        public List<ResourceObject> Resources;
 
-        public List<ResourceObject> Bank { get; set; }
+        public List<ResourceObject> Bank;
+
+        public static bool operator ==(Profile obj, Profile obj2)
+        {
+            return obj.Equals(obj2);
+        }
+        public static bool operator !=(Profile obj, Profile obj2)
+        {
+            return !obj.Equals(obj2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }

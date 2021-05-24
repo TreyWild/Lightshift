@@ -24,6 +24,8 @@ public class Player : NetworkBehaviour
     [SyncVar(hook = nameof(OnActiveLoadoutChanged))]
     public string ActiveLoadout;
     [SyncVar] public string Id;
+    [SyncVar] public string LandedLocationId;
+    [SyncVar] public bool IsLanded;
     private void OnCreditsChanged(int oldValue, int newValue)
     {
         onCreditsChanged?.Invoke(newValue);
@@ -40,12 +42,13 @@ public class Player : NetworkBehaviour
 
     public readonly SyncDictionary<ResourceType, int> Resources = new SyncDictionary<ResourceType, int>();
     public readonly SyncDictionary<string, Item> Items = new SyncDictionary<string, Item>();
-    private readonly SyncDictionary<string, LoadoutObject> ShipLoadouts = new SyncDictionary<string, LoadoutObject>();
+    public readonly SyncDictionary<string, LoadoutObject> ShipLoadouts = new SyncDictionary<string, LoadoutObject>();
 
 
     public PlayerShip ship { get; set; }
 
-    private Profile _profile;
+    [SyncVar]
+    public Profile _profile;
 
     private Account _account;
 
@@ -57,6 +60,7 @@ public class Player : NetworkBehaviour
     private Action<string> _onResetUpgrades;
     private Action<string> _onShipChanged;
     private Action<string> _onModuleEquipped;
+
     private void OnDestroy()
     {
         if (isServer)
@@ -67,7 +71,6 @@ public class Player : NetworkBehaviour
         }
 
         ship = null;
-        _profile = null;
         _account = null;
         onCreditsChanged = null;
         onBankCreditsChanged = null;
@@ -77,11 +80,13 @@ public class Player : NetworkBehaviour
         _onModuleEquipped = null;
     }
 
-    public override void OnStartClient()
+    public override void OnStartLocalPlayer()
     {
-        base.OnStartClient();
+        base.OnStartLocalPlayer();
 
-        StartCoroutine(Init());
+        Debug.Log($"Has authority: {hasAuthority}");
+
+        CmdInit();
     }
     public override void OnStartServer()
     {
@@ -89,64 +94,111 @@ public class Player : NetworkBehaviour
 
         // ADD PLAYER TO SERVER INDEX
         Server.AddPlayer(this);
-
-
-        // LOAD PROFILE
-        LoadProfile(delegate 
-        {
-            // LOAD RESOURCES
-            LoadResources();
-
-            // LOAD ITEMS
-            LoadItems(delegate 
-            {
-                // LOAD SHIPS
-                LoadShips(delegate ()
-                {
-                    SetupAccount();
-
-                    // Ensure ship is selected
-                    if (ActiveLoadout == null || GetActiveLoadout() == null)
-                    {
-                        ActiveLoadout = ShipLoadouts.First().Key;
-                    }
-
-                    Debug.Log($"{Username} initialized.");
-                    foreach (var player in Server.GetAllPlayers())
-                    {
-                        if (player == this)
-                            continue;
-
-                        Communication.ShowUserAlert(player.connectionToClient, $"{Username} connected.", Communication.AlertType.SystemMessage);
-                        Communication.ShowUserAlert(player.connectionToClient, $"{Username} entered the system", Communication.AlertType.ScreenDisplay);
-                    }
-                });
-            });
-        });
     }
 
-    private IEnumerator Init()
+    private bool _loadoutsLoaded;
+    private bool _accountLoaded;
+    private bool _itemsLoaded;
+    private bool _resourcesLoaded;
+    private bool _initPreAccountData;
+    private bool _requirePlayerInit;
+    private void InitPlayerData() 
     {
-        var proceed = GetActiveLoadout() != null;
-        while (!proceed)
+        if (!_accountLoaded)
         {
-            yield return new WaitForSeconds(1f);
+            LoadProfile(() => InitPlayerData());
+            return;
+        }
+        if (!_resourcesLoaded)
+        {
+            LoadResources(() => InitPlayerData());
+            return;
+        }
+        if (!_itemsLoaded)
+        {
+            LoadItems(() => InitPlayerData());
+            return;
+        }
+        if (!_loadoutsLoaded)
+        {
+            LoadLoadouts(() => InitPlayerData());
+            return;
+        }
+        if (!_initPreAccountData)
+        {
+            SetupAccount();
 
-            proceed = GetActiveLoadout() != null;
+            InitShipLoadout();
+
+            UserJoinedBroadcast();
+
+            _initPreAccountData = true;
+
+            InitPlayerData();
+            return;
         }
 
+        if (!_requirePlayerInit)
+        {
+            _requirePlayerInit = true;
+            TargetRequireInit();
+            return;
+        }
+    }
+
+    [TargetRpc]
+    private void TargetRequireInit() 
+    {
+        StartCoroutine(WaitForLoadouts());
+    }
+
+    public IEnumerator WaitForLoadouts()
+    {
+        while (ShipLoadouts.Count == 0)
+            yield return new WaitForSeconds(1f);
+
         CmdInit();
+    }
+
+    private void InitShipLoadout() 
+    {
+        // Ensure ship is selected
+        if (ActiveLoadout == null || GetActiveLoadout() == null)
+        {
+            ActiveLoadout = ShipLoadouts.First().Key;
+        }
+    }
+
+    private void UserJoinedBroadcast() 
+    {
+        Debug.Log($"{Username} initialized.");
+        foreach (var player in Server.GetAllPlayers())
+        {
+            if (player == this)
+                continue;
+
+            Communication.ShowUserAlert(player.connectionToClient, $"{Username} connected.", Communication.AlertType.SystemMessage);
+            Communication.ShowUserAlert(player.connectionToClient, $"{Username} entered the system", Communication.AlertType.ScreenDisplay);
+        }
     }
 
     [Command]
     private void CmdInit() 
     {
-        SpawnShip();
-        TargetInit();
+        if (!_requirePlayerInit)
+        {
+            InitPlayerData();
+            return;
+        }
+        else
+        {
+            SpawnShip();
+            FinalInit();
+        }
     }
 
     [TargetRpc]
-    private void TargetInit()
+    private void FinalInit()
     {
         GameUIManager.Instance.ToggleLoadingScreen(false);
     }
@@ -179,7 +231,7 @@ public class Player : NetworkBehaviour
     public Item GetItem(string id)
     {
         if (!Items.ContainsKey(id))
-            return null;
+            return Item.Empty();
         else return Items[id];
 
     }
@@ -187,7 +239,7 @@ public class Player : NetworkBehaviour
     public LoadoutObject GetShipLoadout(string id)
     {
         if (!ShipLoadouts.ContainsKey(id))
-            return null;
+            return LoadoutObject.Empty();
         else return ShipLoadouts[id];
 
     }
@@ -195,11 +247,19 @@ public class Player : NetworkBehaviour
     #region Resources
     public void LoadResources(Action callback = null) 
     {
-        if (_profile.Resources == null || _profile.Resources.Count == 0)
+        _resourcesLoaded = true;
+
+        if (_profile.Resources == null)
+        {
+            // Add resources to new account
             _profile.Resources = PlayerDefaults.GetTestResources();
+        }
 
         foreach (var resource in _profile.Resources)
             AddResource(resource);
+
+
+        callback.Invoke();
     }
 
     public ResourceObject GetResource(ResourceType type) 
@@ -291,9 +351,10 @@ public class Player : NetworkBehaviour
     }
 
     public Item SpendResources(Item item, List<ResourceObject> resources, float costMultiplier)
-    {            
-        if (item.SpentResources == null)
-            item.SpentResources = new List<ResourceObject>();
+    {
+        var spentResources = item.SpentResources.ToList();
+        if (spentResources == null)
+            spentResources = new List<ResourceObject>();
 
         foreach (var resource in resources)
         {
@@ -306,15 +367,16 @@ public class Player : NetworkBehaviour
             
             SetResource(resource.Type, amount);
 
-
-            var spentResource = item.SpentResources.FirstOrDefault(r => r.Type == resource.Type);
-            if (spentResource == null)
+            var spentResource = spentResources.FirstOrDefault(r => r.Type == resource.Type);
+            if (!spentResources.Any(r => r.Type == resource.Type))
             {
                 spentResource = new ResourceObject { Type = resource.Type, Amount = 0 };
-                item.SpentResources.Add(spentResource);
+                spentResources.Add(spentResource);
             }
             spentResource.Amount += cost;
         }
+
+        item.SpentResources = spentResources.ToArray();
 
         return item;
     }
@@ -326,23 +388,24 @@ public class Player : NetworkBehaviour
         // SPAWN PLAYER SHIP
         var obj = Instantiate(LightshiftNetworkManager.GetPrefab<PlayerShip>());
         ship = obj.GetComponent<PlayerShip>();
-        ship.displayName = _profile.Username;
+        ship.displayName = Username;
 
         NetworkServer.Spawn(obj, connectionToClient);
 
-        if (_profile.IsLanded)
+        if (IsLanded)
         {
-            var station = LandableManager.GetLandableById(_profile.LandedLocationId);
+            var station = LandableManager.GetLandableById(LandedLocationId);
             if (station != null)
             {
                 ship.transform.position = station.transform.position;
-                Land(_profile.LandedLocationId);
+                Land(LandedLocationId);
             }
         }
         else TakeOff();
     }
     public void LoadProfile(Action callback)
     {
+        _accountLoaded = true;
         HttpService.Get("account/get", connectionToClient.authenticationData,
         delegate (Account account)
         {
@@ -361,6 +424,8 @@ public class Player : NetworkBehaviour
             Username = _profile.Username;
             ActiveLoadout = _profile.ActiveLoadout;
             lastCheckpointId = _profile.LastCheckPointId;
+            IsLanded = _profile.IsLanded;
+            LandedLocationId = _profile.LandedLocationId;
             Id = account.Id;
 
             callback?.Invoke();
@@ -375,10 +440,9 @@ public class Player : NetworkBehaviour
             return connectionToServer;
     }
 
-    public void AddShip(LoadoutObject ship) 
+    public void AddLoadout(LoadoutObject ship) 
     {
         _profile.ActiveLoadout = ship.Id;
-        _profile.IsLanded = true;
         ShipLoadouts.Add(ship.Id, ship);
 
         Debug.Log($"New ship built for {_account.Profile.Username}.");
@@ -446,6 +510,8 @@ public class Player : NetworkBehaviour
             _profile.Credits = Credits;
             _profile.BankCredits = BankCredits;
             _profile.Resources = GetResources();
+            _profile.IsLanded = IsLanded;
+            _profile.LandedLocationId = LandedLocationId;
             _account.Profile = _profile;
             HttpService.Get("account/save", _account,
             delegate (Account account)
@@ -480,9 +546,9 @@ public class Player : NetworkBehaviour
         {
             RpcLand(landableId);
 
-            _profile.LandedLocationId = landableId;
+            LandedLocationId = landableId;
 
-            _profile.IsLanded = true;
+            IsLanded = true;
 
             SaveAccount();
 
@@ -498,8 +564,6 @@ public class Player : NetworkBehaviour
         if (hasAuthority)
         {
             GameUIManager.Instance.LeaveLandable();
-
-            _profile.IsLanded = false;
         }
     }
 
@@ -513,9 +577,9 @@ public class Player : NetworkBehaviour
     {
         if (isServer)
         {
-            var station = LandableManager.GetLandableById(_profile.LandedLocationId);
+            var station = LandableManager.GetLandableById(LandedLocationId);
             if (station != null)
-                ship.transform.position = new Vector2(station.transform.position.x, station.transform.position.y);
+                ship.SetPosition(new Vector2(station.transform.position.x, station.transform.position.y));
 
             ship.kinematic.rotation = UnityEngine.Random.Range(0, 360);
 
@@ -523,17 +587,19 @@ public class Player : NetworkBehaviour
             //ship.SetCargo(GetActiveLoadout().Cargo);
             ship.Respawn();
 
-            _profile.IsLanded = false;
+            IsLanded = false;
 
             RpcTakeoff();
         }
         else CmdTakeoff();
     }
 
-    public void LoadShips(Action callback)
+    public void LoadLoadouts(Action callback)
     {
         if (!isServer)
             return;
+
+        _loadoutsLoaded = true;
 
         _account.Profile = _profile;
         HttpService.Get("game/getloadouts", new JsonString { Value = _account.Id },
@@ -546,7 +612,7 @@ public class Player : NetworkBehaviour
                 else ShipLoadouts[ship.Id] = ship;
             }
 
-            Debug.Log($"Server loaded ships [{ships?.Count}]");
+            Debug.Log($"Loadouts for {Username} loaded: [{ships?.Count}]");
 
             callback?.Invoke();
         });
@@ -571,15 +637,17 @@ public class Player : NetworkBehaviour
             // Add new ship object
             var newShip = new LoadoutObject();
             newShip.Id = Guid.NewGuid().ToString();
-            newShip.EquippedModules = new List<string>();
+            var equips = new List<string>();
 
             foreach (var item in items)
-                newShip.EquippedModules.Add(item.Id);
+                equips.Add(item.Id);
 
-            AddShip(newShip);
+            newShip.EquippedModules = equips.ToArray();
+
+            AddLoadout(newShip);
 
             // Setup Landed location
-            _profile.LandedLocationId = PlayerDefaults.GetDefaultStation();
+            LandedLocationId = PlayerDefaults.GetDefaultStation();
 
             // Save account
             SaveAccount();
@@ -590,6 +658,8 @@ public class Player : NetworkBehaviour
     {
         if (!isServer)
             return;
+
+        _itemsLoaded = true;
 
         HttpService.Get("game/getitems", new JsonString { Value = _account.Id },
         delegate (List<Item> items)
@@ -602,6 +672,7 @@ public class Player : NetworkBehaviour
             }
 
             Debug.Log($"Server loaded [{Items?.Count}] items for player {Username}");
+
             callback?.Invoke();
         });
     }
@@ -676,19 +747,22 @@ public class Player : NetworkBehaviour
         if (module == null)
             return;
 
-        if (ship.EquippedModules == null)
-            ship.EquippedModules = new List<string>();
+        var equippedModules = ship.EquippedModules.ToList() ;
+        if (equippedModules == null)
+            equippedModules = new List<string>();
 
         // Remove any old equips
-        for (int i = 0; i < ship.EquippedModules.Count; i++)
+        for (int i = 0; i < equippedModules.Count; i++)
         {
             var equip = ship.EquippedModules[i];
             var item = GetItem(equip);
             if (item.ModuleLocation == loc)
-                ship.EquippedModules.Remove(equip);
+                equippedModules.Remove(equip);
         }
 
-        ship.EquippedModules.Add(module.Id);
+        equippedModules.Add(module.Id);
+
+        ship.EquippedModules = equippedModules.ToArray();
 
         SaveLoadout(GetActiveLoadout());
 
@@ -763,8 +837,9 @@ public class Player : NetworkBehaviour
         if (gameItem == null || gameItem.Upgrades == null)
             return;
 
-        if (item.Upgrades == null)
-            item.Upgrades = new List<Upgrade>();
+        var upgrades = item.Upgrades.ToList();
+        if (upgrades == null)
+            upgrades = new List<Upgrade>();
 
         var totalUpgrades = item.Upgrades.Sum(s => s.Level);
 
@@ -787,7 +862,7 @@ public class Player : NetworkBehaviour
         {
             upgrade = new Upgrade();
             upgrade.Id = upgradeId;
-            item.Upgrades.Add(upgrade);
+            upgrades.Add(upgrade);
         }
 
         // ALREADY MAXED
@@ -803,6 +878,9 @@ public class Player : NetworkBehaviour
 
         // SPEND CREDITS
         item = SpendResources(item, upgradeInfo.ResourceCost, costMultiplier);
+
+        //Update upgrade array
+        item.Upgrades = upgrades.ToArray();
 
         upgrade.Level++;
 

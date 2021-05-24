@@ -74,10 +74,11 @@ public class UpgradeView : MonoBehaviour
         if (_gameItem == null || _gameItem.Upgrades == null)
             return;
 
-        if (_item.Upgrades == null)
-            _item.Upgrades = new List<Upgrade>();
+        var upgrades = _item.Upgrades.ToList();
+        if (upgrades == null)
+            upgrades = new List<Upgrade>();
 
-        var totalUpgrades = _item.Upgrades.Sum(s => s.Level);
+        var totalUpgrades = upgrades.Sum(s => s.Level);
         _upgradesRemainingLabel.text = $"{_gameItem.MaxUpgrades - totalUpgrades}";
         _displayLabel.text = _gameItem.DisplayName;
 
@@ -89,17 +90,19 @@ public class UpgradeView : MonoBehaviour
                 script = Instantiate(_controlPrefab, _contentTransform).GetComponent<UpgradeControl>();
                 script.OnUpgrade += OnUpgrade;
             }
-            var upgrade = _item.Upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
+            var upgrade = upgrades.FirstOrDefault(e => e.Id == upgradeInfo.Id);
             if (upgrade == null)
             {
                 upgrade = new Upgrade { };
                 upgrade.Id = upgradeInfo.Id;
 
-                _item.Upgrades.Add(upgrade);
+                upgrades.Add(upgrade);
             }
             script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
             _controls.Add(script);
         }
+
+        item.Upgrades = upgrades.ToArray();
     }
 
     private List<ResourceItemControl> _resourceList = new List<ResourceItemControl>();
@@ -174,7 +177,7 @@ public class UpgradeView : MonoBehaviour
         var obj = Instantiate(_resetUpgradesPrefab);
         var script = obj.GetComponent<UpgradeResetView>();
 
-        script.Init(_item.SpentResources);
+        script.Init(_item.SpentResources.ToList());
         script.OnReset += () => 
         {
             _player.ResetUpgrades(_item.Id, delegate (string itemId)

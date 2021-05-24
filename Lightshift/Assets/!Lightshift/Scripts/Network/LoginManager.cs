@@ -295,4 +295,10 @@ public class LoginManager : MonoBehaviour
                 break;
         }
     }
+
+    public void ShowGameServerAuthenticationFailure() 
+    {
+        DialogManager.ShowMessage("Uh oh! We couldn't properly authenticate you on the game server. Please try again.");
+        windowManager.OpenPanel("Login");
+    }
 }

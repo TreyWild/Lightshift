@@ -207,6 +207,7 @@ namespace Smooth
         /// <remarks>
         /// Only sends what it needs and compresses floats if you chose to.
         /// </remarks>
+        [Obsolete]
         public static void Serialize(this NetworkWriter writer, NetworkStateMirror msg)
         {
             bool sendPosition, sendRotation, sendScale, sendVelocity, sendAngularVelocity, sendAtPositionalRestTag, sendAtRotationalRestTag;
@@ -442,6 +443,7 @@ namespace Smooth
         /// <remarks>
         /// Only receives what it needs and decompresses floats if you chose to.
         /// </remarks>
+        [Obsolete]
         public static NetworkStateMirror Deserialize(this NetworkReader reader)
         {
             var msg = new NetworkStateMirror();

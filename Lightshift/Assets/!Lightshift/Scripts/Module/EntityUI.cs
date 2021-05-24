@@ -17,7 +17,7 @@ public class EntityUI : MonoBehaviour
             _ui = Instantiate(PrefabManager.Instance.entityUIPrefab, transform).GetComponent<EntityUIControl>();
     }
 
-    public void Init(bool hasAuthority = false, bool isServer = false)
+    public void Init(bool hasAuthority = false, bool isServer = false, string displayName = "")
     {
         this.hasAuthority = hasAuthority;
         this.isServer = isServer;
@@ -27,8 +27,10 @@ public class EntityUI : MonoBehaviour
 
         if (_ui != null && hasAuthority)
             Destroy(_ui.gameObject);
-        else if (_ui == null)
+        else if (_ui == null && !hasAuthority)
             _ui = Instantiate(PrefabManager.Instance.entityUIPrefab, transform).GetComponent<EntityUIControl>();
+
+        SetName(displayName);
     }
 
     public void SetShield(float min, float max)
@@ -67,5 +69,10 @@ public class EntityUI : MonoBehaviour
         if (!hasAuthority)
             _ui?.SetName(name);
         //else _ui?.SetName("");
+    }
+
+    public void SetTeam(bool isTeam) 
+    {
+        _ui?.SetTeam(isTeam);
     }
 }

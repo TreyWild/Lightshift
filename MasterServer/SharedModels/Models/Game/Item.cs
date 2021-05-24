@@ -7,15 +7,36 @@ using System.Threading.Tasks;
 namespace SharedModels.Models.Game
 {
     [Serializable]
-    public class Item
+    public struct Item
     {
-        public string UserId { get; set; }
-        public string Id { get; set; }
-        public string ModuleId { get; set; }
-        public string Color { get; set; } = "FFFFFF";
-        public List<Upgrade> Upgrades { get; set; }
-        public ModuleType ModuleLocation { get; set; }
-        public List<ResourceObject> SpentResources { get; set; }
-        public int MaxUpgrades { get; set; }
+        public string UserId;
+        public string Id;
+        public string ModuleId;
+
+        public string Color;
+        public Upgrade[] Upgrades;
+        public ModuleType ModuleLocation;
+        public ResourceObject[] SpentResources;
+        public int MaxUpgrades;
+
+        public static bool operator ==(Item obj, Item obj2)
+        {
+            return obj.Equals(obj2);
+        }
+        public static bool operator !=(Item obj, Item obj2)
+        {
+            return !obj.Equals(obj2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public static Item Empty() => new Item();
     }
 }

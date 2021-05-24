@@ -7,8 +7,7 @@ using System.Threading.Tasks;
 namespace SharedModels.Models.Game
 {
     public enum Modifier
-    {
-        None,
+    { 
         MaxHealth,
         Health,
         Shield,
@@ -29,9 +28,27 @@ namespace SharedModels.Models.Game
     }
 
     [Serializable]
-    public class Upgrade
+    public struct Upgrade
     {
-        public string Id { get; set; }
-        public int Level { get; set; }
+        public string Id;
+        public int Level;
+
+        public static bool operator ==(Upgrade obj, Upgrade obj2)
+        {
+            return obj.Equals(obj2);
+        }
+        public static bool operator !=(Upgrade obj, Upgrade obj2)
+        {
+            return !obj.Equals(obj2);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }
