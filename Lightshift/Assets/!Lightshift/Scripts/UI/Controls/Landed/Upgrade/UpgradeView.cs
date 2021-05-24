@@ -74,9 +74,9 @@ public class UpgradeView : MonoBehaviour
         if (_gameItem == null || _gameItem.Upgrades == null)
             return;
 
-        var upgrades = _item.Upgrades.ToList();
-        if (upgrades == null)
-            upgrades = new List<Upgrade>();
+        var upgrades = new List<Upgrade>();
+        if (_item.Upgrades != null)
+            upgrades = _item.Upgrades.ToList();
 
         var totalUpgrades = upgrades.Sum(s => s.Level);
         _upgradesRemainingLabel.text = $"{_gameItem.MaxUpgrades - totalUpgrades}";

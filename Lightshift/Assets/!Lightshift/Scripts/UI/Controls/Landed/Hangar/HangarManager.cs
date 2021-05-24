@@ -158,7 +158,7 @@ public class HangarManager : MonoBehaviour
 
         var itemView = DialogManager.ShowItemViewDialog();
 
-        itemView.onEquip += (item) =>
+        itemView.onClick += (item) =>
         {
             _player.EquipModule(item.Id, item.ModuleLocation, delegate (string moduleId)
             {
