@@ -350,33 +350,42 @@ public class Player : NetworkBehaviour
         return true;
     }
 
-    public Item SpendResources(Item item, List<ResourceObject> resources, float costMultiplier)
+    public Item SpendResources(Item item, List<ResourceObject> cost, float costMultiplier)
     {
-        var spentResources = item.SpentResources.ToList();
-        if (spentResources == null)
-            spentResources = new List<ResourceObject>();
+        // Ensure item spent resources aren't null
+        if (item.SpentResources == null)
+            item.SpentResources = new ResourceObject[0];
 
-        foreach (var resource in resources)
+        // Iterate costs
+        foreach (var resource in cost)
         {
-            var cost = (int)(resource.Amount * costMultiplier);
-            var amount = GetResource(resource.Type).Amount - cost;
-            if (amount < 0)
-                amount = 0;
-
-            Debug.LogError($"Resource Type: {resource.Type}:{resource.Amount}");
-            
-            SetResource(resource.Type, amount);
-
-            var spentResource = spentResources.FirstOrDefault(r => r.Type == resource.Type);
-            if (!spentResources.Any(r => r.Type == resource.Type))
+            //Ensure item spent resoureces contains cost type
+            if (!item.SpentResources.Any(r => r.Type == resource.Type))
             {
-                spentResource = new ResourceObject { Type = resource.Type, Amount = 0 };
-                spentResources.Add(spentResource);
+                var spentResource = new ResourceObject { Type = resource.Type, Amount = 0 };
+                item.SpentResources = item.SpentResources.Append(spentResource);
             }
-            spentResource.Amount += cost;
-        }
 
-        item.SpentResources = spentResources.ToArray();
+            // Find item spent resource object and modify it
+            for (int i = 0; i < item.SpentResources.Count(); i++)
+            {
+                // If not resource type, continue.
+                if (resource.Type != item.SpentResources[i].Type)
+                    continue;
+
+                // Calculate Expense
+                var expense = (int)(resource.Amount * costMultiplier);
+                var amount = GetResource(resource.Type).Amount - expense;
+                if (amount < 0)
+                    amount = 0;
+
+                // Modify resource
+                item.SpentResources[i].Amount += expense;
+
+                // Update resources for client 
+                SetResource(resource.Type, amount);
+            }
+        }
 
         return item;
     }
@@ -764,7 +773,7 @@ public class Player : NetworkBehaviour
 
         ship.EquippedModules = equippedModules.ToArray();
 
-        SaveLoadout(GetActiveLoadout());
+        SaveLoadout(ship);
 
         TargetRpcEquipModule(module.Id);
     }
@@ -837,14 +846,21 @@ public class Player : NetworkBehaviour
         if (gameItem == null || gameItem.Upgrades == null)
             return;
 
-        var upgrades = item.Upgrades.ToList();
-        if (upgrades == null)
-            upgrades = new List<Upgrade>();
+        // Init array
+        if (item.Upgrades == null)
+            item.Upgrades = new Upgrade[0];
+
+        // Ensure there's enough room in the array
+        bool hasExistingItem = item.Upgrades.Any(s => s.Id == upgradeId);
+        if (!hasExistingItem)
+        {
+            //var list = item.Upgrades.ToList();
+            //list.Add(new Upgrade());
+            //item.Upgrades = list.ToArray();
+            item.Upgrades = item.Upgrades.Append(new Upgrade());
+        }
 
         var totalUpgrades = item.Upgrades.Sum(s => s.Level);
-
-        Debug.LogError($"Upgrade ID (Player): {upgradeId}");
-
 
         // NOT ALLOWED - over max upgrades
         if (totalUpgrades >= gameItem.MaxUpgrades)
@@ -856,33 +872,36 @@ public class Player : NetworkBehaviour
         if (upgradeInfo == null)
             return;
 
-        var upgrade = item.Upgrades.FirstOrDefault(e => e.Id == upgradeId);
-
-        if (upgrade == null)
+        // For statement because structs are annoying
+        for (int i = 0; i < item.Upgrades.Count(); i++)
         {
-            upgrade = new Upgrade();
-            upgrade.Id = upgradeId;
-            upgrades.Add(upgrade);
+            var upgrade = item.Upgrades[i];
+
+            if (upgrade.Id == null)
+                upgrade.Id = upgradeId;
+
+            if (upgrade.Id != upgradeId)
+                continue;
+
+            // ALREADY MAXED
+            if (upgrade.Level >= 10)
+                return;
+
+            var costMultiplier = (int)((upgrade.Level + totalUpgrades + 1) * 1.15f);
+
+            // CHECK IF CAN AFFORD
+            bool affordable = CheckResourceAffordable(upgradeInfo.ResourceCost, costMultiplier);
+            if (!affordable)
+                return;
+
+            // SPEND CREDITS
+            item = SpendResources(item, upgradeInfo.ResourceCost, costMultiplier);
+
+            //Update upgrade array
+            upgrade.Level++;
+
+            item.Upgrades[i] = upgrade;
         }
-
-        // ALREADY MAXED
-        if (upgrade.Level >= 10)
-            return;
-
-        var costMultiplier = (int)((upgrade.Level + totalUpgrades + 1) * 1.15f);
-
-        // CHECK IF CAN AFFORD
-        bool affordable = CheckResourceAffordable(upgradeInfo.ResourceCost, costMultiplier);
-        if (!affordable)
-            return;
-
-        // SPEND CREDITS
-        item = SpendResources(item, upgradeInfo.ResourceCost, costMultiplier);
-
-        //Update upgrade array
-        item.Upgrades = upgrades.ToArray();
-
-        upgrade.Level++;
 
         SaveItem(item);
         SaveAccount();

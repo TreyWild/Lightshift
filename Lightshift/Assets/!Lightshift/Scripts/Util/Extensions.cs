@@ -15,15 +15,11 @@ public static class Extensions
 
     public static T[] Append<T>(this T[] array, T item)
     {
-        if (array == null)
-        {
-            return new T[] { item };
-        }
-        T[] result = new T[array.Length + 1];
-        array.CopyTo(result, 0);
-        result[array.Length] = item;
-        return result;
+        var list = array.ToList();
+        list.Add(item);
+        return list.ToArray();
     }
+
     public static float CalculateStat(float baseValue, float valueMultiplier, float flat, float level) 
     {
         return (baseValue + flat) * ((1 + 0.08f * level) * valueMultiplier / 100);
