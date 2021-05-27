@@ -40,6 +40,7 @@ public class Player : NetworkBehaviour
         _onShipChanged?.Invoke(newValue);
     }
 
+    public readonly SyncDictionary<ResourceType, int> BankResources = new SyncDictionary<ResourceType, int>();
     public readonly SyncDictionary<ResourceType, int> Resources = new SyncDictionary<ResourceType, int>();
     public readonly SyncDictionary<string, Item> Items = new SyncDictionary<string, Item>();
     public readonly SyncDictionary<string, LoadoutObject> ShipLoadouts = new SyncDictionary<string, LoadoutObject>();
@@ -102,6 +103,7 @@ public class Player : NetworkBehaviour
     private bool _resourcesLoaded;
     private bool _initPreAccountData;
     private bool _requirePlayerInit;
+    private bool _bankResourcesLoaded;
     private void InitPlayerData() 
     {
         if (!_accountLoaded)
@@ -112,6 +114,11 @@ public class Player : NetworkBehaviour
         if (!_resourcesLoaded)
         {
             LoadResources(() => InitPlayerData());
+            return;
+        }
+        if (!_bankResourcesLoaded)
+        {
+            LoadBankResources(() => InitPlayerData());
             return;
         }
         if (!_itemsLoaded)
@@ -219,15 +226,7 @@ public class Player : NetworkBehaviour
 
         return items;
     }
-    public List<ResourceObject> GetResources()
-    {
-        var items = new List<ResourceObject>();
-        foreach (var item in Resources)
-        {
-            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
-        }
-        return items;
-    }
+
     public Item GetItem(string id)
     {
         if (!Items.ContainsKey(id))
@@ -245,6 +244,77 @@ public class Player : NetworkBehaviour
     }
 
     #region Resources
+
+    public void LoadBankResources(Action callback = null)
+    {
+        _bankResourcesLoaded = true;
+
+        if (_profile.Bank == null)
+        {
+            // Add resources to new account
+            _profile.Bank = new List<ResourceObject>();
+        }
+
+        foreach (var resource in _profile.Bank)
+            AddResource(resource);
+
+        callback.Invoke();
+    }
+
+    public ResourceObject GetBankResource(ResourceType type)
+    {
+        if (!BankResources.ContainsKey(type))
+            return new ResourceObject { Amount = 0, Type = type };
+        else return new ResourceObject { Amount = Resources[type], Type = type };
+
+    }
+    public void SetBankResource(ResourceObject resource) => SetBankResource(resource.Type, resource.Amount);
+    public void SetBankResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!BankResources.ContainsKey(type))
+                BankResources.Add(type, value);
+            else
+                BankResources[type] = value;
+        }
+    }
+
+    public void AddBankResource(ResourceObject resource) => AddBankResource(resource.Type, resource.Amount);
+    public void AddBankResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!BankResources.ContainsKey(type))
+                BankResources.Add(type, value);
+            else
+                BankResources[type] += value;
+        }
+    }
+
+    public void TakeBankResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!BankResources.ContainsKey(type))
+                BankResources.Add(type, value);
+            else
+                BankResources[type] -= value;
+
+            if (BankResources[type] < 0)
+                BankResources[type] = 0;
+        }
+    }
+    public List<ResourceObject> GetBankResources()
+    {
+        var items = new List<ResourceObject>();
+        foreach (var item in BankResources)
+        {
+            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
+        }
+        return items;
+    }
+
     public void LoadResources(Action callback = null) 
     {
         _resourcesLoaded = true;
@@ -262,6 +332,15 @@ public class Player : NetworkBehaviour
         callback.Invoke();
     }
 
+    public List<ResourceObject> GetResources()
+    {
+        var items = new List<ResourceObject>();
+        foreach (var item in Resources)
+        {
+            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
+        }
+        return items;
+    }
     public ResourceObject GetResource(ResourceType type) 
     {
         if (!Resources.ContainsKey(type))
@@ -522,6 +601,7 @@ public class Player : NetworkBehaviour
             _profile.IsLanded = IsLanded;
             _profile.LandedLocationId = LandedLocationId;
             _account.Profile = _profile;
+            _profile.Bank = GetBankResources();
             HttpService.Get("account/save", _account,
             delegate (Account account)
             {
@@ -910,40 +990,94 @@ public class Player : NetworkBehaviour
 
     #endregion
 
-    public void BankTransaction(BankAction action, int credits)
+    public void DepositAllCargo()
     {
-        CmdBankAction((uint)action, credits);
+        CmdDepositAll();
     }
 
     [Command]
-    private void CmdBankAction(uint actionId, int credits) 
+    private void CmdDepositAll()
     {
-        var action = (BankAction)actionId;
+        var cargo = GetResources();
 
+        foreach (var item in cargo)
+        {
+            AddBankResource(item.Type, item.Amount);
+            TakeResource(item.Type, item.Amount);
+        }
+    }
+
+    public void WithdrawAllCargo()
+    {
+        CmdWithdrawAll();
+    }
+
+    [Command]
+    private void CmdWithdrawAll() 
+    {
+        var bank = GetBankResources();
+
+        foreach (var item in bank)
+        {
+            AddResource(item.Type, item.Amount);
+            TakeBankResource(item.Type, item.Amount);
+        }
+    }
+
+    public void BankTransaction(BankAction action, ResourceType type, int balance)
+    {
+        CmdBankAction(action, type, balance);
+    }
+
+    [Command]
+    private void CmdBankAction(BankAction action, ResourceType type, int balance) 
+    {
         switch (action) 
         {
             case BankAction.Deposit:
-                if (credits > Credits)
+
+                var cargo = GetResource(type);
+
+                // If there is less or equal cargo than the amount specified in CMD
+                if (balance > cargo.Amount)
                 {
-                    BankCredits += Credits;
-                    Credits = 0;
-                }
-                else if (credits > 0)
+                    // Add to bank
+                    AddBankResource(type, balance);
+
+                    // Remove from cargo
+                    SetResource(type, 0);
+                }// If there is more or equal cargo than the amount specified in CMD
+                else if (balance > 0)
                 {
-                    BankCredits += credits;
-                    Credits -= credits;
+                    // Add to bank
+                    AddBankResource(type, balance);
+
+                    // Remove from cargo
+                    SetResource(type, cargo.Amount - balance);
                 }
                 break;
+
             case BankAction.Withdraw:
-                if (credits > BankCredits)
+
+                var bank = GetBankResource(type);
+
+                // If there is less or equal in the bank than specified by CMD
+                if (balance > bank.Amount)
                 {
-                    Credits += BankCredits;
-                    BankCredits = 0;
+                    // Add to cargo
+                    AddResource(type, balance);
+
+                    // Remove from Bank
+                    SetBankResource(type, 0);
                 }
-                else if (credits > 0)
+                // If there is more or equal in the bank than specified by the CMD
+                else if (balance > 0)
                 {
-                    Credits += credits;
-                    BankCredits -= credits;
+                    // Add to cargo
+                    AddResource(type, balance);
+
+                    // Remove from bank
+                    SetBankResource(type, bank.Amount - balance);
                 }
                 break;
         }

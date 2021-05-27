@@ -1,4 +1,5 @@
 ﻿using Michsky.UI.ModernUIPack;
+using SharedModels.Models.Game;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -12,48 +13,54 @@ public enum BankAction
 public class BankDialog : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _bankBalance;
-    [SerializeField] private TextMeshProUGUI _walletBalance;
-    [SerializeField] private TMP_InputField _inputCredits;
+    [SerializeField] private TextMeshProUGUI _cargoBalance;
+    [SerializeField] private TMP_InputField _inputBalance;
     [SerializeField] private ButtonManagerBasic _buttonConfirm;
     [SerializeField] private ButtonManagerBasic _buttonCancel;
 
     public Action<int> onConfirm;
 
+    public ResourceType type;
+
     private BankAction _action;
 
     private int bank, wallet;
-    public void Init(int wallet, int bank, BankAction action)
+    public void Init(int wallet, int bank, ResourceType type, BankAction action)
     {
         this.bank = bank;
         this.wallet = wallet;
         _action = action;
 
-        _inputCredits.text = $"1000";
+        if (action == BankAction.Deposit)
+            _inputBalance.text = $"{wallet}";
+        else if (action == BankAction.Withdraw)
+            _inputBalance.text = $"{bank}";
+
         _bankBalance.text = $"{bank:D}";
-        _walletBalance.text = $"{wallet:D}";
+        _cargoBalance.text = $"{wallet:D}";
 
         _buttonConfirm.buttonText = action.ToString();;
         _buttonConfirm.UpdateUI();
 
-        _inputCredits.onValueChanged.AddListener(delegate
+        _inputBalance.onValueChanged.AddListener(delegate
         {
             try
             {
-                var credits = int.Parse(_inputCredits.text);
+                var credits = int.Parse(_cargoBalance.text);
 
                 switch (_action)
                 {
                     case BankAction.Deposit:
                         if (credits > wallet)
                         {
-                            _inputCredits.text = $"{wallet}";
+                            _cargoBalance.text = $"{wallet}";
                             return;
                         }
                         break;
                     case BankAction.Withdraw:
                         if (credits > bank)
                         {
-                            _inputCredits.text = $"{bank}";
+                            _cargoBalance.text = $"{bank}";
                             return;
                         }
                         break;
@@ -70,32 +77,35 @@ public class BankDialog : MonoBehaviour
     {
         try
         {
-            var credits = int.Parse(_inputCredits.text);
+            var amount = int.Parse(_inputBalance.text);
 
             switch (_action)
             {
                 case BankAction.Deposit:
-                    if (credits > wallet)
+                    if (amount > wallet)
                     {
-                        DialogManager.ShowMessage("You do not have enough credits!");
+                        DialogManager.ShowMessage($"You do not have enough {type}!"); 
                         return;
                     }
                     break;
                 case BankAction.Withdraw:
-                    if (credits > bank)
+                    if (amount > bank)
                     {
-                        DialogManager.ShowMessage("You do not have enough credits!");
+                        DialogManager.ShowMessage($"You do not have enough {type}!");
                         return;
                     }
                     break;
             }
-            onConfirm?.Invoke(credits);
+            onConfirm?.Invoke(amount);
             Destroy(gameObject);
         }
         catch
         {
             DialogManager.ShowMessage("Please enter a valid number of credits!");
-            _inputCredits.text = $"1000";
+            if (_action == BankAction.Deposit)
+                _inputBalance.text = $"{wallet}";
+            else if (_action == BankAction.Withdraw)
+                _inputBalance.text = $"{bank}";
         }
     }
 
