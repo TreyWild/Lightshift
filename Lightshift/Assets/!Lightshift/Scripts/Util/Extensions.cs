@@ -20,6 +20,11 @@ public static class Extensions
         return list.ToArray();
     }
 
+    public static string ToSentence(this string Input)
+    {
+        return new string(Input.SelectMany((c, i) => i > 0 && char.IsUpper(c) ? new[] { ' ', c } : new[] { c }).ToArray());
+    }
+
     public static float CalculateStat(float baseValue, float valueMultiplier, float flat, float level) 
     {
         return (baseValue + flat) * ((1 + 0.08f * level) * valueMultiplier / 100);

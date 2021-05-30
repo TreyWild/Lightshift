@@ -322,7 +322,7 @@ public class Player : NetworkBehaviour
         if (_profile.Resources == null)
         {
             // Add resources to new account
-            _profile.Resources = PlayerDefaults.GetTestResources();
+            _profile.Resources = ItemService.GetPlayerDefaults().Resources;
         }
 
         foreach (var resource in _profile.Resources)
@@ -429,6 +429,20 @@ public class Player : NetworkBehaviour
         return true;
     }
 
+    public void SpendResources(List<ResourceObject> cost)
+    {
+        foreach (var resource in cost)
+        {
+            // Calculate Expense
+            var amount = GetResource(resource.Type).Amount - resource.Amount;
+            if (amount < 0)
+                amount = 0;
+
+            // Update resources for client 
+            SetResource(resource.Type, amount);
+        }
+    }
+
     public Item SpendResources(Item item, List<ResourceObject> cost, float costMultiplier)
     {
         // Ensure item spent resources aren't null
@@ -530,7 +544,7 @@ public class Player : NetworkBehaviour
 
     public void AddLoadout(LoadoutObject ship) 
     {
-        _profile.ActiveLoadout = ship.Id;
+        ActiveLoadout = ship.Id;
         ShipLoadouts.Add(ship.Id, ship);
 
         Debug.Log($"New ship built for {_account.Profile.Username}.");
@@ -713,30 +727,29 @@ public class Player : NetworkBehaviour
         if (ShipLoadouts == null || ShipLoadouts.Count == 0)
         {
             // Load default items
-            var items = PlayerDefaults.GetDefaultItems();
+            var items = ItemService.GetPlayerDefaults().Items;
 
             var existingItems = GetItems();
-            foreach (var item in items)
-            {
-                //Ensure no duplicate defaults
-                if (existingItems.FirstOrDefault(s=> s.ModuleId == item.ModuleId) == null)
-                    AddItem(item);
-            }
 
             // Add new ship object
             var newShip = new LoadoutObject();
             newShip.Id = Guid.NewGuid().ToString();
-            var equips = new List<string>();
 
             foreach (var item in items)
-                equips.Add(item.Id);
+                AddItem(new Item
+                { 
+                    ModuleId = item.Id,
+                    UserId = _account.Id,
+                });
 
-            newShip.EquippedModules = equips.ToArray();
-
-            AddLoadout(newShip);
+            AddLoadout(ItemService.GetPlayerDefaults().Loadout);
 
             // Setup Landed location
-            LandedLocationId = PlayerDefaults.GetDefaultStation();
+            var station = FindObjectsOfType<Station>().FirstOrDefault(s => s.defaultStation);
+            if (station != null)
+                LandedLocationId = station.Id;
+
+            Credits = ItemService.GetPlayerDefaults().Credits;
 
             // Save account
             SaveAccount();
@@ -814,7 +827,7 @@ public class Player : NetworkBehaviour
         SaveLoadout(shipLoadout);
     }
 
-    public void EquipModule(string id, ModuleType location, Action<string> callback = null)
+    public void EquipModule(string id, ModuleLocation location, Action<string> callback = null)
     {
         if (isLocalPlayer)
         {
@@ -827,31 +840,52 @@ public class Player : NetworkBehaviour
     private void CmdEquipModule(string id, uint location)
     {
         // Short for location
-        var loc = (ModuleType)location;
+        var loc = (ModuleLocation)location;
         var ship = GetActiveLoadout();
         if (ship == null)
             return;
 
-        var module = GetItem(id);
-        if (module == null)
+        var item = GetItem(id);
+        if (item == null)
             return;
 
-        var equippedModules = ship.EquippedModules.ToList() ;
-        if (equippedModules == null)
-            equippedModules = new List<string>();
+        if (ship.EquippedModules == null)
+            ship.EquippedModules = new EquipObject[0];
 
-        // Remove any old equips
-        for (int i = 0; i < equippedModules.Count; i++)
+        // Ensure there's enough room in the array
+        bool hasExistingItem = ship.EquippedModules.Any(s => s.location == loc);
+        if (!hasExistingItem)
         {
-            var equip = ship.EquippedModules[i];
-            var item = GetItem(equip);
-            if (item.ModuleLocation == loc)
-                equippedModules.Remove(equip);
+            //var list = item.Upgrades.ToList();
+            //list.Add(new Upgrade());
+            //item.Upgrades = list.ToArray();
+            ship.EquippedModules = ship.EquippedModules.Append(new EquipObject {location = loc });
         }
 
-        equippedModules.Add(module.Id);
+        var module = ItemService.GetItem(item.ModuleId);
 
-        ship.EquippedModules = equippedModules.ToArray();
+        if (module == null || module.InstallLocations == null)
+            return;
+
+        bool allowedAction = module.InstallLocations.Contains(loc);
+
+        if (!allowedAction)
+            return;
+
+        // Equip Module
+        for (int i = 0; i < ship.EquippedModules.Count(); i++)
+        {
+            var equip = ship.EquippedModules[i];
+            if (equip.location == loc)
+            {
+                ship.EquippedModules[i].itemId = item.Id;
+                continue;
+            }
+
+            // Remove equips from existing locations
+            if (equip.itemId == item.Id)
+                ship.EquippedModules[i].itemId = null;
+        }
 
         SaveLoadout(ship);
 
@@ -990,6 +1024,67 @@ public class Player : NetworkBehaviour
 
     #endregion
 
+
+    #region Buy Items
+    [Command]
+    private void CmdBuyModuleWithResources(string moduleId)
+    {
+        var gameItem = ItemService.GetItem(moduleId);
+        if (gameItem == null || gameItem.Upgrades == null)
+            return;
+
+        var cost = gameItem.resourceCost;
+        bool affordable = CheckResourceAffordable(cost);
+        if (!affordable)
+            return;
+
+        SpendResources(cost);
+
+        var item = new Item
+        {
+            Id = Guid.NewGuid().ToString(),
+            MaxUpgrades = gameItem.MaxUpgrades,
+            ModuleId = gameItem.Id,
+            UserId = Id
+        };
+
+        AddItem(item);
+    }
+
+    public void BuyModuleWithResources(string moduleId) 
+    {
+        CmdBuyModuleWithResources(moduleId);
+    }
+    [Command]
+    private void CmdBuyModuleCredits(string moduleId)
+    {
+        var gameItem = ItemService.GetItem(moduleId);
+        if (gameItem == null || gameItem.Upgrades == null)
+            return;
+
+        var cost = gameItem.creditsCost;
+        bool affordable = Credits >= cost;
+        if (!affordable)
+            return;
+
+        Credits -= cost;
+
+        var item = new Item
+        {
+            Id = Guid.NewGuid().ToString(),
+            MaxUpgrades = gameItem.MaxUpgrades,
+            ModuleId = gameItem.Id,
+            UserId = Id
+        };
+
+        AddItem(item);
+    }
+    public void BuyModuleWithCredits(string moduleId)
+    {
+        CmdBuyModuleCredits(moduleId);
+    }
+
+    #endregion
     public void DepositAllCargo()
     {
         CmdDepositAll();
@@ -1005,6 +1100,8 @@ public class Player : NetworkBehaviour
             AddBankResource(item.Type, item.Amount);
             TakeResource(item.Type, item.Amount);
         }
+
+        SaveAccount();
     }
 
     public void WithdrawAllCargo()
@@ -1022,6 +1119,8 @@ public class Player : NetworkBehaviour
             AddResource(item.Type, item.Amount);
             TakeBankResource(item.Type, item.Amount);
         }
+
+        SaveAccount();
     }
 
     public void BankTransaction(BankAction action, ResourceType type, int balance)
@@ -1081,5 +1180,7 @@ public class Player : NetworkBehaviour
                 }
                 break;
         }
+
+        SaveAccount();
     }
 }

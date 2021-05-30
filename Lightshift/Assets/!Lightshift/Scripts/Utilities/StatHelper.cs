@@ -15,7 +15,7 @@ namespace Assets._Lightshift.Scripts.Utilities
             var stats = new List<GameModifier>();
             var items = player.GetItems();
 
-            var equippedItems = items.Where(e => loadoutObject.EquippedModules.Contains(e.Id));
+            var equippedItems = items.Where(e => loadoutObject.EquippedModules.Any(s => s.itemId == e.Id));
             foreach (var equip in equippedItems)
             {
                 var item = ItemService.GetItem(equip.ModuleId);

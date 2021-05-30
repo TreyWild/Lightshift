@@ -9,6 +9,8 @@ public class Station : Landable
     [Header("Blink image")]
     [SerializeField] private Sprite _blinkSprite;
 
+    public bool defaultStation;
+
     private SpriteRenderer _renderer;
     private void Start()
     {

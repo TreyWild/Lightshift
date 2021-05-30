@@ -18,11 +18,23 @@ namespace Assets._Lightshift.Scripts.Utilities
             return color;
         }
 
+        public static string ToHex(Color hex)
+        {
+            return ColorUtility.ToHtmlStringRGBA(hex);
+        }
+
         public static Color FromItemType(ItemType type) 
         {
             var id = (uint)type;
             return FromModifier((Modifier)id);
         }
+
+        public static Color FromResourceType(ResourceType type)
+        {
+            var id = (uint)type;
+            return FromModifier((Modifier)id);
+        }
+
         public static Color FromModifier(Modifier modifier) 
         {
             Color color = FromHex("#49f5ff");

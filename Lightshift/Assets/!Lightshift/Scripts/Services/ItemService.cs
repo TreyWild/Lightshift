@@ -41,4 +41,9 @@ public class ItemService : MonoBehaviour
 
         return _resourceItems;
     }
+
+    public static PlayerDefaults GetPlayerDefaults() 
+    {
+        return Resources.LoadAll<PlayerDefaults>("").ToList().FirstOrDefault();
+    }
 }

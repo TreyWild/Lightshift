@@ -15,7 +15,6 @@ namespace SharedModels.Models.Game
 
         public string Color;
         public Upgrade[] Upgrades;
-        public ModuleType ModuleLocation;
         public ResourceObject[] SpentResources;
         public int MaxUpgrades;
 

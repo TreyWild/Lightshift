@@ -12,7 +12,7 @@ namespace SharedModels.Models.Game
         public string Name;
         public string Id;
         public string UserId;
-        public string[] EquippedModules;
+        public EquipObject[] EquippedModules;
 
         public static bool operator ==(LoadoutObject obj, LoadoutObject obj2)
         {
@@ -33,5 +33,12 @@ namespace SharedModels.Models.Game
         }
 
         public static LoadoutObject Empty() => new LoadoutObject();
+    }
+
+    [Serializable]
+    public struct EquipObject 
+    {
+        public ModuleLocation location;
+        public string itemId;
     }
 }

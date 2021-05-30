@@ -37,6 +37,11 @@ public class Server : MonoBehaviour
         return Instance._players.FirstOrDefault(p => p.GetConnection() == connection);
     }
 
+    public static Player GetPlayer(string id)
+    {
+        return Instance._players.FirstOrDefault(p => p.Id.ToLower() == id.ToLower());
+    }
+
     public static void AddPlayer(Player player) 
     {
         if (!Instance._players.Contains(player))

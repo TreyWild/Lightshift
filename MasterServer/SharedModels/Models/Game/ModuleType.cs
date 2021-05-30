@@ -6,7 +6,22 @@ using System.Threading.Tasks;
 
 namespace SharedModels.Models.Game
 {
-    public enum ModuleType
+    public enum ItemType
+    {
+        None,
+        Scrap,
+        Engine,
+        Wing,
+        Armor,
+        Weapon,
+        Generator,
+        LightLance,
+        Shield,
+        MiningDrill,
+        Hull,
+    }
+
+    public enum ModuleLocation
     {
         Hull,
         PrimaryWings,

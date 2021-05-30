@@ -98,7 +98,7 @@ public class PlayerShip : Ship
 
         SetModifiers(stats);
 
-        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Contains(s.Id)).ToList();
+        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Any(e => e.itemId == s.Id)).ToList();
         if (_equippedModules != null && _equippedModules.Count > 0)
         {
             InitModules(_equippedModules);

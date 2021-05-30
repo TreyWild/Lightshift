@@ -13,6 +13,7 @@ namespace Assets._Lightshift.Scripts.Data
     public class ResourceItem : ScriptableObject
     {
         public ResourceType Type;
+        public Color DisplayColor = Color.white;
         public string DisplayName;
         public string Lore;
         public Sprite Sprite;
