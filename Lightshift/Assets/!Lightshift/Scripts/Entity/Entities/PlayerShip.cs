@@ -87,64 +87,58 @@ public class PlayerShip : Ship
     private void CmdInit(NetworkConnectionToClient sender = null)
     {
         if (_inited) 
-            TargetInitModules(sender, JsonConvert.SerializeObject(_equippedModules));
+            TargetInitModules(sender, _loadoutObject);
     }
     public void InitLoadoutObject(LoadoutObject loadoutObject) 
     {
+        _loadoutObject = loadoutObject;
+
         displayName = Player.Username;
 
-        _loadoutObject = loadoutObject;
         var stats = StatHelper.GetStatsFromShip(Player, loadoutObject);
 
         SetModifiers(stats);
 
-        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Any(e => e.itemId == s.Id)).ToList();
+        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Any(e => e.itemId == s.ModuleId)).ToList();
         if (_equippedModules != null && _equippedModules.Count > 0)
         {
-            InitModules(_equippedModules);
-            RpcInitModules(JsonConvert.SerializeObject(_equippedModules));
+            InitLoadout(loadoutObject);
+            RpcInitLoadout(loadoutObject);
             _inited = true;
         }
     }
 
     [ClientRpc]
-    private void RpcInitModules(string json) 
+    private void RpcInitLoadout(LoadoutObject loadout) 
     {
-        var modules = JsonConvert.DeserializeObject<List<Item>>(json);
-        InitModules(modules);
+        InitLoadout(loadout);
     }
 
     [TargetRpc]
-    private void TargetInitModules(NetworkConnection target, string json)
+    private void TargetInitModules(NetworkConnection target, LoadoutObject loadout)
     {
-        var modules = JsonConvert.DeserializeObject<List<Item>>(json);
-        InitModules(modules);
+        InitLoadout(loadout);
     }
 
-    private void InitModules(List<Item> equippedModules) 
+    private void InitLoadout(LoadoutObject loadout) 
     {
-        if (equippedModules == null)
-            return;
-
-        foreach (var module in equippedModules)
-        {
-            if (module == null)
-                continue;
-
-            var item = ItemService.GetItem(module.ModuleId);
-            if (item == null)
-                continue;
-
-            switch (item.Type)
+        if (loadout.EquippedModules != null)
+            foreach (var equip in loadout.EquippedModules)
             {
-                case ItemType.Wing:
-                    SetWings(item.Sprite);
-                    break;
-                case ItemType.Hull:
-                    SetHull(item.Sprite);
-                    break;
+                var item = ItemService.GetItem(equip.itemId);
+                if (item == null)
+                    continue;
+
+                switch (item.Type)
+                {
+                    case ItemType.Wing:
+                        SetWings(item.Sprite);
+                        break;
+                    case ItemType.Hull:
+                        SetHull(item.Sprite);
+                        break;
+                }
             }
-        }
     }
 
 #pragma warning disable CS0108 // Member hides inherited member; missing new keyword

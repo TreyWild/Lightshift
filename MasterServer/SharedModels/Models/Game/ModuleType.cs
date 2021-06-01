@@ -27,7 +27,6 @@ namespace SharedModels.Models.Game
         PrimaryWings,
         SecondaryWings,
         Engine,
-        Weapon,
         Weapon1,
         Weapon2,
         Weapon3,

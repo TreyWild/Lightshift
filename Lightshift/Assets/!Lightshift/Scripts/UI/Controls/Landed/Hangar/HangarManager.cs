@@ -35,6 +35,11 @@ public class HangarManager : MonoBehaviour
         RefreshLoadouts();
     }
 
+    private void OnDestroy()
+    {
+        if (_player != null)
+            _player.ShipLoadouts.Callback -= ShipLoadouts_Callback;
+    }
     private void ShipLoadouts_Callback(Mirror.SyncIDictionary<string, LoadoutObject>.Operation op, string key, LoadoutObject item)
     {
         RefreshLoadouts();
@@ -53,14 +58,14 @@ public class HangarManager : MonoBehaviour
 
         foreach (var equip in activeShip.EquippedModules)
         {
-            var module = _player.GetItems().FirstOrDefault(m => m.Id == equip.itemId);
-            if (module == null)
+            var module = _player.GetItems().FirstOrDefault(m => m.ModuleId == equip.itemId);
+            if (module.ModuleId == null)
                 continue;
 
             var item = ItemService.GetItem(module.ModuleId);
             Debug.Log($"Loading Ship Module {item.name}");
             var control = _moduleControlList.FirstOrDefault(m => m.ModuleLocation == equip.location);
-            control.SetItem(item);
+             control.SetItem(item);
         }
 
         RefreshStats();
@@ -97,9 +102,13 @@ public class HangarManager : MonoBehaviour
     {
         if (_loadoutControls != null && _loadoutControls.Count > 0)
             foreach (var loadout in _loadoutControls)
-                Destroy(loadout.gameObject);
+            {
+                if (loadout.gameObject != null)
+                    Destroy(loadout.gameObject);
+            }
 
         _loadoutControls.Clear();
+
         foreach (var loadout in _player.GetShipLoadouts())
            AddLoadout(loadout);
     }
@@ -134,9 +143,6 @@ public class HangarManager : MonoBehaviour
             case ModuleLocation.SecondaryWings:
                 targetType = ItemType.Wing;
                 break;
-            case ModuleLocation.Weapon:
-                targetType = ItemType.Weapon;
-                break;
             case ModuleLocation.Weapon1:
                 targetType = ItemType.Weapon;
                 break;
@@ -167,54 +173,9 @@ public class HangarManager : MonoBehaviour
 
         itemView.onClick += (Item item) =>
         {
-            _player.EquipModule(item.Id, moduleItemControl.ModuleLocation, delegate (string moduleId)
-            {
-                if (_player.isLocalPlayer)
-                {
-                    if (activeShip.EquippedModules == null)
-                        activeShip.EquippedModules = new EquipObject[0];
+            _player.EquipModule(item.Id, moduleItemControl.ModuleLocation);
 
-                    // Ensure there's enough room in the array
-                    bool hasExistingItem = activeShip.EquippedModules.Any(s => s.location == moduleItemControl.ModuleLocation);
-                    if (!hasExistingItem)
-                    {
-                        //var list = item.Upgrades.ToList();
-                        //list.Add(new Upgrade());
-                        //item.Upgrades = list.ToArray();
-                        activeShip.EquippedModules = activeShip.EquippedModules.Append(new EquipObject { location = moduleItemControl.ModuleLocation });
-                    }
-
-                    var module = ItemService.GetItem(moduleId);
-
-                    if (module == null || module.InstallLocations == null)
-                        return;
-
-                    bool allowedAction = module.InstallLocations.Contains(moduleItemControl.ModuleLocation);
-
-                    if (!allowedAction)
-                    {
-                        DialogManager.ShowMessage("You tried to equip a module where it's not allowed.");
-                        return;
-                    }
-
-                    // Equip Module
-                    for (int i = 0; i < activeShip.EquippedModules.Count(); i++)
-                    {
-                        var equip = activeShip.EquippedModules[i];
-                        if (equip.location == moduleItemControl.ModuleLocation) {
-                            activeShip.EquippedModules[i].itemId = item.Id;
-                            continue;
-                        }
-
-                        //remove existing equips in other locations
-                        if (equip.itemId == item.Id)
-                            activeShip.EquippedModules[i].itemId = null;
-                    }
-                }
-
-                RefreshHangar();
-                itemView.Exit();
-            });
+            itemView.Exit();
         };
 
         itemView.Init(items, $"Module Select: {targetType}");

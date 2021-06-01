@@ -7,6 +7,7 @@ using SharedModels.Models.Game;
 
 public class ItemService : MonoBehaviour
 {
+    private static PlayerDefaults _defaultPlayer;
     private static List<ModuleItem> _items;
     private static List<ResourceItem> _resourceItems;
 
@@ -14,6 +15,35 @@ public class ItemService : MonoBehaviour
     private static void Initialize() 
     {
         _items = Resources.LoadAll<ModuleItem>("").ToList();
+        _defaultPlayer = Resources.LoadAll<PlayerDefaults>("").ToList().FirstOrDefault();
+        foreach (var item in _items) 
+        {
+            switch (item.Type)
+            {
+                case ItemType.Wing:
+                    item.InstallLocations = new List<ModuleLocation>();
+                    item.InstallLocations.Add(ModuleLocation.PrimaryWings);
+                    item.InstallLocations.Add(ModuleLocation.SecondaryWings);
+                    break;
+                case ItemType.Weapon:
+                    item.InstallLocations = new List<ModuleLocation>();
+                    item.InstallLocations.Add(ModuleLocation.Weapon1);
+                    item.InstallLocations.Add(ModuleLocation.Weapon2);
+                    item.InstallLocations.Add(ModuleLocation.Weapon3);
+                    item.InstallLocations.Add(ModuleLocation.Weapon4);
+                    item.InstallLocations.Add(ModuleLocation.Weapon5);
+                    break;
+                case ItemType.Hull:
+                    item.InstallLocations = new List<ModuleLocation>();
+                    item.InstallLocations.Add(ModuleLocation.Hull);
+                    break;
+
+                case ItemType.Engine:
+                    item.InstallLocations = new List<ModuleLocation>();
+                    item.InstallLocations.Add(ModuleLocation.Engine);
+                    break;
+            }
+        }
         _resourceItems = Resources.LoadAll<ResourceItem>("").ToList();
         _inititalized = true;
     }
@@ -44,6 +74,9 @@ public class ItemService : MonoBehaviour
 
     public static PlayerDefaults GetPlayerDefaults() 
     {
-        return Resources.LoadAll<PlayerDefaults>("").ToList().FirstOrDefault();
+        if (!_inititalized)
+            Initialize();
+
+        return _defaultPlayer;
     }
 }

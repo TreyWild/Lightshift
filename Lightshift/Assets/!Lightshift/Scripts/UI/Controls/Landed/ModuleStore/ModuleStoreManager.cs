@@ -52,7 +52,7 @@ public class ModuleStoreManager : MonoBehaviour
             var landable = LandableManager.GetLandableById(_player.LandedLocationId);
             if (landable == null)
             {
-                Debug.LogError($"Landable is NULL.");
+                //Debug.LogError($"Landable is NULL.");
 
                 return;
             }
@@ -60,7 +60,7 @@ public class ModuleStoreManager : MonoBehaviour
             var store = landable as ModuleStoreLandable;
             if (store == null)
             {
-                Debug.LogError($"Store Landable is NULL.");
+                //Debug.LogError($"Store Landable is NULL.");
                 return;
             }
 

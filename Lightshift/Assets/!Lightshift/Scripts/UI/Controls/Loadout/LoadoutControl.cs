@@ -26,7 +26,7 @@ public class LoadoutControl : MonoBehaviour
 
         _player = player;
 
-        var equippedItems = player.GetItems().Where(e => loadoutObject.EquippedModules.Any(s => s.itemId == e.Id));
+        var equippedItems = player.GetItems().Where(e => loadoutObject.EquippedModules.Any(s => s.itemId == e.ModuleId));
         foreach (var equip in equippedItems)
         {
             var item = ItemService.GetItem(equip.ModuleId);

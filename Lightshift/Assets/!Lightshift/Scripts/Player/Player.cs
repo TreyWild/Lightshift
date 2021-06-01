@@ -544,6 +544,8 @@ public class Player : NetworkBehaviour
 
     public void AddLoadout(LoadoutObject ship) 
     {
+        ship.Id = Guid.NewGuid().ToString();
+        ship.UserId = _account.Id;
         ActiveLoadout = ship.Id;
         ShipLoadouts.Add(ship.Id, ship);
 
@@ -555,8 +557,6 @@ public class Player : NetworkBehaviour
     {
         if (!isServer)
             return;
-
-        ship.UserId = _account.Id;
 
         ShipLoadouts[ship.Id] = ship;
 
@@ -729,8 +729,6 @@ public class Player : NetworkBehaviour
             // Load default items
             var items = ItemService.GetPlayerDefaults().Items;
 
-            var existingItems = GetItems();
-
             // Add new ship object
             var newShip = new LoadoutObject();
             newShip.Id = Guid.NewGuid().ToString();
@@ -831,16 +829,14 @@ public class Player : NetworkBehaviour
     {
         if (isLocalPlayer)
         {
-            _onModuleEquipped = callback;
-            CmdEquipModule(id, (uint)location);
+            //_onModuleEquipped = callback;
+            CmdEquipModule(id, location);
         }
     }
 
     [Command]
-    private void CmdEquipModule(string id, uint location)
+    private void CmdEquipModule(string id, ModuleLocation loc)
     {
-        // Short for location
-        var loc = (ModuleLocation)location;
         var ship = GetActiveLoadout();
         if (ship == null)
             return;
@@ -878,24 +874,16 @@ public class Player : NetworkBehaviour
             var equip = ship.EquippedModules[i];
             if (equip.location == loc)
             {
-                ship.EquippedModules[i].itemId = item.Id;
+                ship.EquippedModules[i].itemId = item.ModuleId;
                 continue;
             }
 
             // Remove equips from existing locations
-            if (equip.itemId == item.Id)
+            if (equip.itemId == item.ModuleId)
                 ship.EquippedModules[i].itemId = null;
         }
 
         SaveLoadout(ship);
-
-        TargetRpcEquipModule(module.Id);
-    }
-
-    [TargetRpc]
-    private void TargetRpcEquipModule(string id)
-    {
-        _onModuleEquipped?.Invoke(id);
     }
 
     #region ModuleUpgrade
