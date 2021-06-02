@@ -63,7 +63,7 @@ public class ItemView : MonoBehaviour
 
 
         if (_search.text != "")
-            items = items.Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).DisplayName.Contains(_search.text)).ToList();
+            items = items.Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).DisplayName.ToUpper().Contains(_search.text.ToUpper())).ToList();
 
         foreach (var item in items)
         {
@@ -91,6 +91,7 @@ public class ItemView : MonoBehaviour
             DialogManager.ShowModifierDialog(delegate (Modifier modifier)
             {
                 _showAllModifiers = false;
+                _modifier = modifier;
                 ShowItems();
             }, delegate (bool clear)
             {
@@ -106,6 +107,7 @@ public class ItemView : MonoBehaviour
             DialogManager.ShowSortByModuleDialog(delegate (ItemType type)
             {
                 _showAllModules = false;
+                _type = type;
                 ShowItems();
             }, delegate (bool clear)
             {

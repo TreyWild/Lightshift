@@ -12,7 +12,7 @@ public class CargoManager : MonoBehaviour
     [SerializeField] private Transform _contentPanel;
     [SerializeField] private TextMeshProUGUI _capacityLabel;
     private Player _player;
-    private PlayerShip _ship;
+    //private PlayerShip _ship;
 
     private List<CargoItemControl> _controls = new List<CargoItemControl>();
     void Start()
@@ -20,19 +20,19 @@ public class CargoManager : MonoBehaviour
         Settings.KeysLocked = true;
 
         _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
-        _ship = _player.ship;
 
         UpdateCargo();
     }
 
     public void UpdateCargo() 
     {
-        if (_ship == null)
+        var cargoItems = _player.GetResources().Where(c => c.Amount > 0);
+        if (cargoItems == null || cargoItems.Count() == 0)
         {
-            DialogManager.ShowMessage("An error occured loading your cargo.");
+            _capacityLabel.text = $"{0}/{_player.GetCargoCapacity()}";
             return;
         }
-        var cargoItems = _player.GetResources().Where(c => c.Amount > 0);
+
         cargoItems.Max(s => s.Amount);
 
         foreach (var cargo in cargoItems)
@@ -58,15 +58,7 @@ public class CargoManager : MonoBehaviour
             control.Init(cargo.Type, cargo.Amount);
         }
 
-        try
-        {
-            _capacityLabel.text = $"{cargoItems.Sum(s => s.Amount)}/{_ship.Modifiers[Modifier.Storage]}";
-        }
-        catch 
-        {
-            _capacityLabel.text = $"0";
-
-        }
+        _capacityLabel.text = $"{cargoItems.Sum(s => s.Amount)}/{_player.GetCargoCapacity()}";
     }
 
     public void EjectAllCargo() 

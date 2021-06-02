@@ -22,6 +22,9 @@ public class GameUIManager : MonoBehaviour
     [HideInInspector]
     public ShipInterface ShipInterface;
 
+    [HideInInspector]
+    public StatBarSlider XpBar;
+
     private TextMeshProUGUI _statsText;
     void Awake()
     {
@@ -54,6 +57,9 @@ public class GameUIManager : MonoBehaviour
     {
         var shipInterface = ShowUI("ShipInterface");
         ShipInterface = shipInterface.GetComponent<ShipInterface>();
+
+        var xp = ShowUI("XP");
+        XpBar = xp.GetComponent<StatBarSlider>();
 
         ShowUI("Chat");
     }

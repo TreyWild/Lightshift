@@ -89,7 +89,7 @@ public class WeaponSystem : NetworkBehaviour
     {
         for (int i = 0; i < weapon.weaponData.projectileCount; i++)
         {
-            Vector2 newProjVel = _kinematic.velocity * weapon.weaponData.bulletData.speed;
+            Vector2 newProjVel = _kinematic.velocity.normalized * weapon.weaponData.bulletData.speed;
             var angle = _kinematic.rotation;
             var targetEntity = _entity.targetNeutral;
             if (targetEntity != null)
@@ -146,10 +146,13 @@ public class WeaponSystem : NetworkBehaviour
 
             Projectile bullet = LSObjectPool.GetUsableProjectile();
 
-            var velocity = new Vector2();
+            var velocity = Vector2.zero;
             if (weapon.weaponData.inheritVelocity)
-                velocity = newProjVel;
-               //velocity = transform.up * (Mathf.Cos((Mathf.Atan2(_kinematic.velocity.y, _kinematic.velocity.x)) - rotation * Mathf.Deg2Rad) * 0.5f + 0.5f) * _kinematic.velocity.magnitude;
+            {
+                float shipSpeed = _kinematic.velocity.magnitude;
+                velocity = _kinematic.velocity / shipSpeed * (shipSpeed * 1.1f); //you monster, just change the 1.1 to any number you like
+            }
+
 
             bullet.entity = _entity;
             bullet.weapon = weapon;
@@ -159,7 +162,7 @@ public class WeaponSystem : NetworkBehaviour
 
             bullet.transform.position = gunPoint;
             bullet.transform.eulerAngles = new Vector3(0, 0, rotation);
-            //bullet.Initialize(velocity, weapon.weaponData.bulletData, weapon.Sprite, weapon.color, weapon.trailColor);
+            bullet.Initialize(velocity, weapon.weaponData.bulletData, weapon.projectileSprite, weapon.projectileColor, weapon.trailColor);
         }
         activeWeapon.timeSinceLastShot = 0;
     }

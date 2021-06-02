@@ -19,6 +19,12 @@ namespace Assets._Lightshift.Scripts.Utilities
             foreach (var equip in equippedItems)
             {
                 var item = ItemService.GetItem(equip.ModuleId);
+                if (item == null)
+                    continue;
+
+                // SPECIAL TYPES IGNORED HERE
+                if (item.Type == ItemType.Weapon)
+                    continue;
 
                 if (equip.Upgrades != null)
                     foreach (var upgrade in equip.Upgrades)

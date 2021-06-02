@@ -32,5 +32,7 @@ namespace SharedModels.Models.Game
         Weapon3,
         Weapon4,
         Weapon5,
+        Utility1,
+        Utility2
     }
 }

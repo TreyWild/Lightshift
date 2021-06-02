@@ -6,50 +6,15 @@ using UnityEngine;
 
 public class Npc : Ship
 {
+    public NpcSettings Settings;
+
     private float _aimArc;
     private int _rotationMod;
 
-    private SpriteRenderer _spriteRenderer;
-    private PolygonCollider2D _collider;
-
-    [SyncVar(hook = nameof(UpdateNpcData))]
-    private string npcDataKey;
-
-    //Simple hack to prevent scriptable stacking.
-    [SerializeField]
-    private NpcDataShell _npcDataShell;
-    public NpcData npcData => _npcDataShell?.data;
-
-    public Action onDataLoaded;
-
-    private List<NpcBehavior> _behaviors = new List<NpcBehavior>();
-#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-    public void Awake()
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
-    {
-        base.Awake();
-    }
-
-#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-    public void Start()
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
-    {
-        base.Start();
-    }
-
     public override void OnStartServer()
     {
-        if (isServer && npcData != null)
-            LoadNpcData(npcData.key);
-    }
-
-    public void LoadNpcData(string key) 
-    {
-        if (key == "")
-            return;
-
-        npcDataKey = key;
-        UpdateNpcData(key, key);
+        if (isServer)
+            InitSettings();
     }
 
     public void SetFaction(NpcFaction faction)
@@ -58,29 +23,15 @@ public class Npc : Ship
             teamId = faction.ToString();
     }
 
-    private void UpdateNpcData(string oldValue, string newValue)
+    private void InitSettings()
     {
-        _npcDataShell = new NpcDataShell {
-            data = EntityManager.GetEntityData(newValue),
-        };
-
-        if (npcData == null)
-            return;
-
-        trackingRange = npcData.trackingRange;
-
-        SetName(npcData.Name);
-        SetWeapons(npcData.weapons);
-        //stats = npcData.data;
-        SetFaction(npcData.faction);
-        LoadBehaviors(npcData.Behavior);
-
-        if (npcData.scale == Vector2.zero)
-            transform.localScale = new Vector3(1, 1, 1);
-        transform.localScale = new Vector3(npcData.scale.x, npcData.scale.y, 1);
-
-        //UpdateStats(true);
-        onDataLoaded?.Invoke();
+        trackingRange = Settings.TrackingRange;
+        SetName(Settings.Name);
+        SetWeapons(Settings.Weapons.ToArray());
+        SetFaction(Settings.Faction);
+        SetModifiers(Settings.Stats);
+        SetSpawnLocation(kinematic.position);
+        Respawn();
     }
 
     private Vector2 _spawnLocation;
@@ -89,19 +40,19 @@ public class Npc : Ship
         _spawnLocation = spawnLocation;
     }
 
-    public void LoadBehaviors(List<UnityEngine.Object> npcBehaviors) 
-    {
-        var behaviors = new List<string>();
-        foreach (var behavior in npcBehaviors) 
-            behaviors.Add(behavior.name);
+    //public void LoadBehaviors(List<UnityEngine.Object> npcBehaviors) 
+    //{
+    //    var behaviors = new List<string>();
+    //    foreach (var behavior in npcBehaviors) 
+    //        behaviors.Add(behavior.name);
 
-        for (int i = 0; i < _behaviors.Count; i++)
-            Destroy(_behaviors[i]);
-        _behaviors.Clear();
+    //    for (int i = 0; i < _behaviors.Count; i++)
+    //        Destroy(_behaviors[i]);
+    //    _behaviors.Clear();
 
-        foreach (var behavior in behaviors)
-            gameObject.AddComponent(Type.GetType(behavior));
-    }
+    //    foreach (var behavior in behaviors)
+    //        gameObject.AddComponent(Type.GetType(behavior));
+    //}
 
     public void SetWeapons(Weapon[] weapons) 
     {
@@ -117,9 +68,9 @@ public class Npc : Ship
 
     public void RunBasicFollowAI() 
     {
-        //MoveForwards(stats.maxSpeed);
-        //RotateTowardsTarget(stats.agility);
         RunAIChecks();
+        MoveForwards(speed);
+        RotateTowardsTarget(agility);
     }
 
     public void MoveForwards(float speed)
@@ -133,7 +84,7 @@ public class Npc : Ship
         if (HasTarget && !IsTargetIsInFront(50))
             speed *= 3.5f;
         var targetAngle = GetTargetRotationMod();
-        kinematic.SetDirection(kinematic.transform.eulerAngles.z + speed * _rotationMod * Time.fixedDeltaTime);
+        kinematic.SetDirection(kinematic.rotation + speed * targetAngle * Time.fixedDeltaTime);
     }
     public void RunAIChecks()
     {

@@ -8,7 +8,6 @@ public class EntityManager : MonoBehaviour
 {
     private static EntityManager Instance;
     private List<Entity> _entities = new List<Entity>();
-    private List<NpcData> _npcData = new List<NpcData>();
     public static int EntityCount 
     {
         get 
@@ -30,9 +29,6 @@ public class EntityManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(this);
         }
-
-        _npcData.Clear();
-        _npcData = Resources.LoadAll<NpcData>("").ToList();
 
         SceneManager.sceneLoaded += SceneManager_sceneLoaded;
     }
@@ -64,9 +60,6 @@ public class EntityManager : MonoBehaviour
 
     public static List<Npc> GetAllNpcs() => Instance._entities.OfType<Npc>().ToList();
 
-    public static List<Entity> GetAllEntities() => Instance._entities;
-
-    public static NpcData GetEntityData(string key) => Instance._npcData.FirstOrDefault(i => i.key == key);
-  
+    public static List<Entity> GetAllEntities() => Instance._entities;  
 }
 

@@ -10,7 +10,6 @@ public class NpcShip : Npc
     public new void Awake()
     {
         base.Awake();
-        onDataLoaded += InitializeData;
     }
 
     private void InitializeData()
@@ -20,7 +19,6 @@ public class NpcShip : Npc
         //if (wing != null && npcData.wingImage != null)
         //    wing.SetImage(npcData.wingImage, Color.white);
 
-        SetSortingOrder(npcData.renderOrder);
     }
 
     public void SetSortingOrder(int sortingOrder)

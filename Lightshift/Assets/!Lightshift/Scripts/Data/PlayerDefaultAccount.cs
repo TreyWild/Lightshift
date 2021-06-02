@@ -8,7 +8,7 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "Default Player Data", menuName = "Lightshift/Create Default Player Data", order = 4)]
 
-public class PlayerDefaults : ScriptableObject
+public class PlayerDefaultAccount : ScriptableObject
 {
     public int Level;
     public int Xp;

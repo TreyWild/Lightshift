@@ -32,14 +32,20 @@ public class SortByModuleDialog : BaseDialog
             button.buttonEvent.AddListener(delegate ()
             {
                 onConfirm(type);
-                Clear();
+                Exit();
             });
         }
     }
+
     public void Clear()
     {
         onClearClicked?.Invoke();
         onClearClicked = null;
+        Destroy(gameObject);
+    }
+
+    public void Exit() 
+    {
         Destroy(gameObject);
     }
 }

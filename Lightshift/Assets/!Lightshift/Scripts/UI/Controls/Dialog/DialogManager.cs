@@ -14,6 +14,7 @@ public class DialogManager : MonoBehaviour
     [SerializeField] GameObject _upgradeView;
     [SerializeField] GameObject _inputDialog;
     [SerializeField] GameObject _modifierDialog;
+    [SerializeField] GameObject _moduleDialog;
     [SerializeField] GameObject _itemViewDialog;
     [SerializeField] GameObject _networkClientSelectorDialog;
     public static DialogManager Instance { get; set; }
@@ -74,11 +75,12 @@ public class DialogManager : MonoBehaviour
 
     public static void ShowSortByModuleDialog(Action<ItemType> callback = null, Action<bool> clearAction = null)
     {
-        var obj = Instantiate(Instance._modifierDialog);
+        var obj = Instantiate(Instance._moduleDialog);
         var messageBox = obj.GetComponent<SortByModuleDialog>();
         messageBox.onConfirm += (type) => callback?.Invoke(type);
         messageBox.onClearClicked += () => clearAction?.Invoke(true);
     }
+
     public static ItemView ShowItemViewDialog()
     {
         var obj = Instantiate(Instance._itemViewDialog);

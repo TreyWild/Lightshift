@@ -7,7 +7,7 @@ using SharedModels.Models.Game;
 
 public class ItemService : MonoBehaviour
 {
-    private static PlayerDefaults _defaultPlayer;
+    private static PlayerDefaultAccount _defaultPlayer;
     private static List<ModuleItem> _items;
     private static List<ResourceItem> _resourceItems;
 
@@ -15,7 +15,7 @@ public class ItemService : MonoBehaviour
     private static void Initialize() 
     {
         _items = Resources.LoadAll<ModuleItem>("").ToList();
-        _defaultPlayer = Resources.LoadAll<PlayerDefaults>("").ToList().FirstOrDefault();
+        _defaultPlayer = Resources.LoadAll<PlayerDefaultAccount>("").ToList().FirstOrDefault();
         foreach (var item in _items) 
         {
             switch (item.Type)
@@ -72,7 +72,7 @@ public class ItemService : MonoBehaviour
         return _resourceItems;
     }
 
-    public static PlayerDefaults GetPlayerDefaults() 
+    public static PlayerDefaultAccount GetPlayerDefaults() 
     {
         if (!_inititalized)
             Initialize();
