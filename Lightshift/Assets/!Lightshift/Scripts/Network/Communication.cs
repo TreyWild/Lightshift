@@ -19,7 +19,49 @@ namespace Assets._Lightshift.Scripts.Network
         [Command(requiresAuthority = false)]
         private void CmdSendChatMessage(string message, NetworkConnectionToClient sender = null)
         {
+            if (message[0] == '/')
+            {
+                var args = message.Split(' ');
+                if (args.Length > 1)
+                {
+                    var cmd = args[0];
+                    switch (cmd)
+                    { 
+                        case "/moo":
+                            if (args.Length != 3)
+                                return;
+
+                            var id = args[1];
+                            var duration = int.Parse(args[2]);
+
+                            var player = Server.GetPlayer(id);
+
+                            if (player == null)
+                            {
+                                TargetRpcAlert(sender, $"Unkown user", AlertType.Popup);
+
+                                return;
+                            }
+                            TargetEnableInterruptingCow(player.connectionToClient, duration);
+
+                            if (duration > 0)
+                                TargetRpcAlert(sender, $"Interrupting Cow is activated on User ID [{id}] every {duration} seconds.", AlertType.Popup);
+                            else TargetRpcAlert(sender, $"Interrupting Cow is DISABLED on User ID [{id}]", AlertType.Popup);
+
+                            break;
+                    }
+                }
+                return;
+            }
             SendChatMessage(sender, message);
+        }
+
+        [TargetRpc]
+        private void TargetEnableInterruptingCow(NetworkConnection target, int duration)
+        {
+            var cow = FindObjectOfType<InterruptingCow>();
+            if (cow != null)
+                cow.UpdateSettings(duration);
         }
 
         [ClientRpc]
@@ -66,28 +108,27 @@ namespace Assets._Lightshift.Scripts.Network
 
         public static void ShowBroadcastAlert(string message, AlertType type)
         {
-            Instance.RpcBroadcastAlert(message, (byte)type);
+            Instance.RpcBroadcastAlert(message, type);
         }
         public static void ShowUserAlert(NetworkConnection target, string message, AlertType type)
         {
-            Instance.TargetRpcAlert(target, message, (byte)type);
+            Instance.TargetRpcAlert(target, message, type);
         }
 
         [ClientRpc]
-        private void RpcBroadcastAlert(string message, byte typeId)
+        private void RpcBroadcastAlert(string message, AlertType typeId)
         {
             ShowAlert(message, typeId);
         }
 
         [TargetRpc]
-        private void TargetRpcAlert(NetworkConnection target, string message, byte typeId)
+        private void TargetRpcAlert(NetworkConnection target, string message, AlertType type)
         {
-            ShowAlert(message, typeId);
+            ShowAlert(message, type);
         }
 
-        private void ShowAlert(string message, byte typeId) 
+        private void ShowAlert(string message, AlertType type) 
         {
-            var type = (AlertType)typeId;
             switch (type)
             {
                 case AlertType.Popup:

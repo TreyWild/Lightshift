@@ -8,7 +8,7 @@ using UnityEngine.Events;
 
 public class ModuleItemControl : MonoBehaviour
 {
-    public ModuleType ModuleType;
+    public ModuleLocation ModuleLocation;
 
     private ItemButton _button;
     private List<ItemGraphicDisplay> _graphics = new List<ItemGraphicDisplay>();

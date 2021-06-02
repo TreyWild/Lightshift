@@ -55,11 +55,12 @@ public class UpgradeControl : MonoBehaviour, IPointerExitHandler
 
     public void Init(Upgrade upgrade, UpgradeInfo upgradeInfo, int totalUpgrades, Player player, bool upgradeLimit = false) 
     {
-        if (upgrade == null)
+        if (upgrade.Id == null)
         {
             upgrade = new Upgrade();
             upgrade.Id = upgradeInfo.Id;
         }
+
         Type = upgradeInfo.Type;
         level = upgrade.Level;
         id = upgrade.Id;

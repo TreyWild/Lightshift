@@ -10,21 +10,21 @@ public class Mufenz : NpcBehavior
 {
     public void FixedUpdate()
     {
-        if (!behavior.alive)
+        if (!npc.alive)
             return;
 
-        if (behavior.isServer)
-            behavior.RunBasicFollowAI();
+        if (npc.isServer)
+            npc.RunBasicFollowAI();
 
-        if (behavior.HasTarget && behavior.IsTargetIsInFront(30) && behavior.TargetDistance < 15) 
+        if (npc.HasTarget && npc.IsTargetIsInFront(30) && npc.TargetDistance < 30) 
         {
             //Shoot close range
-            behavior.weaponSystem.TryFireWeapon(0);
+            npc.weaponSystem.TryFireWeapon(0);
         }
-        else if (behavior.HasTarget && behavior.IsTargetIsInFront(90))
+        else if (npc.HasTarget && npc.IsTargetIsInFront(80) && npc.TargetDistance > 30)
         {
             // Shoot Missiles
-            behavior.weaponSystem.TryFireWeapon(1);
+            npc.weaponSystem.TryFireWeapon(1);
         }
     }
 }

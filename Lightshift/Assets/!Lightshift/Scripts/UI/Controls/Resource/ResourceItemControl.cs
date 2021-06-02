@@ -14,8 +14,7 @@ public class ResourceItemControl : MonoBehaviour, IPointerEnterHandler, IPointer
     [SerializeField] private TextMeshProUGUI _toolTipLabel;
     [SerializeField] private TextMeshProUGUI _toolTipLore;
     [SerializeField] private GameObject _toolTipPanel;
-    [SerializeField] private Image _icon;
-
+    [SerializeField] private ItemGraphicDisplay _icon;
     [SerializeField] private ButtonManagerBasic _button;
 
     public Action<ResourceType> onClicked;
@@ -31,7 +30,7 @@ public class ResourceItemControl : MonoBehaviour, IPointerEnterHandler, IPointer
         if (resource == null)
             return;
 
-        _icon.sprite = resource.Sprite;
+        _icon.InitializeGraphic(resource.Sprite);
 
         _button.gameObject.SetActive(showButton);
         _button.buttonText = buttonText;

@@ -22,6 +22,9 @@ public class GameUIManager : MonoBehaviour
     [HideInInspector]
     public ShipInterface ShipInterface;
 
+    [HideInInspector]
+    public StatBarSlider XpBar;
+
     private TextMeshProUGUI _statsText;
     void Awake()
     {
@@ -54,6 +57,9 @@ public class GameUIManager : MonoBehaviour
     {
         var shipInterface = ShowUI("ShipInterface");
         ShipInterface = shipInterface.GetComponent<ShipInterface>();
+
+        var xp = ShowUI("XP");
+        XpBar = xp.GetComponent<StatBarSlider>();
 
         ShowUI("Chat");
     }
@@ -89,12 +95,11 @@ public class GameUIManager : MonoBehaviour
     }
     public GameObject ToggleUI(string key, bool active = true, bool useGameCanvas = false)
     {
-        var ui = GetUI(key);
+        var gameObject = ShowUI(key, useGameCanvas);
 
-        ui.MemoryStorage = ShowUI(key, useGameCanvas);
-        ui.MemoryStorage.SetActive(active);
+        gameObject.SetActive(active);
 
-        return ui.MemoryStorage;
+        return gameObject;
     }
 
     private void Start()

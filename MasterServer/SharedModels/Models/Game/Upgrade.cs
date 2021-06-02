@@ -8,10 +8,10 @@ namespace SharedModels.Models.Game
 {
     public enum Modifier
     { 
-        MaxHealth,
+        MiningSpeed,
         Health,
         Shield,
-        MaxShield,
+        Damage,
         Weight,
         Accel,
         Range,
@@ -21,10 +21,13 @@ namespace SharedModels.Models.Game
         Armor,
         Refire,
         Power,
-        MaxPower,
+        Pull,
         Brakes,
         Overdrive,
         Storage,
+        PowerCost,
+        HitCount,
+        Projectiles
     }
 
     [Serializable]

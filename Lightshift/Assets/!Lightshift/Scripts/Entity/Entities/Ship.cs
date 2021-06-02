@@ -1,4 +1,5 @@
-﻿using SharedModels.Models.Game;
+﻿using Mirror;
+using SharedModels.Models.Game;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,9 @@ public class Ship : Entity
     public ShipDesign design;
     public WeaponSystem weaponSystem;
     public Generator generator;
+    public Heart heart;
+    public Shield shield;
 
-    [Header("Stats")]
     public float acceleration;
     public float brakeForce;
     public float speed;
@@ -27,6 +29,12 @@ public class Ship : Entity
 
         if (generator == null)
             generator = GetComponent<Generator>();
+
+        if (shield == null)
+            shield = GetComponent<Shield>();
+
+        if (heart == null)
+            heart = GetComponent<Heart>();
 
         if (weaponSystem == null)
             weaponSystem = gameObject.AddComponent<WeaponSystem>();
@@ -124,6 +132,17 @@ public class Ship : Entity
             case Modifier.Agility:
                 agility = value;
                 break;
+            case Modifier.Health:
+                heart.maxHealth = value;
+                heart.health = value;
+                break;
+            case Modifier.Shield:
+                shield.maxShield = value;
+                shield.shield = value;
+                break;
+            case Modifier.Regen:
+                shield.shieldRegen = value;
+                break;
         }
     }
 
@@ -148,6 +167,10 @@ public class Ship : Entity
         for (int i = 0; i < transform.childCount; i++)
         {
             var child = transform.GetChild(i).gameObject;
+
+            if (child.GetComponent<NetworkIdentity>() != null)
+                continue;
+
             if (child != null)
             {          
                 child.SetActive(false);
@@ -166,6 +189,10 @@ public class Ship : Entity
         for (int i = 0; i < transform.childCount; i++)
         {
             var child = transform.GetChild(i).gameObject;
+
+            if (child.GetComponent<NetworkIdentity>() != null)
+                continue;
+
             if (child != null)
                 child.SetActive(true);
         }

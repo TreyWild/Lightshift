@@ -28,12 +28,15 @@ public class GalaxyManager : MonoBehaviour
     {
         _parallaxManager = GetComponentInChildren<ParallaxManager>();
         _galaxy = ResourceHelper.GetDefaultGalaxy();
+
+        Initialize(_galaxy.Name);
     }
-    public void Initialize(string name, string color)
+    public void Initialize(string name)
     {
         _name = name;
-        Color parsedColor = (Color)System.Enum.Parse(typeof(Color), color);
+        //Color parsedColor = (Color)System.Enum.Parse(typeof(Color), color);
 
-        _parallaxManager.Initialize(parsedColor);
+        //_parallaxManager.Initialize(parsedColor);
+        SoundManager.Instance.PlayMusic();
     }
 }

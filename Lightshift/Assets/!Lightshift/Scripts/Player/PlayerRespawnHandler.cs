@@ -15,6 +15,7 @@ public class PlayerRespawnHandler : NetworkBehaviour
 
     public TextMeshProUGUI _respawnLabel;
     public TextMeshProUGUI _killedByLabel;
+    public AudioSource _audioSource;
 
     private void Start()
     {
@@ -38,7 +39,10 @@ public class PlayerRespawnHandler : NetworkBehaviour
         GameUIManager.Instance.ToggleAllUI(false);
 
         if (hasAuthority)
+        {
+            _audioSource.Play();
             GetComponent<Canvas>().enabled = true;
+        }
     }
 
     public void Update()

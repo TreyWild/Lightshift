@@ -11,6 +11,7 @@ using Assets._Lightshift.Scripts.Utilities;
 
 public class ItemViewControl : MonoBehaviour
 {
+    [SerializeField] private Image _titleBackground;
     [SerializeField] private ItemGraphicDisplay _graphicDisplay;
     [SerializeField] private TextMeshProUGUI _title;
     [SerializeField] private ButtonManagerBasic _button;
@@ -27,6 +28,7 @@ public class ItemViewControl : MonoBehaviour
         SetDisplayName(gameItem.DisplayName);
         SetSprite(gameItem.Sprite);
         SetColor(item.Color);
+        _titleBackground.color = gameItem.DisplayColor;
     }
 
     public void ClickInfo()

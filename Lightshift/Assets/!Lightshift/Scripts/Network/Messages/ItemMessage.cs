@@ -14,6 +14,6 @@ struct ItemMessage : NetworkMessage
     public string Id;
     public string ModuleId;
     public string Color;
-    public ModuleType ModuleLocation;
+    public ModuleLocation ModuleLocation;
     public int MaxUpgrades;
 }

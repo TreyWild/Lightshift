@@ -1,4 +1,5 @@
-﻿using Assets._Lightshift.Scripts.Utilities;
+﻿using Assets._Lightshift.Scripts.Services;
+using Assets._Lightshift.Scripts.Utilities;
 using Lightshift;
 using Mirror;
 using Newtonsoft.Json;
@@ -87,64 +88,117 @@ public class PlayerShip : Ship
     private void CmdInit(NetworkConnectionToClient sender = null)
     {
         if (_inited) 
-            TargetInitModules(sender, JsonConvert.SerializeObject(_equippedModules));
+            TargetInitModules(sender, _loadoutObject, _equippedModules);
     }
     public void InitLoadoutObject(LoadoutObject loadoutObject) 
     {
+        _loadoutObject = loadoutObject;
+
         displayName = Player.Username;
 
-        _loadoutObject = loadoutObject;
         var stats = StatHelper.GetStatsFromShip(Player, loadoutObject);
 
         SetModifiers(stats);
 
-        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Contains(s.Id)).ToList();
+        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Any(e => e.itemId == s.ModuleId)).ToList();
         if (_equippedModules != null && _equippedModules.Count > 0)
         {
-            InitModules(_equippedModules);
-            RpcInitModules(JsonConvert.SerializeObject(_equippedModules));
+            InitLoadout(loadoutObject, _equippedModules);
+            RpcInitLoadout(loadoutObject, _equippedModules);
             _inited = true;
         }
     }
 
     [ClientRpc]
-    private void RpcInitModules(string json) 
+    private void RpcInitLoadout(LoadoutObject loadout, List<Item> itemData) 
     {
-        var modules = JsonConvert.DeserializeObject<List<Item>>(json);
-        InitModules(modules);
+        InitLoadout(loadout, _equippedModules);
     }
 
     [TargetRpc]
-    private void TargetInitModules(NetworkConnection target, string json)
+    private void TargetInitModules(NetworkConnection target, LoadoutObject loadout, List<Item> itemData)
     {
-        var modules = JsonConvert.DeserializeObject<List<Item>>(json);
-        InitModules(modules);
+        InitLoadout(loadout, _equippedModules);
     }
 
-    private void InitModules(List<Item> equippedModules) 
+    private void InitLoadout(LoadoutObject loadout, List<Item> itemData) 
     {
-        if (equippedModules == null)
-            return;
-
-        foreach (var module in equippedModules)
-        {
-            if (module == null)
-                continue;
-
-            var item = ItemService.GetItem(module.ModuleId);
-            if (item == null)
-                continue;
-
-            switch (item.Type)
+        if (loadout.EquippedModules != null)
+            foreach (var equip in loadout.EquippedModules)
             {
-                case ItemType.Wing:
-                    SetWings(item.Sprite);
-                    break;
-                case ItemType.Hull:
-                    SetHull(item.Sprite);
-                    break;
+                var module = ItemService.GetItem(equip.itemId);
+                if (module == null)
+                    continue;
+
+                switch (module.Type)
+                {
+                    case ItemType.Wing:
+                        SetWings(module.Sprite);
+                        break;
+                    case ItemType.Hull:
+                        SetHull(module.Sprite);
+                        break;
+                    case ItemType.Weapon:
+
+                        var weapon = module as Weapon;
+                        if (weapon == null)
+                            continue;
+
+                        var item = itemData.FirstOrDefault(i => i.ModuleId == module.Id);
+                        if (item.Id == null)
+                            continue;
+
+                        var stats = StatHelper.GetStatsFromItem(item);
+
+                        foreach (var stat in stats)
+                        {
+                            switch (stat.Type)
+                            {
+                                case Modifier.Damage:
+                                    weapon.weaponData.bulletData.damage += stat.Value;
+                                    break;
+                                case Modifier.Refire:
+                                    weapon.weaponData.refire += stat.Value;
+                                    break;
+                                case Modifier.Range:
+                                    weapon.weaponData.bulletData.range += stat.Value;
+                                    break;
+                                case Modifier.Speed:
+                                    weapon.weaponData.bulletData.speed += stat.Value;
+                                    break;
+                                case Modifier.PowerCost:
+                                    weapon.weaponData.powerCost += stat.Value;
+                                    break;
+                            }
+                        }
+
+                        switch (equip.location)
+                        {
+                            case ModuleLocation.Weapon1:
+                                weaponSystem.AddWeapon(weapon, 0);
+                                break;
+                            case ModuleLocation.Weapon2:
+                                weaponSystem.AddWeapon(weapon, 1);
+                                break;
+                            case ModuleLocation.Weapon3:
+                                weaponSystem.AddWeapon(weapon, 2);
+                                break;
+                            case ModuleLocation.Weapon4:
+                                weaponSystem.AddWeapon(weapon, 3);
+                                break;
+                            case ModuleLocation.Weapon5:
+                                weaponSystem.AddWeapon(weapon, 4);
+                                break;
+                        }
+                        break;
+
+                    case ItemType.LightLance:
+                        
+                        break;
+                    case ItemType.MiningDrill:
+                        break;
+                }
             }
-        }
     }
 
 #pragma warning disable CS0108 // Member hides inherited member; missing new keyword

@@ -8,7 +8,8 @@ public class Weapon : ModuleItem
     public GameObject hitEffectPrefab;
     public AudioClip ShootSound;
     public AudioClip HitSound;
-
+    public Sprite projectileSprite;
+    public Color projectileColor = Color.white;
     public Color trailColor = Color.white;
 
     public WeaponData weaponData;

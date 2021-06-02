@@ -9,6 +9,11 @@ using UnityEngine.UI;
 using SharedModels.Models.Game;
 using Assets._Lightshift.Scripts.Utilities;
 
+public enum ItemViewType 
+{
+    Upgrade,
+    Equip
+}
 public class ItemView : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI _title;
@@ -16,10 +21,12 @@ public class ItemView : MonoBehaviour
     [SerializeField] private Transform _contentPanel;
     [SerializeField] private GameObject _itemPrefab;
 
+    public ItemViewType type;
+    
     private List<Item> _items;
     private List<ItemViewControl> _itemControls;
 
-    public Action<Item> onEquip;
+    public Action<Item> onClick;
     public void Init(List<Item> items, string title = "Select Module")  
     {
         _items = items;
@@ -33,7 +40,11 @@ public class ItemView : MonoBehaviour
     }
 
     private bool _showAllModifiers = true;
+    private bool _showAllModules = true;
+
     private Modifier _modifier = Modifier.Health;
+    private ItemType _type = ItemType.MiningDrill;
+
     public void ShowItems() 
     {
         if (_itemControls != null)
@@ -46,10 +57,13 @@ public class ItemView : MonoBehaviour
         var items = _items.ToList();
         if (!_showAllModifiers)
             items = items.Where(i => StatHelper.GetStatsFromItem(i).FirstOrDefault(s => s.Type == _modifier) != null).ToList();
-        
+
+        if (!_showAllModules)
+            items = items.Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).Type == _type).ToList();
+
 
         if (_search.text != "")
-            items = items.Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).DisplayName.Contains(_search.text)).ToList();
+            items = items.Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).DisplayName.ToUpper().Contains(_search.text.ToUpper())).ToList();
 
         foreach (var item in items)
         {
@@ -66,26 +80,45 @@ public class ItemView : MonoBehaviour
 
             control.onClick += (c) =>
             {
-                onEquip?.Invoke(item);
+                onClick?.Invoke(item);
             };
         }
     }
 
     public void SortBy() 
     {
-        DialogManager.ShowModifierDialog(delegate (Modifier modifier)
-        {
-            _showAllModifiers = false;
-            ShowItems();
-        }, delegate (bool clear ) 
-        {
-            if (clear)
+        if (type == ItemViewType.Equip)
+            DialogManager.ShowModifierDialog(delegate (Modifier modifier)
             {
-                _showAllModifiers = true;
-            }
+                _showAllModifiers = false;
+                _modifier = modifier;
+                ShowItems();
+            }, delegate (bool clear)
+            {
+                if (clear)
+                {
+                    _showAllModifiers = true;
+                }
 
-            ShowItems();
-        });
+                ShowItems();
+            });
+        else if (type == ItemViewType.Upgrade)
+        {
+            DialogManager.ShowSortByModuleDialog(delegate (ItemType type)
+            {
+                _showAllModules = false;
+                _type = type;
+                ShowItems();
+            }, delegate (bool clear)
+            {
+                if (clear)
+                {
+                    _showAllModules = true;
+                }
+
+                ShowItems();
+            });
+        }
     }
 
     public void Exit()

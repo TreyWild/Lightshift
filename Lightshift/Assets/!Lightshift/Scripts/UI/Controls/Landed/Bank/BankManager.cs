@@ -5,63 +5,162 @@ using Michsky.UI.ModernUIPack;
 using TMPro;
 using System;
 using System.Linq;
+using Mirror;
+using SharedModels.Models.Game;
 
 public class BankManager : MonoBehaviour
 {
     [SerializeField] private GameObject _bankDialog;
-    [SerializeField] private TextMeshProUGUI _bankBalance;
-    [SerializeField] private TextMeshProUGUI _walletBalance;
+
+    [Header("Resources")]
+    [SerializeField] private Transform _resourceTransform;
+    [SerializeField] private GameObject _resourceItemControlPrefab;
+
+    [Header("Content")]
+    [SerializeField] private Transform _contentTransform;
+    [SerializeField] private GameObject _bankItemPrefab;
 
     private Player _player;
-    private void Start()
+    private void Awake()
     {
         _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
 
-        _player.onBankCreditsChanged += (credits) =>
+        if (_player != null)
         {
-            RefreshBalances();
-        };
-
-        _player.onCreditsChanged += (credits) =>
-        {
-            RefreshBalances();
-        };
-
-        RefreshBalances();
+            _player.Resources.Callback += OnResourceChanged;
+            _player.BankResources.Callback += OnBankChanged;
+            LoadResources();
+            LoadBankResources();
+        }
     }
+
+    private void OnResourceChanged(SyncIDictionary<ResourceType, int>.Operation op, ResourceType key, int item)
+    {
+        LoadResources();
+    }
+    private void OnBankChanged(SyncIDictionary<ResourceType, int>.Operation op, ResourceType key, int item)
+    {
+        LoadBankResources();
+    }
+
+    private List<ResourceItemControl> _resourceList = new List<ResourceItemControl>();
+    private void LoadResources()
+    {
+        if (_resourceList == null)
+            _resourceList = new List<ResourceItemControl>();
+
+        foreach (var resource in _resourceList)
+        {
+            if (resource == null)
+                continue;
+            if (resource.gameObject != null)
+            {
+                Destroy(resource.gameObject);
+            }
+        }
+
+        _resourceList.Clear();
+        _resourceList = new List<ResourceItemControl>();
+
+        var resources = _player.GetResources();
+        foreach (var resource in resources)
+        {
+            var obj = Instantiate(_resourceItemControlPrefab, _resourceTransform);
+            var script = obj.GetComponent<ResourceItemControl>();
+            script.Init(resource.Type, resource.Amount);
+            _resourceList.Add(script);
+        }
+    }
+
+    private List<BankItem> _bankResourceList = new List<BankItem>();
+    private void LoadBankResources()
+    {
+        if (_bankResourceList == null)
+            _bankResourceList = new List<BankItem>();
+
+        foreach (var resource in _bankResourceList)
+        {
+            if (resource == null)
+                continue;
+            if (resource.gameObject != null)
+            {
+                Destroy(resource.gameObject);
+            }
+        }
+
+        _bankResourceList.Clear();
+        _bankResourceList = new List<BankItem>();
+
+        //Ensure bank can see any playerr resources for deposit/withdrawal
+        var resources = _player.GetBankResources().Where(b => b.Amount > 0).ToList();
+            foreach (var resource in _player.GetResources().Where(a => a.Amount > 0))
+            if (!resources.Any(a => a.Type == resource.Type))
+                    resources.Add(new ResourceObject { Type = resource.Type, Amount = 0 });
+
+        foreach (var resource in resources)
+        {
+            var resourceObject = ItemService.GetResourceItem(resource.Type);
+            if (resourceObject != null) {
+                var obj = Instantiate(_bankItemPrefab, _contentTransform);
+                var script = obj.GetComponent<BankItem>();
+                script.SetBalance(resource.Amount);
+                script.SetDisplay(resourceObject.Sprite);
+                script.SetLabel(resourceObject.DisplayName);
+
+                script.onWithdraw += (s) => 
+                {
+                    ShowBankDialog(resource.Type,BankAction.Withdraw);
+                };
+                script.onDeposit += (s) => 
+                {
+                    ShowBankDialog(resource.Type, BankAction.Deposit);
+                };
+
+                _bankResourceList.Add(script);
+            }
+        }
+    }
+
+    private void ShowBankDialog(ResourceType type, BankAction action) 
+    {
+        var balance = _player.GetBankResource(type);
+        var cargo = _player.GetResource(type);
+
+        var dialog = Instantiate(_bankDialog);
+        var control = dialog.GetComponent<BankDialog>();
+        control.Init(cargo.Amount, balance.Amount, type, action);
+
+        control.onConfirm += (balance) =>
+        {
+            _player.BankTransaction(action, type, balance);
+        };
+    }
+
 
     public void LeaveBank()
     {
         _player.TakeOff();
     }
 
-    public void RefreshBalances() 
+    public void DepositAll() 
     {
-        _bankBalance.text = _player.BankCredits.ToString("D");
-        _walletBalance.text = _player.Credits.ToString("D");
+        DialogManager.ShowDialog($"Are you sure you want to Deposit all of your Cargo?", delegate (bool result) 
+        {
+            if (result)
+            {
+                _player.DepositAllCargo();
+            }
+        });
     }
 
-    public void Deposit() 
+    public void WithdrawAll() 
     {
-        var dialog = Instantiate(_bankDialog);
-        var control = dialog.GetComponent<BankDialog>();
-        control.Init(_player.Credits, _player.BankCredits, BankAction.Deposit);
-
-        control.onConfirm += (value) =>
+        DialogManager.ShowDialog($"Are you sure you want to Withdraw all of your Cargo?", delegate (bool result)
         {
-            _player.BankTransaction(BankAction.Deposit, value);
-        };
-    }
-
-    public void Withdraw() 
-    {
-        var dialog = Instantiate(_bankDialog);
-        var control = dialog.GetComponent<BankDialog>();
-        control.Init(_player.Credits, _player.BankCredits, BankAction.Withdraw);
-
-        control.onConfirm += (value) =>
-        {
-            _player.BankTransaction(BankAction.Withdraw, value);
-        };
+            if (result)
+            {
+                _player.WithdrawAllCargo();
+            }
+        });
     }
 }

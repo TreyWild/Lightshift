@@ -14,31 +14,40 @@ using UnityEngine;
 [RequireComponent(typeof(Kinematic), typeof(Kinematic))]
 public class Entity : NetworkBehaviour
 {
-
     [HideInInspector]
     [SyncVar(hook = nameof(UpdateLivingState))] public bool alive;
-
+    [HideInInspector]
     [SyncVar] private bool isLanding;
 
     [SyncVar]
     public short Id;
 
+    [HideInInspector]
     [SyncVar(hook = nameof(SetDisplayName))]
     public string displayName;
 
     [SyncVar(hook = nameof(UpdateTeamId))]
     public string teamId;
+    [HideInInspector]
     public SmoothSyncMirror smoothSync;
+    [HideInInspector]
     public Rigidbody2D rigidBody;
+    [HideInInspector]
     public Entity targetNeutral;
+    [HideInInspector]
     public Entity targetEntity;
-
+    [HideInInspector]
     public Kinematic kinematic;
 
+    [HideInInspector]
     public EntityUI ui;
+    [HideInInspector]
     private float _timeSinceLastTargetUpdate = 0;
+    [HideInInspector]
     public bool isInCheckpoint;
+    [HideInInspector]
     public Action onCleanup;
+    [HideInInspector]
     public MapObject mapObject;
 
     public void OnDestroy()
@@ -67,21 +76,17 @@ public class Entity : NetworkBehaviour
         ui = gameObject.AddComponent<EntityUI>();
         mapObject = GetComponent<MapObject>();
         onEnterCheckpoint += (checkpoint) => OnEnterCheckpoint(checkpoint);
-
         onLeaveCheckpoint += (checkpoint) => OnLeaveCheckpoint(checkpoint);
     }
 
     public override void OnStartServer()
     {
         base.OnStartServer();
-
-        //SetAlive();
     }
 
     public void Start()
     {
         EntityManager.AddEntity(this);
-        ui.Init(hasAuthority, isServer, displayName);
     }
 
     public virtual void OnEnterCheckpoint(Checkpoint checkpoint)
@@ -98,23 +103,23 @@ public class Entity : NetworkBehaviour
     {
         base.OnStartClient();
 
+        ui.InitLocalPlayer(hasAuthority && isClient);
+
         Modifiers.Callback += Modifiers_Callback;
 
         var modifiers = Modifiers.ToList();
         foreach (var modifier in modifiers)
         {
-            UpdateModifier(modifier.Key, modifier.Value);
+            UpdateClientModifier(modifier.Key, modifier.Value);
         };
     }
 
     private void Modifiers_Callback(SyncIDictionary<Modifier, float>.Operation op, Modifier key, float value)
     {
-        if (isServer)
-            return;
-
-        UpdateModifier(key, value);
+        UpdateClientModifier(key, value);
     }
 
+    [HideInInspector]
     public readonly SyncDictionary<Modifier, float> Modifiers = new SyncDictionary<Modifier, float>();
 
     public void ClearModifiers()
@@ -134,30 +139,15 @@ public class Entity : NetworkBehaviour
         ClearModifiers();
 
         foreach (var modifier in modifiers)
-        {
-            UpdateModifier(modifier.Type, modifier.Value);
-
-            switch (modifier.Type)
-            {
-                case Modifier.MaxHealth:
-                    UpdateModifier(Modifier.Health, modifier.Value);
-                    break;
-
-                case Modifier.MaxShield:
-                    UpdateModifier(Modifier.Shield, modifier.Value);
-                    break;
-
-                case Modifier.MaxPower:
-                    UpdateModifier(Modifier.Power, modifier.Value);
-                    break;
-            }
-        }
-
-        //foreach (var modifier in Modifiers)
-        //    UpdateModifier(modifier.Key, modifier.Value);
+            UpdateModifier(modifier.Type, modifier.Value);;
     }
 
     public Action<Modifier, float> onModifierChanged;
+    public void UpdateClientModifier(Modifier type, float value)
+    {
+        onModifierChanged?.Invoke(type, value);
+    }
+
     public void UpdateModifier(Modifier type, float value)
     {
         if (isServer)
@@ -167,8 +157,6 @@ public class Entity : NetworkBehaviour
             else
                 Modifiers[type] = value;
         }
-
-        onModifierChanged?.Invoke(type, value);
     }
 
     public void FixedUpdate()
@@ -191,7 +179,7 @@ public class Entity : NetworkBehaviour
         if (isServer)
             this.displayName = displayName;
 
-        if (!hasAuthority)
+        if (!hasAuthority && mapObject != null)
             mapObject.Name = displayName;
 
     }
@@ -200,6 +188,11 @@ public class Entity : NetworkBehaviour
     private void UpdateTeamId(string oldValue, string newValue)
     {
         LocalTeamId = newValue;
+
+        ui?.SetTeam(teamId == LocalTeamId);
+
+        if (mapObject == null)
+            return;
 
         if (!hasAuthority)
         {
@@ -212,11 +205,10 @@ public class Entity : NetworkBehaviour
         }
         else
         {
+
             mapObject.IconSize = new Vector2(32, 32);
             mapObject.iconColor = Color.white;
         }
-
-        ui?.SetTeam(teamId == LocalTeamId);
     }
 
     //#region Collision
@@ -231,6 +223,7 @@ public class Entity : NetworkBehaviour
     //}
     //#endregion Collision
 
+    //[HideInInspector]
     [SyncVar]
     public float trackingRange = 100;
 
@@ -379,13 +372,24 @@ public class Entity : NetworkBehaviour
     }
 
 
-    public void Kill()
+    public void Suicide()
     {
         CmdKillEntity();
     }
 
+    public void Kill()
+    {
+        kinematic.velocity = Vector2.zero;
+        SetEnemyKilled();
+    }
+
     [Command]
     private void CmdKillEntity()
+    {
+        SetEnemyKilled();
+    }
+
+    private void SetEnemyKilled() 
     {
         alive = false;
 
@@ -405,6 +409,7 @@ public class Entity : NetworkBehaviour
     public virtual void OnKilled()
     {
         Instantiate(PrefabManager.Instance.deathEffectPrefab, kinematic.position, kinematic.Transform.rotation);
+        OnDeath();
     }
 
     public void Respawn()

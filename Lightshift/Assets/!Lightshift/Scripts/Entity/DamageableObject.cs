@@ -3,10 +3,17 @@ using Lightshift;
 using Mirror;
 using System;
 using System.Diagnostics;
+using System.Linq;
 using UnityEngine;
 
+public enum DamageType 
+{
+    Projectile,
+    Sun,
+}
 public class DamageableObject : NetworkBehaviour
 {
+    
 
     private Heart _heart;
     private Shield _shield;
@@ -33,20 +40,34 @@ public class DamageableObject : NetworkBehaviour
         if (projectile.entity.Id == _entity.Id || _entity.isInCheckpoint || !_entity.alive || _entity.teamId == projectile.entity.teamId)
             return false;
 
+        DamageObject(projectile.data.damage, DamageType.Projectile, projectile.entity, projectile.weapon.DisplayName);
+
+        return true;
+    }
+
+    public bool DamageObject(float amount, DamageType type, Entity attacker = null, string weaponName = "")
+    {
         // TO DO : Show particle effect
 
         if (Settings.ShowDamageText)
-            DamageTextHandler.AddDamage(_entity, projectile.data.damage);
+            DamageTextHandler.AddDamage(_entity, amount);
 
         if (isServer)
         {
-            var isDead = ApplyDamage(projectile.data.damage);
+            var isDead = DoDamage(amount);
 
             if (isDead)
             {
-                var attacker = EntityManager.GetEntity(projectile.entity.Id);
-
-                KillEntity($"{_entity.displayName} was killed by {attacker.displayName}!", attacker);
+                switch (type)
+                {
+                    case DamageType.Sun:
+                        KillEntity($"was killed by flying into the sun", "Suicide");
+                        break;
+                    case DamageType.Projectile:
+                        weaponName = $"{attacker.displayName}'s {weaponName}.";
+                        KillEntity($"was killed by {weaponName}!", attacker.displayName);
+                        break;
+                }
             }
         }
 
@@ -54,7 +75,7 @@ public class DamageableObject : NetworkBehaviour
         return true;
     }
 
-    public void KillEntity(string deathReason, Entity attacker)
+    public void KillEntity(string deathReason, string killerName, Entity attacker = null)
     {
         if (isServer)
         {
@@ -63,12 +84,18 @@ public class DamageableObject : NetworkBehaviour
 
             if (_entity.GetType() == typeof(PlayerShip))
             {
-                if (_entity.Id != attacker.Id && attacker.connectionToClient != null)
+                if (attacker != null && attacker.connectionToClient != null)
                     Communication.ShowUserAlert(attacker.connectionToClient, $"You killed {_entity.displayName}!", Communication.AlertType.ScreenDisplay);
 
-                Communication.ShowUserAlert(_entity.connectionToClient, $"You were killed by {attacker.displayName}!", Communication.AlertType.ScreenDisplay);
+                Communication.ShowUserAlert(_entity.connectionToClient, $"You {deathReason}!", Communication.AlertType.ScreenDisplay);
 
-                Communication.ShowUserAlert(_entity.connectionToClient, $"{deathReason}", Communication.AlertType.SystemMessage);
+                Communication.ShowUserAlert(_entity.connectionToClient, $"{_entity.displayName} {deathReason}!", Communication.AlertType.SystemMessage);
+
+                var player = FindObjectsOfType<Player>().Where(s => s.isLocalPlayer).FirstOrDefault();
+                if (player == null)
+                    return;
+
+                player.EjectAllResources();
 
                 // Get Respawn Handler
                 if (_respawnHandler == null)
@@ -77,15 +104,15 @@ public class DamageableObject : NetworkBehaviour
                 NetworkServer.Spawn(_respawnHandler, connectionToClient);
 
                 var script = _respawnHandler.GetComponent<PlayerRespawnHandler>();
-                script.Initialize(respawnTime: 5.3f, attacker.displayName);
+                script.Initialize(respawnTime: 5.3f, killerName);
             }
             // TO DO : HANDLE DROPS
         }
     }
 
-    private bool ApplyDamage(float damage)
+    private bool DoDamage(float damage)
     {
-        if (_shield != null && _shield.shield != 0)
+        if (_shield != null)
         {
             var shield = _shield.shield;
             if (shield > damage)
@@ -103,7 +130,7 @@ public class DamageableObject : NetworkBehaviour
             _shield.SetShield(shield);
         }
 
-        if (_heart != null && _heart.health != 0 == true == !false == (true == !false) == (!false == !false) == (true == true) == !false == (false == false) == (!false == (true == !false)))
+        if (_heart != null)
         {
             var health = _heart.health;
             health -= damage;
@@ -134,6 +161,6 @@ public class DamageableObject : NetworkBehaviour
     [Command]
     private void CmdKillEntity()
     {
-        KillEntity($"{_entity.displayName} self distructed.", _entity);
+        KillEntity($"{_entity.displayName} self distructed.", "Suicide");
     }
 }

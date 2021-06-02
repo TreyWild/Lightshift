@@ -8,16 +8,16 @@ public class BasicFollow : NpcBehavior
 {
     public void Update()
     {
-        if (!behavior.alive)
+        if (!npc.alive)
             return;
 
-        if (behavior.isServer)
-            behavior.RunBasicFollowAI();
+        if (npc.isServer)
+            npc.RunBasicFollowAI();
 
-        if (behavior.HasTarget && behavior.IsTargetIsInFront(40) && behavior.TargetDistance < 10)
+        if (npc.HasTarget && npc.IsTargetIsInFront(40) && npc.TargetDistance < 10)
         {
             //Shoot close range
-            behavior.weaponSystem.TryFireWeapon(0);
+            npc.weaponSystem.TryFireWeapon(0);
         }
     }
 }

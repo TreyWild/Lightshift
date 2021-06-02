@@ -8,10 +8,10 @@ using UnityEngine;
 public class NpcBehavior : MonoBehaviour 
 {
     [HideInInspector]
-    public Npc behavior;
+    public Npc npc;
 
     private void Awake()
     {
-        behavior = GetComponent<Npc>();
+        npc = GetComponent<Npc>();
     }
 }

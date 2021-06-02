@@ -13,7 +13,6 @@ public class NpcEntity : Npc
     {
         base.Awake();
 
-        onDataLoaded += OnInitialize;
     }
 
     private void OnInitialize()
@@ -21,8 +20,6 @@ public class NpcEntity : Npc
         _renderer = GetComponent<SpriteRenderer>();
         if (_renderer == null)
             _renderer = gameObject.AddComponent<SpriteRenderer>();
-        _renderer.sortingOrder = npcData.renderOrder;
-        _renderer.sprite = npcData.sprite;
 
         if (_polyCollider != null)
             Destroy(_polyCollider);

@@ -1,6 +1,7 @@
 ﻿using Assets._Lightshift.Scripts.Data;
 using Assets._Lightshift.Scripts.Network;
 using Assets._Lightshift.Scripts.SolarSystem;
+using Assets._Lightshift.Scripts.Utilities;
 using Assets._Lightshift.Scripts.Web;
 using Mirror;
 using SharedModels;
@@ -11,7 +12,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using UnityEngine;
+using UnityEngine.Video;
 
 public class Player : NetworkBehaviour
 {
@@ -26,10 +29,30 @@ public class Player : NetworkBehaviour
     [SyncVar] public string Id;
     [SyncVar] public string LandedLocationId;
     [SyncVar] public bool IsLanded;
+    [SyncVar(hook = nameof(OnXpChanged))] public int Xp;
+    [SyncVar(hook = nameof(OnLevelChanged))] public int Level;
     private void OnCreditsChanged(int oldValue, int newValue)
     {
         onCreditsChanged?.Invoke(newValue);
     }
+    private void OnXpChanged(int oldValue, int newValue)
+    {
+        if (isLocalPlayer)
+            RefreshXpBar();
+    }
+
+    private void OnLevelChanged(int oldValue, int newValue)
+    {
+        if (isLocalPlayer)
+            RefreshXpBar();
+    }
+
+    private void RefreshXpBar() 
+    {
+        GameUIManager.Instance.XpBar.SetLabel($"Level {Level}");
+        GameUIManager.Instance.XpBar.SetProgress(Xp, Xp * 1.25f, true);
+    }
+
     private void OnBankCreditsChanged(int oldValue, int newValue)
     {
         onBankCreditsChanged?.Invoke(newValue);
@@ -40,6 +63,7 @@ public class Player : NetworkBehaviour
         _onShipChanged?.Invoke(newValue);
     }
 
+    public readonly SyncDictionary<ResourceType, int> BankResources = new SyncDictionary<ResourceType, int>();
     public readonly SyncDictionary<ResourceType, int> Resources = new SyncDictionary<ResourceType, int>();
     public readonly SyncDictionary<string, Item> Items = new SyncDictionary<string, Item>();
     public readonly SyncDictionary<string, LoadoutObject> ShipLoadouts = new SyncDictionary<string, LoadoutObject>();
@@ -86,6 +110,8 @@ public class Player : NetworkBehaviour
 
         Debug.Log($"Has authority: {hasAuthority}");
 
+        RefreshXpBar();
+
         CmdInit();
     }
     public override void OnStartServer()
@@ -102,6 +128,7 @@ public class Player : NetworkBehaviour
     private bool _resourcesLoaded;
     private bool _initPreAccountData;
     private bool _requirePlayerInit;
+    private bool _bankResourcesLoaded;
     private void InitPlayerData() 
     {
         if (!_accountLoaded)
@@ -112,6 +139,11 @@ public class Player : NetworkBehaviour
         if (!_resourcesLoaded)
         {
             LoadResources(() => InitPlayerData());
+            return;
+        }
+        if (!_bankResourcesLoaded)
+        {
+            LoadBankResources(() => InitPlayerData());
             return;
         }
         if (!_itemsLoaded)
@@ -219,15 +251,7 @@ public class Player : NetworkBehaviour
 
         return items;
     }
-    public List<ResourceObject> GetResources()
-    {
-        var items = new List<ResourceObject>();
-        foreach (var item in Resources)
-        {
-            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
-        }
-        return items;
-    }
+
     public Item GetItem(string id)
     {
         if (!Items.ContainsKey(id))
@@ -236,152 +260,6 @@ public class Player : NetworkBehaviour
 
     }
 
-    public LoadoutObject GetShipLoadout(string id)
-    {
-        if (!ShipLoadouts.ContainsKey(id))
-            return LoadoutObject.Empty();
-        else return ShipLoadouts[id];
-
-    }
-
-    #region Resources
-    public void LoadResources(Action callback = null) 
-    {
-        _resourcesLoaded = true;
-
-        if (_profile.Resources == null)
-        {
-            // Add resources to new account
-            _profile.Resources = PlayerDefaults.GetTestResources();
-        }
-
-        foreach (var resource in _profile.Resources)
-            AddResource(resource);
-
-
-        callback.Invoke();
-    }
-
-    public ResourceObject GetResource(ResourceType type) 
-    {
-        if (!Resources.ContainsKey(type))
-            return new ResourceObject { Amount = 0, Type = type };
-        else return new ResourceObject { Amount = Resources[type], Type = type };
-
-    }
-    public void SetResource(ResourceObject resource) => SetResource(resource.Type, resource.Amount);
-    public void SetResource(ResourceType type, int value)
-    {
-        if (isServer)
-        {
-            if (!Resources.ContainsKey(type))
-                Resources.Add(type, value);
-            else
-                Resources[type] = value;
-        }
-    }
-
-    public void EjectAllResources() 
-    {
-        var resources = Resources.ToList();
-        foreach (var resource in resources)
-            EjectResource(resource.Key, resource.Value);
-    }
-
-    public void EjectResource(ResourceType type, int amount) 
-    {
-        if (amount == 0)
-            return;
-
-        var obj = Instantiate(LightshiftNetworkManager.GetPrefab<DroppedItem>());
-
-        var item = obj.GetComponent<DroppedItem>();
-        item.Init(new ResourceObject { Type = type, Amount = amount }, ship);
-
-        obj.transform.position = ship.transform.position + new Vector3(UnityEngine.Random.Range(0,5), UnityEngine.Random.Range(0, 5));
-        NetworkServer.Spawn(obj);
-
-        TakeResource(type, amount);
-    }
-
-    public void PickupResource(ResourceType type, int amount) 
-    {
-        // TO DO : Sound Effects, etc
-        AddResource(new ResourceObject { Amount = amount, Type = type });
-    }
-
-    public void AddResource(ResourceObject resource) => AddResource(resource.Type, resource.Amount);
-    public void AddResource(ResourceType type, int value)
-    {
-        if (isServer)
-        {
-            if (!Resources.ContainsKey(type))
-                Resources.Add(type, value);
-            else
-                Resources[type] += value;
-        }
-    }
-
-    public void TakeResource(ResourceType type, int value)
-    {
-        if (isServer)
-        {
-            if (!Resources.ContainsKey(type))
-                Resources.Add(type, value);
-            else
-                Resources[type] -= value;
-
-            if (Resources[type] < 0)
-                Resources[type] = 0;
-        }
-    }
-
-    public bool CheckResourceAffordable(List<ResourceObject> resources, float costMultiplier = 1)
-    {
-        foreach (var expense in resources)
-        {
-            bool affordable = (int)(expense.Amount * costMultiplier) <= GetResource(expense.Type).Amount;
-
-            // NOT AFFORDABLE
-            if (!affordable)
-                return false;
-        }
-
-        return true;
-    }
-
-    public Item SpendResources(Item item, List<ResourceObject> resources, float costMultiplier)
-    {
-        var spentResources = item.SpentResources.ToList();
-        if (spentResources == null)
-            spentResources = new List<ResourceObject>();
-
-        foreach (var resource in resources)
-        {
-            var cost = (int)(resource.Amount * costMultiplier);
-            var amount = GetResource(resource.Type).Amount - cost;
-            if (amount < 0)
-                amount = 0;
-
-            Debug.LogError($"Resource Type: {resource.Type}:{resource.Amount}");
-            
-            SetResource(resource.Type, amount);
-
-            var spentResource = spentResources.FirstOrDefault(r => r.Type == resource.Type);
-            if (!spentResources.Any(r => r.Type == resource.Type))
-            {
-                spentResource = new ResourceObject { Type = resource.Type, Amount = 0 };
-                spentResources.Add(spentResource);
-            }
-            spentResource.Amount += cost;
-        }
-
-        item.SpentResources = spentResources.ToArray();
-
-        return item;
-    }
-
-    #endregion
 
     public void SpawnShip()
     {
@@ -426,6 +304,8 @@ public class Player : NetworkBehaviour
             lastCheckpointId = _profile.LastCheckPointId;
             IsLanded = _profile.IsLanded;
             LandedLocationId = _profile.LandedLocationId;
+            Xp = _profile.XP;
+            Level = _profile.Level;
             Id = account.Id;
 
             callback?.Invoke();
@@ -440,34 +320,7 @@ public class Player : NetworkBehaviour
             return connectionToServer;
     }
 
-    public void AddLoadout(LoadoutObject ship) 
-    {
-        _profile.ActiveLoadout = ship.Id;
-        ShipLoadouts.Add(ship.Id, ship);
-
-        Debug.Log($"New ship built for {_account.Profile.Username}.");
-
-        SaveLoadout(ship);
-    }
-    public void SaveLoadout(LoadoutObject ship, Action callback = null)
-    {
-        if (!isServer)
-            return;
-
-        ship.UserId = _account.Id;
-
-        ShipLoadouts[ship.Id] = ship;
-
-        HttpService.Get("game/saveloadout", ship,
-        delegate (bool result)
-        {
-            if (result)
-                Debug.Log($"Ship saved.");
-            else Debug.LogError("Ship was not saved.");
-
-            callback?.Invoke();
-        });
-    }
+    
     public void AddItem(Item item)
     {
         item.Id = Guid.NewGuid().ToString();
@@ -512,6 +365,9 @@ public class Player : NetworkBehaviour
             _profile.Resources = GetResources();
             _profile.IsLanded = IsLanded;
             _profile.LandedLocationId = LandedLocationId;
+            _profile.XP = Xp;
+            _profile.Level = Level;
+            _profile.Bank = GetBankResources();
             _account.Profile = _profile;
             HttpService.Get("account/save", _account,
             delegate (Account account)
@@ -522,6 +378,65 @@ public class Player : NetworkBehaviour
             });
         }
     }
+
+    
+
+    public void SetupAccount()
+    {
+        // IF PLAYER HAS NO SHIPS, ADD DEFAULT
+        if (ShipLoadouts == null || ShipLoadouts.Count == 0)
+        {
+            // Load default items
+            var items = ItemService.GetPlayerDefaults().Items;
+
+            // Add new ship object
+            var newShip = new LoadoutObject();
+            newShip.Id = Guid.NewGuid().ToString();
+
+            foreach (var item in items)
+                AddItem(new Item
+                {
+                    ModuleId = item.Id,
+                    UserId = _account.Id,
+                });
+
+            AddLoadout(ItemService.GetPlayerDefaults().Loadout);
+
+            // Setup Landed location
+            var station = FindObjectsOfType<Station>().FirstOrDefault(s => s.defaultStation);
+            if (station != null)
+                LandedLocationId = station.Id;
+
+            Credits = ItemService.GetPlayerDefaults().Credits;
+
+            // Save account
+            SaveAccount();
+        }
+    }
+
+    public void LoadItems(Action callback)
+    {
+        if (!isServer)
+            return;
+
+        _itemsLoaded = true;
+
+        HttpService.Get("game/getitems", new JsonString { Value = _account.Id },
+        delegate (List<Item> items)
+        {
+            foreach (var item in items)
+            {
+                if (!Items.ContainsKey(item.Id))
+                    Items.Add(item.Id, item);
+                else Items[item.Id] = item;
+            }
+
+            Debug.Log($"Server loaded [{Items?.Count}] items for player {Username}");
+
+            callback?.Invoke();
+        });
+    }
+    #region Land/Takeoff
 
     [ClientRpc]
     private void RpcLand(string landableId)
@@ -594,6 +509,46 @@ public class Player : NetworkBehaviour
         else CmdTakeoff();
     }
 
+    #endregion
+    #region Loadout
+    public LoadoutObject GetShipLoadout(string id)
+    {
+        if (!ShipLoadouts.ContainsKey(id))
+            return LoadoutObject.Empty();
+        else return ShipLoadouts[id];
+
+    }
+
+    public void SaveLoadout(LoadoutObject ship, Action callback = null)
+    {
+        if (!isServer)
+            return;
+
+        ShipLoadouts[ship.Id] = ship;
+
+        HttpService.Get("game/saveloadout", ship,
+        delegate (bool result)
+        {
+            if (result)
+                Debug.Log($"Ship saved.");
+            else Debug.LogError("Ship was not saved.");
+
+            callback?.Invoke();
+        });
+    }
+
+    public void AddLoadout(LoadoutObject ship)
+    {
+        ship.Id = Guid.NewGuid().ToString();
+        ship.UserId = _account.Id;
+        ActiveLoadout = ship.Id;
+        ShipLoadouts.Add(ship.Id, ship);
+
+        Debug.Log($"New ship built for {_account.Profile.Username}.");
+
+        SaveLoadout(ship);
+    }
+
     public void LoadLoadouts(Action callback)
     {
         if (!isServer)
@@ -614,65 +569,10 @@ public class Player : NetworkBehaviour
 
             Debug.Log($"Loadouts for {Username} loaded: [{ships?.Count}]");
 
-            callback?.Invoke();
-        });
-    }
-
-    public void SetupAccount() 
-    {
-        // IF PLAYER HAS NO SHIPS, ADD DEFAULT
-        if (ShipLoadouts == null || ShipLoadouts.Count == 0)
-        {
-            // Load default items
-            var items = PlayerDefaults.GetDefaultItems();
-
-            var existingItems = GetItems();
-            foreach (var item in items)
+            if (ActiveLoadout == null || ActiveLoadout == "" || !ShipLoadouts.ContainsKey(ActiveLoadout))
             {
-                //Ensure no duplicate defaults
-                if (existingItems.FirstOrDefault(s=> s.ModuleId == item.ModuleId) == null)
-                    AddItem(item);
+                ActiveLoadout = ShipLoadouts.FirstOrDefault().Key;
             }
-
-            // Add new ship object
-            var newShip = new LoadoutObject();
-            newShip.Id = Guid.NewGuid().ToString();
-            var equips = new List<string>();
-
-            foreach (var item in items)
-                equips.Add(item.Id);
-
-            newShip.EquippedModules = equips.ToArray();
-
-            AddLoadout(newShip);
-
-            // Setup Landed location
-            LandedLocationId = PlayerDefaults.GetDefaultStation();
-
-            // Save account
-            SaveAccount();
-        }
-    }
-
-    public void LoadItems(Action callback)
-    {
-        if (!isServer)
-            return;
-
-        _itemsLoaded = true;
-
-        HttpService.Get("game/getitems", new JsonString { Value = _account.Id },
-        delegate (List<Item> items)
-        {
-            foreach (var item in items)
-            {
-                if (!Items.ContainsKey(item.Id))
-                    Items.Add(item.Id, item);
-                else Items[item.Id] = item;
-            }
-
-            Debug.Log($"Server loaded [{Items?.Count}] items for player {Username}");
-
             callback?.Invoke();
         });
     }
@@ -725,56 +625,67 @@ public class Player : NetworkBehaviour
         SaveLoadout(shipLoadout);
     }
 
-    public void EquipModule(string id, ModuleType location, Action<string> callback = null)
+    public void EquipModule(string id, ModuleLocation location, Action<string> callback = null)
     {
         if (isLocalPlayer)
         {
-            _onModuleEquipped = callback;
-            CmdEquipModule(id, (uint)location);
+            //_onModuleEquipped = callback;
+            CmdEquipModule(id, location);
         }
     }
 
     [Command]
-    private void CmdEquipModule(string id, uint location)
+    private void CmdEquipModule(string id, ModuleLocation loc)
     {
-        // Short for location
-        var loc = (ModuleType)location;
         var ship = GetActiveLoadout();
         if (ship == null)
             return;
 
-        var module = GetItem(id);
-        if (module == null)
+        var item = GetItem(id);
+        if (item == null)
             return;
 
-        var equippedModules = ship.EquippedModules.ToList() ;
-        if (equippedModules == null)
-            equippedModules = new List<string>();
+        if (ship.EquippedModules == null)
+            ship.EquippedModules = new EquipObject[0];
 
-        // Remove any old equips
-        for (int i = 0; i < equippedModules.Count; i++)
+        // Ensure there's enough room in the array
+        bool hasExistingItem = ship.EquippedModules.Any(s => s.location == loc);
+        if (!hasExistingItem)
         {
-            var equip = ship.EquippedModules[i];
-            var item = GetItem(equip);
-            if (item.ModuleLocation == loc)
-                equippedModules.Remove(equip);
+            //var list = item.Upgrades.ToList();
+            //list.Add(new Upgrade());
+            //item.Upgrades = list.ToArray();
+            ship.EquippedModules = ship.EquippedModules.Append(new EquipObject {location = loc });
         }
 
-        equippedModules.Add(module.Id);
+        var module = ItemService.GetItem(item.ModuleId);
 
-        ship.EquippedModules = equippedModules.ToArray();
+        if (module == null || module.InstallLocations == null)
+            return;
 
-        SaveLoadout(GetActiveLoadout());
+        bool allowedAction = module.InstallLocations.Contains(loc);
 
-        TargetRpcEquipModule(module.Id);
+        if (!allowedAction)
+            return;
+
+        // Equip Module
+        for (int i = 0; i < ship.EquippedModules.Count(); i++)
+        {
+            var equip = ship.EquippedModules[i];
+            if (equip.location == loc)
+            {
+                ship.EquippedModules[i].itemId = item.ModuleId;
+                continue;
+            }
+
+            // Remove equips from existing locations
+            if (equip.itemId == item.ModuleId)
+                ship.EquippedModules[i].itemId = null;
+        }
+
+        SaveLoadout(ship);
     }
-
-    [TargetRpc]
-    private void TargetRpcEquipModule(string id)
-    {
-        _onModuleEquipped?.Invoke(id);
-    }
-
+    #endregion
     #region ModuleUpgrade
     public void BuyUpgrade(string itemId, string upgradeId, Action<string> callback)
     {
@@ -837,14 +748,21 @@ public class Player : NetworkBehaviour
         if (gameItem == null || gameItem.Upgrades == null)
             return;
 
-        var upgrades = item.Upgrades.ToList();
-        if (upgrades == null)
-            upgrades = new List<Upgrade>();
+        // Init array
+        if (item.Upgrades == null)
+            item.Upgrades = new Upgrade[0];
+
+        // Ensure there's enough room in the array
+        bool hasExistingItem = item.Upgrades.Any(s => s.Id == upgradeId);
+        if (!hasExistingItem)
+        {
+            //var list = item.Upgrades.ToList();
+            //list.Add(new Upgrade());
+            //item.Upgrades = list.ToArray();
+            item.Upgrades = item.Upgrades.Append(new Upgrade());
+        }
 
         var totalUpgrades = item.Upgrades.Sum(s => s.Level);
-
-        Debug.LogError($"Upgrade ID (Player): {upgradeId}");
-
 
         // NOT ALLOWED - over max upgrades
         if (totalUpgrades >= gameItem.MaxUpgrades)
@@ -856,33 +774,36 @@ public class Player : NetworkBehaviour
         if (upgradeInfo == null)
             return;
 
-        var upgrade = item.Upgrades.FirstOrDefault(e => e.Id == upgradeId);
-
-        if (upgrade == null)
+        // For statement because structs are annoying
+        for (int i = 0; i < item.Upgrades.Count(); i++)
         {
-            upgrade = new Upgrade();
-            upgrade.Id = upgradeId;
-            upgrades.Add(upgrade);
+            var upgrade = item.Upgrades[i];
+
+            if (upgrade.Id == null)
+                upgrade.Id = upgradeId;
+
+            if (upgrade.Id != upgradeId)
+                continue;
+
+            // ALREADY MAXED
+            if (upgrade.Level >= 10)
+                return;
+
+            var costMultiplier = (int)((upgrade.Level + totalUpgrades + 1) * 1.15f);
+
+            // CHECK IF CAN AFFORD
+            bool affordable = CheckResourceAffordable(upgradeInfo.ResourceCost, costMultiplier);
+            if (!affordable)
+                return;
+
+            // SPEND CREDITS
+            item = SpendResources(item, upgradeInfo.ResourceCost, costMultiplier);
+
+            //Update upgrade array
+            upgrade.Level++;
+
+            item.Upgrades[i] = upgrade;
         }
-
-        // ALREADY MAXED
-        if (upgrade.Level >= 10)
-            return;
-
-        var costMultiplier = (int)((upgrade.Level + totalUpgrades + 1) * 1.15f);
-
-        // CHECK IF CAN AFFORD
-        bool affordable = CheckResourceAffordable(upgradeInfo.ResourceCost, costMultiplier);
-        if (!affordable)
-            return;
-
-        // SPEND CREDITS
-        item = SpendResources(item, upgradeInfo.ResourceCost, costMultiplier);
-
-        //Update upgrade array
-        item.Upgrades = upgrades.ToArray();
-
-        upgrade.Level++;
 
         SaveItem(item);
         SaveAccount();
@@ -890,43 +811,425 @@ public class Player : NetworkBehaviour
     }
 
     #endregion
-
-    public void BankTransaction(BankAction action, int credits)
+    #region Buy Items
+    [Command]
+    private void CmdBuyModuleWithResources(string moduleId)
     {
-        CmdBankAction((uint)action, credits);
+        var gameItem = ItemService.GetItem(moduleId);
+        if (gameItem == null || gameItem.Upgrades == null)
+            return;
+
+        var cost = gameItem.resourceCost;
+        bool affordable = CheckResourceAffordable(cost);
+        if (!affordable)
+            return;
+
+        SpendResources(cost);
+
+        var item = new Item
+        {
+            Id = Guid.NewGuid().ToString(),
+            MaxUpgrades = gameItem.MaxUpgrades,
+            ModuleId = gameItem.Id,
+            UserId = Id
+        };
+
+        AddItem(item);
+    }
+
+    public void BuyModuleWithResources(string moduleId) 
+    {
+        CmdBuyModuleWithResources(moduleId);
+    }
+    [Command]
+    private void CmdBuyModuleCredits(string moduleId)
+    {
+        var gameItem = ItemService.GetItem(moduleId);
+        if (gameItem == null || gameItem.Upgrades == null)
+            return;
+
+        var cost = gameItem.creditsCost;
+        bool affordable = Credits >= cost;
+        if (!affordable)
+            return;
+
+        Credits -= cost;
+
+        var item = new Item
+        {
+            Id = Guid.NewGuid().ToString(),
+            MaxUpgrades = gameItem.MaxUpgrades,
+            ModuleId = gameItem.Id,
+            UserId = Id
+        };
+
+        AddItem(item);
+    }
+    public void BuyModuleWithCredits(string moduleId)
+    {
+        CmdBuyModuleCredits(moduleId);
+    }
+
+    #endregion
+    #region Bank/Cargo
+    public void LoadBankResources(Action callback = null)
+    {
+        _bankResourcesLoaded = true;
+
+        if (_profile.Bank == null)
+        {
+            // Add resources to new account
+            _profile.Bank = new List<ResourceObject>();
+        }
+
+        foreach (var resource in _profile.Bank)
+            AddResource(resource);
+
+        callback.Invoke();
+    }
+
+    public ResourceObject GetBankResource(ResourceType type)
+    {
+        if (!BankResources.ContainsKey(type))
+            return new ResourceObject { Amount = 0, Type = type };
+        else return new ResourceObject { Amount = Resources[type], Type = type };
+
+    }
+    public void SetBankResource(ResourceObject resource) => SetBankResource(resource.Type, resource.Amount);
+    public void SetBankResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!BankResources.ContainsKey(type))
+                BankResources.Add(type, value);
+            else
+                BankResources[type] = value;
+        }
+    }
+
+    public void AddBankResource(ResourceObject resource) => AddBankResource(resource.Type, resource.Amount);
+    public void AddBankResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!BankResources.ContainsKey(type))
+                BankResources.Add(type, value);
+            else
+                BankResources[type] += value;
+        }
+    }
+
+    public void TakeBankResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!BankResources.ContainsKey(type))
+                BankResources.Add(type, value);
+            else
+                BankResources[type] -= value;
+
+            if (BankResources[type] < 0)
+                BankResources[type] = 0;
+        }
+    }
+    public List<ResourceObject> GetBankResources()
+    {
+        var items = new List<ResourceObject>();
+        foreach (var item in BankResources)
+        {
+            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
+        }
+        return items;
+    }
+
+    public void LoadResources(Action callback = null)
+    {
+        _resourcesLoaded = true;
+
+        if (_profile.Resources == null)
+        {
+            // Add resources to new account
+            _profile.Resources = ItemService.GetPlayerDefaults().Resources;
+        }
+
+        foreach (var resource in _profile.Resources)
+            AddResource(resource);
+
+
+        callback.Invoke();
+    }
+
+    public List<ResourceObject> GetResources()
+    {
+        var items = new List<ResourceObject>();
+        foreach (var item in Resources)
+        {
+            items.Add(new ResourceObject { Amount = item.Value, Type = item.Key });
+        }
+        return items;
+    }
+    public ResourceObject GetResource(ResourceType type)
+    {
+        if (!Resources.ContainsKey(type))
+            return new ResourceObject { Amount = 0, Type = type };
+        else return new ResourceObject { Amount = Resources[type], Type = type };
+
+    }
+    public void SetResource(ResourceObject resource) => SetResource(resource.Type, resource.Amount);
+    public void SetResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!Resources.ContainsKey(type))
+                Resources.Add(type, value);
+            else
+                Resources[type] = value;
+        }
+    }
+
+    public void EjectAllResources()
+    {
+        var resources = Resources.ToList();
+        foreach (var resource in resources)
+            EjectResource(resource.Key, resource.Value);
+    }
+
+    public void EjectResource(ResourceType type, int amount)
+    {
+        if (amount == 0)
+            return;
+
+        var obj = Instantiate(LightshiftNetworkManager.GetPrefab<DroppedItem>());
+
+        var item = obj.GetComponent<DroppedItem>();
+        item.Init(new ResourceObject { Type = type, Amount = amount }, ship);
+
+        obj.transform.position = ship.transform.position + new Vector3(UnityEngine.Random.Range(-3, 3), UnityEngine.Random.Range(3, -3));
+        NetworkServer.Spawn(obj);
+
+        TakeResource(type, amount);
+    }
+
+    public int GetCargoCapacity() 
+    {
+        var stats = StatHelper.GetStatsFromShip(this, GetActiveLoadout());
+        if (stats == null)
+            return 0;
+        var stat = stats.FirstOrDefault(s => s.Type == Modifier.Storage);
+        if (stat != null)
+            return (int)stat.Value;
+        return 0; 
+    }
+
+    public void PickupResource(ResourceType type, int amount)
+    {
+        var cargoCount = Resources.Sum(s => s.Value);
+        var capacity = GetCargoCapacity();
+        var total = cargoCount + amount;
+
+        // Eject remaining when over capacity
+        if (total > capacity)
+        {
+            var maths = total - capacity;
+            if (maths > 0)
+                EjectResource(type, maths);
+            amount -= maths;
+        }
+        // TO DO : Sound Effects, etc
+        AddResource(new ResourceObject { Amount = amount, Type = type });
+    }
+
+    public void AddResource(ResourceObject resource) => AddResource(resource.Type, resource.Amount);
+    public void AddResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!Resources.ContainsKey(type))
+                Resources.Add(type, value);
+            else
+                Resources[type] += value;
+        }
+    }
+
+    public void TakeResource(ResourceType type, int value)
+    {
+        if (isServer)
+        {
+            if (!Resources.ContainsKey(type))
+                Resources.Add(type, value);
+            else
+                Resources[type] -= value;
+
+            if (Resources[type] < 0)
+                Resources[type] = 0;
+        }
+    }
+
+    public bool CheckResourceAffordable(List<ResourceObject> resources, float costMultiplier = 1)
+    {
+        foreach (var expense in resources)
+        {
+            bool affordable = (int)(expense.Amount * costMultiplier) <= GetResource(expense.Type).Amount;
+
+            // NOT AFFORDABLE
+            if (!affordable)
+                return false;
+        }
+
+        return true;
+    }
+
+    public void SpendResources(List<ResourceObject> cost)
+    {
+        foreach (var resource in cost)
+        {
+            // Calculate Expense
+            var amount = GetResource(resource.Type).Amount - resource.Amount;
+            if (amount < 0)
+                amount = 0;
+
+            // Update resources for client 
+            SetResource(resource.Type, amount);
+        }
+    }
+
+    public Item SpendResources(Item item, List<ResourceObject> cost, float costMultiplier)
+    {
+        // Ensure item spent resources aren't null
+        if (item.SpentResources == null)
+            item.SpentResources = new ResourceObject[0];
+
+        // Iterate costs
+        foreach (var resource in cost)
+        {
+            //Ensure item spent resoureces contains cost type
+            if (!item.SpentResources.Any(r => r.Type == resource.Type))
+            {
+                var spentResource = new ResourceObject { Type = resource.Type, Amount = 0 };
+                item.SpentResources = item.SpentResources.Append(spentResource);
+            }
+
+            // Find item spent resource object and modify it
+            for (int i = 0; i < item.SpentResources.Count(); i++)
+            {
+                // If not resource type, continue.
+                if (resource.Type != item.SpentResources[i].Type)
+                    continue;
+
+                // Calculate Expense
+                var expense = (int)(resource.Amount * costMultiplier);
+                var amount = GetResource(resource.Type).Amount - expense;
+                if (amount < 0)
+                    amount = 0;
+
+                // Modify resource
+                item.SpentResources[i].Amount += expense;
+
+                // Update resources for client 
+                SetResource(resource.Type, amount);
+            }
+        }
+
+        return item;
+    }
+
+    public void DepositAllCargo()
+    {
+        CmdDepositAll();
     }
 
     [Command]
-    private void CmdBankAction(uint actionId, int credits) 
+    private void CmdDepositAll()
     {
-        var action = (BankAction)actionId;
+        var cargo = GetResources();
 
+        foreach (var item in cargo)
+        {
+            AddBankResource(item.Type, item.Amount);
+            TakeResource(item.Type, item.Amount);
+        }
+
+        SaveAccount();
+    }
+
+    public void WithdrawAllCargo()
+    {
+        CmdWithdrawAll();
+    }
+
+    [Command]
+    private void CmdWithdrawAll() 
+    {
+        var bank = GetBankResources();
+
+        foreach (var item in bank)
+        {
+            AddResource(item.Type, item.Amount);
+            TakeBankResource(item.Type, item.Amount);
+        }
+
+        SaveAccount();
+    }
+
+    public void BankTransaction(BankAction action, ResourceType type, int balance)
+    {
+        CmdBankAction(action, type, balance);
+    }
+
+    [Command]
+    private void CmdBankAction(BankAction action, ResourceType type, int balance) 
+    {
         switch (action) 
         {
             case BankAction.Deposit:
-                if (credits > Credits)
+
+                var cargo = GetResource(type);
+
+                // If there is less or equal cargo than the amount specified in CMD
+                if (balance > cargo.Amount)
                 {
-                    BankCredits += Credits;
-                    Credits = 0;
-                }
-                else if (credits > 0)
+                    // Add to bank
+                    AddBankResource(type, balance);
+
+                    // Remove from cargo
+                    SetResource(type, 0);
+                }// If there is more or equal cargo than the amount specified in CMD
+                else if (balance > 0)
                 {
-                    BankCredits += credits;
-                    Credits -= credits;
+                    // Add to bank
+                    AddBankResource(type, balance);
+
+                    // Remove from cargo
+                    SetResource(type, cargo.Amount - balance);
                 }
                 break;
+
             case BankAction.Withdraw:
-                if (credits > BankCredits)
+
+                var bank = GetBankResource(type);
+
+                // If there is less or equal in the bank than specified by CMD
+                if (balance > bank.Amount)
                 {
-                    Credits += BankCredits;
-                    BankCredits = 0;
+                    // Add to cargo
+                    AddResource(type, balance);
+
+                    // Remove from Bank
+                    SetBankResource(type, 0);
                 }
-                else if (credits > 0)
+                // If there is more or equal in the bank than specified by the CMD
+                else if (balance > 0)
                 {
-                    Credits += credits;
-                    BankCredits -= credits;
+                    // Add to cargo
+                    AddResource(type, balance);
+
+                    // Remove from bank
+                    SetBankResource(type, bank.Amount - balance);
                 }
                 break;
         }
+
+        SaveAccount();
     }
+    #endregion
 }

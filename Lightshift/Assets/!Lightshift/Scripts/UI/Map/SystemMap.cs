@@ -18,7 +18,7 @@ public class SystemMap : MonoBehaviour
     private List<SolarSystemMapData> _solarObjects = new List<SolarSystemMapData>();
 
     public float Zoom = 10;
-
+    public float IconScale = 4;
     private PlayerShip _playerShip;
 
     private void Awake()
@@ -107,7 +107,7 @@ public class SystemMap : MonoBehaviour
         {
             obj.uiMapObject.transform.position = new Vector2((obj.mapObject.transform.position.x - GetLocalPosition().x) / Zoom + (Screen.width / 2), (obj.mapObject.transform.position.y - GetLocalPosition().y) / Zoom + (Screen.height / 2));
             obj.uiMapObject.SetRotation(obj.mapObject.transform.eulerAngles.z);
-            obj.uiMapObject.SetSize(new Vector2((obj.mapObject.IconSize.x) / ((Zoom)/ 4), (obj.mapObject.IconSize.y) / ((Zoom) / 4)));
+            obj.uiMapObject.SetSize(new Vector2((obj.mapObject.IconSize.x) / ((Zoom)/ IconScale), (obj.mapObject.IconSize.y) / ((Zoom) / IconScale)));
             obj.uiMapObject.Init(obj.mapObject);
         }
 
