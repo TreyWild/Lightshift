@@ -1,4 +1,5 @@
 ﻿using Assets._Lightshift.Scripts.Services;
+using Assets._Lightshift.Scripts.SolarSystem;
 using Assets._Lightshift.Scripts.Utilities;
 using Lightshift;
 using Mirror;
@@ -16,7 +17,7 @@ public class PlayerShip : Ship
 {
     private LoadoutObject _loadoutObject;
     private PlayerController _input;
-    private List<Item> _equippedModules;
+    private Item[] _equippedModules;
     private Player _player;
     private bool _inited;
     public Player Player 
@@ -100,8 +101,8 @@ public class PlayerShip : Ship
 
         SetModifiers(stats);
 
-        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Any(e => e.itemId == s.ModuleId)).ToList();
-        if (_equippedModules != null && _equippedModules.Count > 0)
+        _equippedModules = Player.GetItems().Where(s => loadoutObject.EquippedModules.Any(e => e.itemId == s.ModuleId)).ToArray();
+        if (_equippedModules != null && _equippedModules.Count() > 0)
         {
             InitLoadout(loadoutObject, _equippedModules);
             RpcInitLoadout(loadoutObject, _equippedModules);
@@ -110,18 +111,18 @@ public class PlayerShip : Ship
     }
 
     [ClientRpc]
-    private void RpcInitLoadout(LoadoutObject loadout, List<Item> itemData) 
+    private void RpcInitLoadout(LoadoutObject loadout, Item[] itemData) 
     {
-        InitLoadout(loadout, _equippedModules);
+        InitLoadout(loadout, itemData);
     }
 
     [TargetRpc]
-    private void TargetInitModules(NetworkConnection target, LoadoutObject loadout, List<Item> itemData)
+    private void TargetInitModules(NetworkConnection target, LoadoutObject loadout, Item[] itemData)
     {
-        InitLoadout(loadout, _equippedModules);
+        InitLoadout(loadout, itemData);
     }
 
-    private void InitLoadout(LoadoutObject loadout, List<Item> itemData) 
+    private void InitLoadout(LoadoutObject loadout, Item[] itemData) 
     {
         if (loadout.EquippedModules != null)
             foreach (var equip in loadout.EquippedModules)
@@ -166,9 +167,9 @@ public class PlayerShip : Ship
                                 case Modifier.Speed:
                                     weapon.weaponData.bulletData.speed += stat.Value;
                                     break;
-                                case Modifier.PowerCost:
-                                    weapon.weaponData.powerCost += stat.Value;
-                                    break;
+                                //case Modifier.PowerRegen:
+                                //    weapon.weaponData.powerCost += stat.Value;
+                                //    break;
                             }
                         }
 
@@ -201,9 +202,7 @@ public class PlayerShip : Ship
             }
     }
 
-#pragma warning disable CS0108 // Member hides inherited member; missing new keyword
-    private void FixedUpdate()
-#pragma warning restore CS0108 // Member hides inherited member; missing new keyword
+    private new void FixedUpdate()
     {
         if (!alive)
             return;
@@ -237,7 +236,7 @@ public class PlayerShip : Ship
                     Brake();
 
                 if (_input.Drifting)
-                    kinematic.drag = 0.999f;
+                    kinematic.drag = 0f;
                 else kinematic.drag = 0.99f;
             }
         }
@@ -299,6 +298,39 @@ public class PlayerShip : Ship
         base.OnDeath();
 
         _input.Locked = true;
+    }
+
+    [TargetRpc]
+    public void TargetStartLandingAnimation(string landableId) 
+    {
+        var landable = LandableManager.GetLandableById(landableId);
+        if (landable == null)
+            return;
+
+        StartCoroutine(landShip(landable.transform.position, landableId));
+    }
+
+
+
+    private IEnumerator landShip(Vector2 landingLocation, string landableId) 
+    {
+        kinematic.velocity = Vector2.zero;
+        while (transform.localScale.x > .3f)
+        {
+            transform.Rotate(new Vector3(0,0, 90 * Time.deltaTime));
+            var vector = Vector2.MoveTowards(kinematic.position, landingLocation, 5 * Time.deltaTime);
+            kinematic.position = vector;
+            transform.localScale = new Vector2(transform.localScale.x - .8f * Time.deltaTime, transform.localScale.y - .8f * Time.deltaTime);
+            yield return new WaitForEndOfFrame();
+        }
+
+        CmdFinishLandingAnimation(landableId);
+    }
+
+    [Command]
+    private void CmdFinishLandingAnimation(string landableId) 
+    {
+        _player.Land(landableId, true);
     }
 }
 

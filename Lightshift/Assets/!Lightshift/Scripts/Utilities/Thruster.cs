@@ -71,6 +71,7 @@ public class Thruster : MonoBehaviour
             _audioSource.mute = false;
             // If the audio volume is lower than the sound effect volume...
             var volume = Settings.soundEffectVolume;
+            volume /= 2;
             if (!_overDriveActive)
                 volume /= 2;
             if (_audioSource.volume < volume)

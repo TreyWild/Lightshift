@@ -14,6 +14,7 @@ public class PlayerDefaultAccount : ScriptableObject
     public int Xp;
     public int Credits;
     public List<ResourceObject> Resources;
+    public List<ResourceObject> BankResources;
     public List<ModuleItem> Items;
     public LoadoutObject Loadout;
 }

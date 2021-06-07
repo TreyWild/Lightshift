@@ -12,6 +12,8 @@ public enum BankAction
 }
 public class BankDialog : MonoBehaviour
 {
+    [SerializeField] private ItemGraphicDisplay _icon;
+    [SerializeField] private TextMeshProUGUI _displayName;
     [SerializeField] private TextMeshProUGUI _bankBalance;
     [SerializeField] private TextMeshProUGUI _cargoBalance;
     [SerializeField] private TMP_InputField _inputBalance;
@@ -41,6 +43,13 @@ public class BankDialog : MonoBehaviour
 
         _buttonConfirm.buttonText = action.ToString();;
         _buttonConfirm.UpdateUI();
+
+        var resource = ItemService.GetResourceItem(type);
+        if (resource != null) 
+        {
+            _displayName.text = resource.ToString().ToSentence();
+            _icon.InitializeGraphic(resource.Sprite);
+        }
 
         _inputBalance.onValueChanged.AddListener(delegate
         {

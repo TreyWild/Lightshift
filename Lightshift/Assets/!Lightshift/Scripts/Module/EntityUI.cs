@@ -10,17 +10,22 @@ public class EntityUI : MonoBehaviour
 {
     private EntityUIControl _ui;
     private bool isLocalPlayer;
-    private void Awake()
+    private void Start()
     {
-        if (_ui != null)
+        if (_ui == null && !isLocalPlayer)
+        {
             _ui = Instantiate(PrefabManager.Instance.entityUIPrefab, transform).GetComponent<EntityUIControl>();
+
+            var entity = GetComponent<Entity>();
+            _ui.SetName(entity.displayName);
+        }
     }
 
     public void InitLocalPlayer(bool isLocalPlayer)
     {
         this.isLocalPlayer = isLocalPlayer;
         if (_ui != null && isLocalPlayer)
-            Destroy(_ui.gameObject);
+            _ui.gameObject.SetActive(false);
     }
 
     public void SetShield(float min, float max)

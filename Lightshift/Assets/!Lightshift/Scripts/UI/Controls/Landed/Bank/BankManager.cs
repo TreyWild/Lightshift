@@ -8,7 +8,7 @@ using System.Linq;
 using Mirror;
 using SharedModels.Models.Game;
 
-public class BankManager : MonoBehaviour
+public class BankManager : LandedState
 {
     [SerializeField] private GameObject _bankDialog;
 
@@ -20,15 +20,12 @@ public class BankManager : MonoBehaviour
     [SerializeField] private Transform _contentTransform;
     [SerializeField] private GameObject _bankItemPrefab;
 
-    private Player _player;
-    private void Awake()
+    private void Start()
     {
-        _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
-
-        if (_player != null)
+        if (player != null)
         {
-            _player.Resources.Callback += OnResourceChanged;
-            _player.BankResources.Callback += OnBankChanged;
+            player.Resources.Callback += OnResourceChanged;
+            player.BankResources.Callback += OnBankChanged;
             LoadResources();
             LoadBankResources();
         }
@@ -62,7 +59,7 @@ public class BankManager : MonoBehaviour
         _resourceList.Clear();
         _resourceList = new List<ResourceItemControl>();
 
-        var resources = _player.GetResources();
+        var resources = player.GetResources();
         foreach (var resource in resources)
         {
             var obj = Instantiate(_resourceItemControlPrefab, _resourceTransform);
@@ -92,8 +89,8 @@ public class BankManager : MonoBehaviour
         _bankResourceList = new List<BankItem>();
 
         //Ensure bank can see any playerr resources for deposit/withdrawal
-        var resources = _player.GetBankResources().Where(b => b.Amount > 0).ToList();
-            foreach (var resource in _player.GetResources().Where(a => a.Amount > 0))
+        var resources = player.GetBankResources().Where(b => b.Amount > 0).ToList();
+            foreach (var resource in player.GetResources().Where(a => a.Amount > 0))
             if (!resources.Any(a => a.Type == resource.Type))
                     resources.Add(new ResourceObject { Type = resource.Type, Amount = 0 });
 
@@ -121,25 +118,31 @@ public class BankManager : MonoBehaviour
         }
     }
 
+    private GameObject _dialogObject;
+
     private void ShowBankDialog(ResourceType type, BankAction action) 
     {
-        var balance = _player.GetBankResource(type);
-        var cargo = _player.GetResource(type);
+        var balance = player.GetBankResource(type);
+        var cargo = player.GetResource(type);
 
-        var dialog = Instantiate(_bankDialog);
+        var dialog = Instantiate(_bankDialog, transform);
         var control = dialog.GetComponent<BankDialog>();
         control.Init(cargo.Amount, balance.Amount, type, action);
 
         control.onConfirm += (balance) =>
         {
-            _player.BankTransaction(action, type, balance);
+            player.BankTransaction(action, type, balance);
         };
+
+        _dialogObject = dialog.gameObject;
     }
 
 
     public void LeaveBank()
     {
-        _player.TakeOff();
+        player.TakeOff();
+        if (_dialogObject != null)
+            Destroy(_dialogObject);
     }
 
     public void DepositAll() 
@@ -148,7 +151,7 @@ public class BankManager : MonoBehaviour
         {
             if (result)
             {
-                _player.DepositAllCargo();
+                player.DepositAllCargo();
             }
         });
     }
@@ -159,7 +162,7 @@ public class BankManager : MonoBehaviour
         {
             if (result)
             {
-                _player.WithdrawAllCargo();
+                player.WithdrawAllCargo();
             }
         });
     }

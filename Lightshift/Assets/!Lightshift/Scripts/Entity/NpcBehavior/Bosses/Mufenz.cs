@@ -8,9 +8,14 @@ using UnityEngine.PlayerLoop;
 
 public class Mufenz : NpcBehavior
 {
+    private bool _entityReady;
+    public void Start()
+    {
+        _entityReady = true;
+    }
     public void FixedUpdate()
     {
-        if (!npc.alive)
+        if (!npc.alive || !_entityReady)
             return;
 
         if (npc.isServer)

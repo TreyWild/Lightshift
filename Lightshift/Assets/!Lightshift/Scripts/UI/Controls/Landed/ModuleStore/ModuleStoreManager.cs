@@ -10,7 +10,7 @@ using System.Linq;
 using Assets._Lightshift.Scripts.SolarSystem;
 using System;
 
-public class ModuleStoreManager : MonoBehaviour
+public class ModuleStoreManager : LandedState
 {
     [SerializeField] private Transform _itemPanel;
     [SerializeField] private GameObject _itemPrefab;
@@ -33,23 +33,22 @@ public class ModuleStoreManager : MonoBehaviour
     [SerializeField] private GameObject _ownedPanel;
 
     private ModuleStoreLandable _store;
-    private Player _player;
     private bool _owned;
 
     private void Awake()
     {
-        _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
+        player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
 
-        if (_player != null)
+        if (player != null)
         {
-            _player.onCreditsChanged += (credits) =>
+            player.onCreditsChanged += (credits) =>
             {
                 _creditAmount.text = credits.ToString();
             };
 
-            _player.Items.Callback += Items_Callback;
+            player.Items.Callback += Items_Callback;
 
-            var landable = LandableManager.GetLandableById(_player.LandedLocationId);
+            var landable = LandableManager.GetLandableById(player.LandedLocationId);
             if (landable == null)
             {
                 //Debug.LogError($"Landable is NULL.");
@@ -133,14 +132,14 @@ public class ModuleStoreManager : MonoBehaviour
         _lore.text = _selectedItem.Lore;
         _displayNameColor.color = _selectedItem.DisplayColor;
 
-        _creditAmount.text = _player.Credits.ToString();
+        _creditAmount.text = player.Credits.ToString();
         _creditCost.text = _selectedItem.creditsCost.ToString();
 
         PopulateResourceCost();
 
         PopulateStats();
 
-        _owned = _player.Items.Any(s => s.Value.ModuleId == _selectedItem.Id);
+        _owned = player.Items.Any(s => s.Value.ModuleId == _selectedItem.Id);
         _ownedPanel.SetActive(_owned);
     }
 
@@ -165,9 +164,9 @@ public class ModuleStoreManager : MonoBehaviour
         {
             if (result) 
             {
-                var affordable = _player.CheckResourceAffordable(_selectedItem.resourceCost);
+                var affordable = player.CheckResourceAffordable(_selectedItem.resourceCost);
                 if (affordable)
-                    _player.BuyModuleWithResources(_selectedItem.Id);
+                    player.BuyModuleWithResources(_selectedItem.Id);
                 else DialogManager.ShowMessage($"You cannot afford that!");
             }
         });
@@ -187,8 +186,8 @@ public class ModuleStoreManager : MonoBehaviour
         {
             if (result)
             {
-                if (_player.Credits >= _selectedItem.creditsCost)
-                    _player.BuyModuleWithCredits(_selectedItem.Id);
+                if (player.Credits >= _selectedItem.creditsCost)
+                    player.BuyModuleWithCredits(_selectedItem.Id);
                 else DialogManager.ShowMessage($"You cannot afford that!");
             }
         });
@@ -250,13 +249,5 @@ public class ModuleStoreManager : MonoBehaviour
 
             _statUICache.Add(obj.gameObject);
         }
-
-    
     }
-
-    public void ExitStore()
-    {
-        _player.TakeOff();
-    }
-
 }

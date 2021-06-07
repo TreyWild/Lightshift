@@ -14,6 +14,10 @@ public class GalaxyManager : MonoBehaviour
 
         Instance = this;
 
+        _parallaxManager = GetComponentInChildren<ParallaxManager>();
+        _galaxy = ResourceHelper.GetDefaultGalaxy();
+
+        Initialize(_galaxy.Name);
     }
 
     public static Galaxy GetGalaxy() => Instance._galaxy;
@@ -24,13 +28,6 @@ public class GalaxyManager : MonoBehaviour
 
     private string _name;
 
-    private void Start()
-    {
-        _parallaxManager = GetComponentInChildren<ParallaxManager>();
-        _galaxy = ResourceHelper.GetDefaultGalaxy();
-
-        Initialize(_galaxy.Name);
-    }
     public void Initialize(string name)
     {
         _name = name;

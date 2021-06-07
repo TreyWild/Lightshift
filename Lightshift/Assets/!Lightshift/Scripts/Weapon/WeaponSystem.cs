@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using System.Linq;
 using Mirror;
 using System;
+using Cinemachine.Utility;
 
 public class WeaponSystem : NetworkBehaviour
 {
@@ -153,6 +154,8 @@ public class WeaponSystem : NetworkBehaviour
                 velocity = _kinematic.velocity / shipSpeed * (shipSpeed * 1.1f); //you monster, just change the 1.1 to any number you like
             }
 
+            if (velocity.IsNaN())
+                velocity = new Vector2();
 
             bullet.entity = _entity;
             bullet.weapon = weapon;

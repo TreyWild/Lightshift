@@ -25,7 +25,7 @@ namespace SharedModels.Models.Game
         Brakes,
         Overdrive,
         Storage,
-        PowerCost,
+        PowerRegen,
         HitCount,
         Projectiles
     }

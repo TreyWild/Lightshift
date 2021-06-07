@@ -12,7 +12,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -30,18 +29,12 @@ public class Player : NetworkBehaviour
     [SyncVar] public string LandedLocationId;
     [SyncVar] public bool IsLanded;
     [SyncVar(hook = nameof(OnXpChanged))] public int Xp;
-    [SyncVar(hook = nameof(OnLevelChanged))] public int Level;
+    [SyncVar(hook = nameof(OnXpChanged))] public int Level;
     private void OnCreditsChanged(int oldValue, int newValue)
     {
         onCreditsChanged?.Invoke(newValue);
     }
     private void OnXpChanged(int oldValue, int newValue)
-    {
-        if (isLocalPlayer)
-            RefreshXpBar();
-    }
-
-    private void OnLevelChanged(int oldValue, int newValue)
     {
         if (isLocalPlayer)
             RefreshXpBar();
@@ -454,11 +447,16 @@ public class Player : NetworkBehaviour
         Land(landableId);
     }
 
-    public void Land(string landableId) 
+    public void Land(string landableId, bool instant = true) 
     {
         Debug.Log($"Requesting Land {landableId}");
         if (isServer)
         {
+            if (!instant)
+            {
+                ship.TargetStartLandingAnimation(landableId);
+                return;
+            }
             RpcLand(landableId);
 
             LandedLocationId = landableId;
@@ -496,7 +494,7 @@ public class Player : NetworkBehaviour
             if (station != null)
                 ship.SetPosition(new Vector2(station.transform.position.x, station.transform.position.y));
 
-            ship.kinematic.rotation = UnityEngine.Random.Range(0, 360);
+            ship.kinematic.SetDirection(UnityEngine.Random.Range(0, 360));
 
             ship.InitLoadoutObject(GetActiveLoadout());
             //ship.SetCargo(GetActiveLoadout().Cargo);
@@ -950,11 +948,13 @@ public class Player : NetworkBehaviour
         {
             // Add resources to new account
             _profile.Resources = ItemService.GetPlayerDefaults().Resources;
+            _profile.Bank = ItemService.GetPlayerDefaults().BankResources;
         }
 
         foreach (var resource in _profile.Resources)
             AddResource(resource);
-
+        foreach (var resource in _profile.Bank)
+            AddBankResource(resource);
 
         callback.Invoke();
     }
@@ -1189,7 +1189,7 @@ public class Player : NetworkBehaviour
                 if (balance > cargo.Amount)
                 {
                     // Add to bank
-                    AddBankResource(type, balance);
+                    AddBankResource(type, cargo.Amount);
 
                     // Remove from cargo
                     SetResource(type, 0);
@@ -1212,7 +1212,7 @@ public class Player : NetworkBehaviour
                 if (balance > bank.Amount)
                 {
                     // Add to cargo
-                    AddResource(type, balance);
+                    AddResource(type, bank.Amount);
 
                     // Remove from Bank
                     SetBankResource(type, 0);
