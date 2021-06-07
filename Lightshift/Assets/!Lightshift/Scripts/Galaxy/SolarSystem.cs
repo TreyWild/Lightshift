@@ -13,7 +13,7 @@ public class SolarSystem : MonoBehaviour
     public List<float> OrbitSizes = new List<float>();
 
     private List<OrbitalData> _orbitalData = new List<OrbitalData>();
-    private void Awake()
+    private void Start()
     {
         var orbits = GetComponentsInChildren<Orbit>();
         if (orbits == null)

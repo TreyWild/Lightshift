@@ -30,6 +30,12 @@ public class LSObjectPool : MonoBehaviour
         if (!Instance._projectiles.Contains(projectile))
             Instance._projectiles.Add(projectile);
 
+        var trail = projectile.GetTrailRenderer();
+        if (trail != null)
+        {
+            trail.emitting = false;
+            trail.Clear();
+        }
         projectile.gameObject.SetActive(true);
         return projectile;
     }

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
+[RequireComponent(typeof(EntityUI))]
 public class Shield : NetworkBehaviour 
 {
     [SyncVar(hook = nameof(SetUIShieldMax))]

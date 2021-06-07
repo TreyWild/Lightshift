@@ -102,6 +102,7 @@ public class GameUIManager : MonoBehaviour
         return gameObject;
     }
 
+    private Player _localPlayer;
     private void Start()
     {
         //if (Server.Instance != null)
@@ -109,6 +110,8 @@ public class GameUIManager : MonoBehaviour
 
         if (Settings.Instance != null)
             ShowScreenStats(Settings.Instance.ShowDebugStats);
+
+        _localPlayer = FindObjectsOfType<Player>().Where(p => p.isLocalPlayer).FirstOrDefault();
     }
 
     public void ShowScreenStats(bool active) 
@@ -145,9 +148,6 @@ public class GameUIManager : MonoBehaviour
         }
 
         if (!Settings.KeysLocked) {
-
-            //if (Input.GetKeyDown(Settings.InventoryKey))
-            //    ToggleInventoryUI(true);
 
             if (Input.GetKeyDown(Settings.PlayerMenuKey))
                 TogglePlayerMenu();

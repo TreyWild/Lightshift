@@ -16,10 +16,20 @@ public class Projectile : MonoBehaviour
     private SpriteRenderer _renderer;
     private BoxCollider2D _collider;
     private Kinematic _target;
+    private float speed;
+    private AudioSource _audioSource;
+    private BoxCollider2D _physicalCollider;
+
+    public TrailRenderer GetTrailRenderer() 
+    {
+        return _trailRenderer;
+    }
+
     private void Awake()
     {
         _kinematic = gameObject.AddComponent<Kinematic>();
         _trailRenderer = GetComponent<TrailRenderer>();
+        _audioSource = GetComponent<AudioSource>();
         _renderer = GetComponent<SpriteRenderer>();
         _trailRenderer.Clear();
     }
@@ -32,6 +42,9 @@ public class Projectile : MonoBehaviour
         if (_collider == null)
             _collider = gameObject.AddComponent<BoxCollider2D>();
 
+        //if (_physicalCollider == null)
+        //    _physicalCollider = gameObject.AddComponent<BoxCollider2D>();
+
         this.data = data;
         _kinematic.velocity = velocity;
         _remainingHits = data.hitCount;
@@ -39,7 +52,7 @@ public class Projectile : MonoBehaviour
 
         isAlive = true;
 
-        //_kinematic.mass = data.weight;
+        _kinematic.mass = data.weight;
 
         _renderer.sprite = sprite;
         _renderer.color = color;
@@ -49,13 +62,22 @@ public class Projectile : MonoBehaviour
         _collider.size = _renderer.sprite.bounds.size;
         _collider.offset = _renderer.sprite.bounds.center;
 
+        //_physicalCollider.size = _renderer.sprite.bounds.size;
+        //_physicalCollider.offset = _renderer.sprite.bounds.center;
+
         _trailRenderer.sortingOrder = SortingOrders.BULLET_TRAIL;
         _trailRenderer.Clear();
         _trailRenderer.enabled = true;
         _trailRenderer.emitting = true;
         _trailRenderer.material.color = trailColor;
+        _trailRenderer.startColor = trailColor;
+        _trailRenderer.endColor = trailColor;
         _trailRenderer.time = data.trailLength;
         _trailRenderer.startWidth = data.trailSize;
+        speed = data.speed * 100;
+
+        _audioSource.clip = weapon.ShootSound;
+        _audioSource.Play();
     }
 
     void FixedUpdate()
@@ -80,7 +102,7 @@ public class Projectile : MonoBehaviour
 
     public void Move()
     {
-        _kinematic.AddForce(_kinematic.Transform.up * data.speed * Time.deltaTime);
+        _kinematic.AddForce(_kinematic.Transform.up * speed * Time.deltaTime);
     }
 
     private void RotateTowardsTarget() 
@@ -106,6 +128,9 @@ public class Projectile : MonoBehaviour
 
             if (weapon.hitEffectPrefab != null)
                 Instantiate(weapon.hitEffectPrefab, _kinematic.position, _kinematic.Transform.rotation);
+
+            _audioSource.clip = weapon.HitSound;
+            _audioSource.Play();
 
             if (--_remainingHits == 0)
                 SetAsDead();

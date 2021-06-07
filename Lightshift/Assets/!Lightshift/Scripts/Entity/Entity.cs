@@ -67,16 +67,18 @@ public class Entity : NetworkBehaviour
         onLeaveCheckpoint = null;
         onEnterCheckpoint = null;
         mapObject = null;
+        onKilled = null;
     }
+
+    private Vector3 _startScale;
+
     public void Awake()
     {
         //weaponSystem = gameObject.AddComponent<WeaponSystem>();
         rigidBody = gameObject.GetComponent<Rigidbody2D>();
         kinematic = gameObject.GetComponent<Kinematic>();
-        ui = gameObject.AddComponent<EntityUI>();
+        ui = gameObject.GetComponent<EntityUI>();
         mapObject = GetComponent<MapObject>();
-        onEnterCheckpoint += (checkpoint) => OnEnterCheckpoint(checkpoint);
-        onLeaveCheckpoint += (checkpoint) => OnLeaveCheckpoint(checkpoint);
     }
 
     public override void OnStartServer()
@@ -86,7 +88,10 @@ public class Entity : NetworkBehaviour
 
     public void Start()
     {
+        _startScale = transform.localScale;
         EntityManager.AddEntity(this);
+        onEnterCheckpoint += (checkpoint) => OnEnterCheckpoint(checkpoint);
+        onLeaveCheckpoint += (checkpoint) => OnLeaveCheckpoint(checkpoint);
     }
 
     public virtual void OnEnterCheckpoint(Checkpoint checkpoint)
@@ -103,15 +108,16 @@ public class Entity : NetworkBehaviour
     {
         base.OnStartClient();
 
-        ui.InitLocalPlayer(hasAuthority && isClient);
-
         Modifiers.Callback += Modifiers_Callback;
+
+        ui.InitLocalPlayer(hasAuthority);
 
         var modifiers = Modifiers.ToList();
         foreach (var modifier in modifiers)
         {
             UpdateClientModifier(modifier.Key, modifier.Value);
         };
+
     }
 
     private void Modifiers_Callback(SyncIDictionary<Modifier, float>.Operation op, Modifier key, float value)
@@ -187,7 +193,8 @@ public class Entity : NetworkBehaviour
     public static string LocalTeamId;
     private void UpdateTeamId(string oldValue, string newValue)
     {
-        LocalTeamId = newValue;
+        if (hasAuthority)
+            LocalTeamId = newValue;
 
         ui?.SetTeam(teamId == LocalTeamId);
 
@@ -402,14 +409,18 @@ public class Entity : NetworkBehaviour
         OnKilled();
     }
 
+    public Action onKilled;
     public virtual void OnDeath()
     {
-
+        if (hasAuthority)
+        {
+            transform.localScale = new Vector3(1,1,1);
+        }
     }
     public virtual void OnKilled()
     {
-        Instantiate(PrefabManager.Instance.deathEffectPrefab, kinematic.position, kinematic.Transform.rotation);
         OnDeath();
+        onKilled?.Invoke();
     }
 
     public void Respawn()
@@ -461,10 +472,12 @@ public class Entity : NetworkBehaviour
     public void EnterCheckpoint(Checkpoint checkpoint)
     {
         onEnterCheckpoint?.Invoke(checkpoint);
+        OnEnterCheckpoint(checkpoint);
     }
     public void LeaveCheckpoint(Checkpoint checkpoint)
     {
         onLeaveCheckpoint?.Invoke(checkpoint);
+        OnLeaveCheckpoint(checkpoint);
     }
     #endregion
 }

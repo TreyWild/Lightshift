@@ -23,7 +23,7 @@ namespace Mirror
         [Tooltip("Should the Network Manager object be persisted through scene changes?")]
         public bool dontDestroyOnLoad = true;
 
-        // Deprecated 3/10/2021
+        // Deprecated 2021-03-10
         // Temporary bool to allow Network Manager to persist to offline scene
         // Based on Discord convo, BigBox is invoking StopHost in startup sequence, bouncing the server and clients back to offline scene, which resets Network Manager.
         // Request is for a checkbox to persist Network Manager to offline scene, despite the collision and warning.
@@ -128,6 +128,7 @@ namespace Mirror
         [NonSerialized]
         public bool isNetworkActive;
 
+        // TODO remove this
         static NetworkConnection clientReadyConnection;
 
         /// <summary>True if the client loaded a new scene when connecting to the server.</summary>
@@ -1199,7 +1200,7 @@ namespace Mirror
             // can be overwritten for cases like delayed logouts in MMOs to
             // avoid players escaping from PvP situations by logging out.
             NetworkServer.DestroyPlayerForConnection(conn);
-            Debug.Log("OnServerDisconnect: Client disconnected.");
+            //Debug.Log("OnServerDisconnect: Client disconnected.");
         }
 
         /// <summary>Called on the server when a client is ready (= loaded the scene)</summary>

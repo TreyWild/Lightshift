@@ -28,7 +28,7 @@ namespace Assets._Lightshift.Scripts.SolarSystem
         public static void RequestLand(string id) 
         {
             var player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
-            player.Land(id);
+            player.Land(id, false);
         }
 
         public static void Land(string id) 

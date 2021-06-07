@@ -20,6 +20,7 @@ public class Ship : Entity
     public float speed;
     public float overDriveBoost;
     public float agility;
+    public float overDrivePowerCost;
 
     public new void Awake()
     {
@@ -118,16 +119,16 @@ public class Ship : Entity
                 kinematic.mass = value;
                 break;
             case Modifier.Accel:
-                acceleration = value;
+                acceleration = value * 100f;
                 break;
             case Modifier.Speed:
-                speed = value;
+                speed = value * 100f;
                 break;
             case Modifier.Overdrive:
                 overDriveBoost = value;
                 break;
             case Modifier.Brakes:
-                brakeForce = value;
+                brakeForce = value / 1000f;
                 break;
             case Modifier.Agility:
                 agility = value;
@@ -142,6 +143,12 @@ public class Ship : Entity
                 break;
             case Modifier.Regen:
                 shield.shieldRegen = value;
+                break;
+            case Modifier.Power:
+                generator.power = value;
+                break;
+            case Modifier.PowerRegen:
+                generator.powerRegen = value;
                 break;
         }
     }

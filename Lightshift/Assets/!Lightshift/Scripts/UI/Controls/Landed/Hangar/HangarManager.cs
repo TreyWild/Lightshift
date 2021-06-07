@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-public class HangarManager : MonoBehaviour
+public class HangarManager : LandedState
 {
     [SerializeField] private GameObject _overViewPanel;
     [SerializeField] private GameObject _modulePanel;
@@ -15,8 +15,6 @@ public class HangarManager : MonoBehaviour
     [SerializeField] private GameObject _loadoutPanel;
     [SerializeField] private GameObject _loadoutPrefab;
 
-
-    private Player _player;
 
     private List<ModuleItemControl> _moduleControlList;
 
@@ -28,17 +26,17 @@ public class HangarManager : MonoBehaviour
             module.OnClicked.AddListener(OnModuleClicked);
         }
 
-        _player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
+        player = FindObjectsOfType<Player>().FirstOrDefault(p => p.isLocalPlayer);
 
-        _player.ShipLoadouts.Callback += ShipLoadouts_Callback;
+        player.ShipLoadouts.Callback += ShipLoadouts_Callback;
         RefreshHangar();
         RefreshLoadouts();
     }
 
     private void OnDestroy()
     {
-        if (_player != null)
-            _player.ShipLoadouts.Callback -= ShipLoadouts_Callback;
+        if (player != null)
+            player.ShipLoadouts.Callback -= ShipLoadouts_Callback;
     }
     private void ShipLoadouts_Callback(Mirror.SyncIDictionary<string, LoadoutObject>.Operation op, string key, LoadoutObject item)
     {
@@ -48,17 +46,17 @@ public class HangarManager : MonoBehaviour
 
     public void RefreshHangar() 
     {
-        if (_player == null)
+        if (player == null)
             return;
 
-        var activeShip = _player.GetActiveLoadout();
+        var activeShip = player.GetActiveLoadout();
 
         if (activeShip == null)
             return;
 
         foreach (var equip in activeShip.EquippedModules)
         {
-            var module = _player.GetItems().FirstOrDefault(m => m.ModuleId == equip.itemId);
+            var module = player.GetItems().FirstOrDefault(m => m.ModuleId == equip.itemId);
             if (module.ModuleId == null)
                 continue;
 
@@ -84,14 +82,14 @@ public class HangarManager : MonoBehaviour
     //}
     private void RefreshStats() 
     {
-        if (_player == null)
+        if (player == null)
             return;
 
-        var ship = _player.GetActiveLoadout();
+        var ship = player.GetActiveLoadout();
         if (ship == null)
             return;
 
-        var stats = StatHelper.GetStatsFromShip(_player, ship);
+        var stats = StatHelper.GetStatsFromShip(player, ship);
 
         _statView.Clear();
         foreach (var stat in stats)
@@ -109,7 +107,7 @@ public class HangarManager : MonoBehaviour
 
         _loadoutControls.Clear();
 
-        foreach (var loadout in _player.GetShipLoadouts())
+        foreach (var loadout in player.GetShipLoadouts())
            AddLoadout(loadout);
     }
 
@@ -117,7 +115,7 @@ public class HangarManager : MonoBehaviour
     private void AddLoadout(LoadoutObject loadout) 
     {
         var control = Instantiate(_loadoutPrefab, _loadoutPanel.transform).GetComponent<LoadoutControl>();
-        control.Init(_player, loadout);
+        control.Init(player, loadout);
         _loadoutControls.Add(control);
     }
 
@@ -160,20 +158,20 @@ public class HangarManager : MonoBehaviour
                 break;
         }
 
-        var activeShip = _player.GetActiveLoadout();
+        var activeShip = player.GetActiveLoadout();
 
         if (activeShip == null)
             return;
 
         Debug.Log($"Target type is {targetType}");
 
-        var items = _player.GetItems().Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).Type == targetType).ToList();
+        var items = player.GetItems().Where(i => ItemService.GetItem(i.ModuleId) != null && ItemService.GetItem(i.ModuleId).Type == targetType).ToList();
 
         var itemView = DialogManager.ShowItemViewDialog();
 
         itemView.onClick += (Item item) =>
         {
-            _player.EquipModule(item.Id, moduleItemControl.ModuleLocation);
+            player.EquipModule(item.Id, moduleItemControl.ModuleLocation);
 
             itemView.Exit();
         };
@@ -186,9 +184,9 @@ public class HangarManager : MonoBehaviour
     {
         //var listView = DialogManager.CreateListView($"{title}");
 
-        //var activeShip = _player.GetActiveLoadout();
+        //var activeShip = player.GetActiveLoadout();
 
-        //foreach (var m in _player.GetItems())
+        //foreach (var m in player.GetItems())
         //{
         //    var gameItem = ItemService.GetItem(m.ModuleId);
         //    if (gameItem == null)
@@ -208,10 +206,5 @@ public class HangarManager : MonoBehaviour
         //        };
         //    }
         //}
-    }
-
-    public void LeaveHangar() 
-    {
-        _player.TakeOff();
     }
 }

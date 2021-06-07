@@ -13,18 +13,35 @@ public enum DamageType
 }
 public class DamageableObject : NetworkBehaviour
 {
-    
+
+    [SerializeField] private AudioClip _deathSound;
+    [SerializeField] private GameObject _deathEffect;
 
     private Heart _heart;
     private Shield _shield;
     private Entity _entity;
-
     private GameObject _respawnHandler;
+
     private void Awake()
     {
         _heart = GetComponent<Heart>();
         _shield = GetComponent<Shield>();
         _entity = GetComponent<Entity>();
+        _entity.onKilled += () =>
+        {
+            var obj = Instantiate(_deathEffect, _entity.kinematic.position, _entity.kinematic.Transform.rotation);
+
+            var sound = obj.AddComponent<AudioSource>();
+            sound.clip = _deathSound;
+            sound.rolloffMode = AudioRolloffMode.Logarithmic;
+            sound.minDistance = 1;
+            sound.maxDistance = 150;
+            sound.dopplerLevel = 0.6f;
+            sound.spread = 19;
+            sound.loop = false;
+            sound.Play();
+            Destroy(sound.gameObject, _deathSound.length + 1);
+        }; 
     }
 
     private void OnDestroy()
@@ -64,8 +81,8 @@ public class DamageableObject : NetworkBehaviour
                         KillEntity($"was killed by flying into the sun", "Suicide");
                         break;
                     case DamageType.Projectile:
-                        weaponName = $"{attacker.displayName}'s {weaponName}.";
-                        KillEntity($"was killed by {weaponName}!", attacker.displayName);
+                        weaponName = $"{attacker.displayName}'s {weaponName}";
+                        KillEntity($"was killed by {weaponName}", attacker.displayName);
                         break;
                 }
             }
