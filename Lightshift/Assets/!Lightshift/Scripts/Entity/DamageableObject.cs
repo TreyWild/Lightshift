@@ -92,12 +92,17 @@ public class DamageableObject : NetworkBehaviour
         return true;
     }
 
-    public void KillEntity(string deathReason, string killerName, Entity attacker = null)
+    public void KillEntity(string deathReason, string killerName, Entity attacker = null, bool suicide = false)
     {
         if (isServer)
         {
+            //Can't kill the dead lol
+            if (!_entity.alive)
+                return;
             //Kill Entity
-            _entity.Kill();
+            if (suicide)
+                _entity.Suicide();
+            else _entity.Kill();
 
             if (_entity.GetType() == typeof(PlayerShip))
             {
@@ -170,7 +175,8 @@ public class DamageableObject : NetworkBehaviour
         {
             if (Input.GetKeyDown(Settings.SelfDestruct) && hasAuthority)
             {
-                CmdKillEntity();
+                if (_entity.alive)
+                    CmdKillEntity();
             }
         }
     }
@@ -178,6 +184,8 @@ public class DamageableObject : NetworkBehaviour
     [Command]
     private void CmdKillEntity()
     {
-        KillEntity($"{_entity.displayName} self distructed.", "Suicide");
+        if (_entity.alive)
+            KillEntity($"{_entity.displayName} self distructed.", "Suicide");
     }
+
 }

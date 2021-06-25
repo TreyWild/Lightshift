@@ -11,6 +11,7 @@ public class MapObject : MonoBehaviour
 
     public string Name;
     public string Lore;
+    public bool IsVisible = true;
 
     public Sprite Icon;
     public Vector2 IconSize = new Vector2(24,24);

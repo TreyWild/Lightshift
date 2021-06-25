@@ -890,7 +890,7 @@ public class Player : NetworkBehaviour
     {
         if (!BankResources.ContainsKey(type))
             return new ResourceObject { Amount = 0, Type = type };
-        else return new ResourceObject { Amount = Resources[type], Type = type };
+        else return new ResourceObject { Amount = BankResources[type], Type = type };
 
     }
     public void SetBankResource(ResourceObject resource) => SetBankResource(resource.Type, resource.Amount);
