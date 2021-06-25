@@ -125,7 +125,7 @@ public class BankManager : LandedState
         var balance = player.GetBankResource(type);
         var cargo = player.GetResource(type);
 
-        var dialog = Instantiate(_bankDialog, transform);
+        var dialog = Instantiate(_bankDialog);
         var control = dialog.GetComponent<BankDialog>();
         control.Init(cargo.Amount, balance.Amount, type, action);
 

@@ -105,6 +105,7 @@ public class SystemMap : MonoBehaviour
 
         foreach (var obj in _objects)
         {
+            obj.uiMapObject.gameObject.SetActive(obj.mapObject.IsVisible);
             obj.uiMapObject.transform.position = new Vector2((obj.mapObject.transform.position.x - GetLocalPosition().x) / Zoom + (Screen.width / 2), (obj.mapObject.transform.position.y - GetLocalPosition().y) / Zoom + (Screen.height / 2));
             obj.uiMapObject.SetRotation(obj.mapObject.transform.eulerAngles.z);
             obj.uiMapObject.SetSize(new Vector2((obj.mapObject.IconSize.x) / ((Zoom)/ IconScale), (obj.mapObject.IconSize.y) / ((Zoom) / IconScale)));

@@ -61,6 +61,12 @@ public class CargoManager : MonoBehaviour
         _capacityLabel.text = $"{cargoItems.Sum(s => s.Amount)}/{_player.GetCargoCapacity()}";
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(Settings.CargoMenu))
+            Exit();
+    }
+
     public void EjectAllCargo() 
     {
         DialogManager.ShowDialog($"Are you sure you want to EJECT ALL of your cargo?", delegate (bool result)

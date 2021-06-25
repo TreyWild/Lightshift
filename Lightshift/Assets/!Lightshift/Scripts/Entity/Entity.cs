@@ -387,16 +387,16 @@ public class Entity : NetworkBehaviour
     public void Kill()
     {
         kinematic.velocity = Vector2.zero;
-        SetEnemyKilled();
+        SetEntityKilled();
     }
 
     [Command]
     private void CmdKillEntity()
     {
-        SetEnemyKilled();
+        SetEntityKilled();
     }
 
-    private void SetEnemyKilled() 
+    private void SetEntityKilled() 
     {
         alive = false;
 
@@ -412,6 +412,7 @@ public class Entity : NetworkBehaviour
     public Action onKilled;
     public virtual void OnDeath()
     {
+        mapObject.IsVisible = false;
         if (hasAuthority)
         {
             transform.localScale = new Vector3(1,1,1);
@@ -433,6 +434,7 @@ public class Entity : NetworkBehaviour
 
     public virtual void OnRespawn()
     {
+        mapObject.IsVisible = true;
 
         //Respawn Effect
         Instantiate(PrefabManager.Instance.spawnEffectPrefab, transform);

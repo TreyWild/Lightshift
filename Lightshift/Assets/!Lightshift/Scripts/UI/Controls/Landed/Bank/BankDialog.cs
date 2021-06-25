@@ -47,7 +47,7 @@ public class BankDialog : MonoBehaviour
         var resource = ItemService.GetResourceItem(type);
         if (resource != null) 
         {
-            _displayName.text = resource.ToString().ToSentence();
+            _displayName.text = resource.Type.ToString().ToSentence();
             _icon.InitializeGraphic(resource.Sprite);
         }
 
