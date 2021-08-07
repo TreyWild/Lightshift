@@ -5,4 +5,4 @@ C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\S
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.pdb
 C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\SharedModels.dll
 C:\Users\bryly\Documents\GitHub\Lightshift\Lightshift\Assets\Plugins\SharedModels.pdb
-C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.csprojAssemblyReference.cache
+C:\Users\Bryly\Documents\GitHub\Lightshift\MasterServer\SharedModels\obj\Debug\SharedModels.csproj.AssemblyReference.cache

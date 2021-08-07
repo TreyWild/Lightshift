@@ -38,6 +38,11 @@ public class SoundManager : MonoBehaviour
         PlayMusic();
     }
 
+    public void StopMusic() 
+    {
+        _musicSource.Stop();
+    }
+
     public void PlayMusic()
     {
         if (SceneManager.GetActiveScene().name == "_AUTHENTICATION_")

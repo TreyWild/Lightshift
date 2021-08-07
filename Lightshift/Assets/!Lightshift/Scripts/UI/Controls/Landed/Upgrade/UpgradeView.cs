@@ -32,6 +32,13 @@ public class UpgradeView : MonoBehaviour
 
     private List<UpgradeControl> _controls = new List<UpgradeControl>();
 
+    [SerializeField] private AudioSource _spendEffect;
+    [SerializeField] private AudioSource _loadingSound;
+    [SerializeField] private AudioSource _upgradeEffect;
+
+    [SerializeField] private GameObject _loadingView;
+
+
     private string itemId;
     private Player _player 
     {
@@ -60,9 +67,18 @@ public class UpgradeView : MonoBehaviour
         RefreshView();
     }
 
+    private bool _initView;
     private void OnResourceChanged(SyncIDictionary<ResourceType, int>.Operation op, ResourceType key, int item)
     {
         LoadResources();
+
+        if (_initView)
+        {
+            _upgradeEffect.Play();
+            _loadingSound.Stop();
+            _loadingView.SetActive(false);
+        }
+        _initView = true;
     }
 
     public void InitializeUpgrades(Item item)
@@ -169,6 +185,9 @@ public class UpgradeView : MonoBehaviour
         _player.BuyUpgrade(_item.Id, id, delegate (string itemId)
         {
             RefreshView();
+            _spendEffect.Play();
+            _loadingSound.Play();
+            _loadingView.SetActive(true);
         });
     }
 

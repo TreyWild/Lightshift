@@ -1,7 +1,6 @@
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\appsettings.Development.json
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\appsettings.json
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\MasterServer.exe
-C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.csprojAssemblyReference.cache
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.AssemblyInfoInputs.cache
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.AssemblyInfo.cs
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.RazorTargetAssemblyInfo.cache
@@ -30,3 +29,4 @@ C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\n
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.JsonPatch.dll
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Microsoft.AspNetCore.Mvc.NewtonsoftJson.dll
 C:\Users\bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\bin\Debug\netcoreapp3.1\Newtonsoft.Json.Bson.dll
+C:\Users\Bryly\Documents\GitHub\Lightshift\MasterServer\MasterServer\obj\Debug\netcoreapp3.1\MasterServer.csproj.AssemblyReference.cache

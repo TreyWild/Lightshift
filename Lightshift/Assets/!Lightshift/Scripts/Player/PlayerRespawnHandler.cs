@@ -16,6 +16,7 @@ public class PlayerRespawnHandler : NetworkBehaviour
     public TextMeshProUGUI _respawnLabel;
     public TextMeshProUGUI _killedByLabel;
     public AudioSource _audioSource;
+    public AudioSource _musicSource;
 
     private void Start()
     {
@@ -40,7 +41,9 @@ public class PlayerRespawnHandler : NetworkBehaviour
 
         if (hasAuthority)
         {
+            SoundManager.Instance.StopMusic();
             _audioSource.Play();
+            _musicSource.Play();
             GetComponent<Canvas>().enabled = true;
         }
     }
@@ -76,6 +79,7 @@ public class PlayerRespawnHandler : NetworkBehaviour
         _killedByLabel.text = "Respawning";
         _respawnLabel.text = $"Waiting for Server";
 
+        SoundManager.Instance.PlayMusic();
         CmdRespawn();
     }
 

@@ -1,20 +1,24 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj": {}
+    "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj": {}
   },
   "projects": {
-    "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj": {
+    "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj",
+        "projectUniqueName": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj",
         "projectName": "MasterServer",
-        "projectPath": "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj",
-        "packagesPath": "C:\\Users\\bryly\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\obj\\",
+        "projectPath": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj",
+        "packagesPath": "C:\\Users\\Bryly\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\obj\\",
         "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+        ],
         "configFilePaths": [
-          "C:\\Users\\bryly\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Bryly\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -28,8 +32,8 @@
           "netcoreapp3.1": {
             "targetAlias": "netcoreapp3.1",
             "projectReferences": {
-              "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj": {
-                "projectPath": "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj"
+              "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj": {
+                "projectPath": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj"
               }
             }
           }
@@ -75,15 +79,15 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.102\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.301\\RuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj": {
+    "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj": {
       "restore": {
-        "projectUniqueName": "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj",
+        "projectUniqueName": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj",
         "projectName": "SharedModels",
-        "projectPath": "C:\\Users\\bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj"
+        "projectPath": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\SharedModels\\SharedModels.csproj"
       },
       "frameworks": {
         "net472": {}
