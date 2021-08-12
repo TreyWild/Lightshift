@@ -62,6 +62,16 @@ namespace MasterServer.Controllers
             return true;
         }
 
+        [HttpPost("saveitems")]
+        public ActionResult<bool> SaveItems(List<Item> items)
+        {
+            if (!AuthenticationService.ValidateGameServerFromRequest(Request))
+                return false;
+
+            DB.Context.SaveDocuments(items);
+            return true;
+        }
+
 
         [HttpPost("saveloadout")]
         public ActionResult<bool> SaveLoadout(LoadoutObject loadout)

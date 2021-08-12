@@ -30,7 +30,7 @@ namespace MasterServer
             {
                 Urls = new[]
 {
-                    "https://a.free.bryly.ravendb.cloud"
+                    "https://a.free.ls.ravendb.cloud"
                 },
                 Database = _databaseName,
                 Certificate = new System.Security.Cryptography.X509Certificates.X509Certificate2(_certificate),
@@ -44,6 +44,19 @@ namespace MasterServer
 
             var session = documentStore.OpenSession();
             session.Store(document);
+            session.SaveChanges();
+
+            return document;
+        }
+
+        public virtual List<T> SaveDocuments<T>(List<T> document)
+        {
+            if (document == null)
+                return document;
+
+            var session = documentStore.OpenSession();
+            foreach (var item in document)
+                session.Store(item);
             session.SaveChanges();
 
             return document;

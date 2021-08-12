@@ -81,11 +81,7 @@ public class Player : NetworkBehaviour
     private void OnDestroy()
     {
         if (isServer)
-        {
-            SaveAccount();
-
             Communication.ShowBroadcastAlert($"{_account.Profile.Username} has left the system.", Communication.AlertType.SystemMessage);
-        }
 
         ship = null;
         _account = null;
@@ -95,6 +91,13 @@ public class Player : NetworkBehaviour
         _onResetUpgrades = null;
         _onShipChanged = null;
         _onModuleEquipped = null;
+    }
+
+    private DateTime _lastDataSave;
+    private void Update()
+    {
+        if ((DateTime.Now - _lastDataSave).TotalMinutes > 30)
+            SavePlayerData();
     }
 
     public override void OnStartLocalPlayer()
@@ -323,9 +326,9 @@ public class Player : NetworkBehaviour
 
         Debug.Log($"New item built for {Username}.");
 
-        SaveItem(item);
+        UpdateItem(item);
     }
-    public void SaveItem(Item item, Action callback = null)
+    public void UpdateItem(Item item)
     {
         if (!isServer)
             return;
@@ -334,18 +337,18 @@ public class Player : NetworkBehaviour
 
         Items[item.Id] = item;
 
-        HttpService.Get("game/saveitem", item,
-        delegate (bool result)
-        {
-            if (result)
-                Debug.Log($"Item saved.");
-            else Debug.LogError("Item was not saved.");
+        //HttpService.Get("game/saveitem", item,
+        //delegate (bool result)
+        //{
+        //    if (result)
+        //        Debug.Log($"Item saved.");
+        //    else Debug.LogError("Item was not saved.");
 
-            callback?.Invoke();
-        });
+        //    callback?.Invoke();
+        //});
     }
 
-    public void SaveAccount()
+    public void SavePlayerData()
     {
         if (isServer)
         {
@@ -362,6 +365,7 @@ public class Player : NetworkBehaviour
             _profile.Level = Level;
             _profile.Bank = GetBankResources();
             _account.Profile = _profile;
+
             HttpService.Get("account/save", _account,
             delegate (Account account)
             {
@@ -369,6 +373,16 @@ public class Player : NetworkBehaviour
                 _profile = account.Profile;
                 Debug.Log($"Account for {_account.CaseSensitiveUsername} saved.");
             });
+
+            HttpService.Get("game/saveitems", GetItems(),
+            delegate (bool result)
+            {
+                if (result)
+                    Debug.Log($"Items saved.");
+                else Debug.LogError("Item were not saved.");
+            });
+
+            _lastDataSave = DateTime.Now;
         }
     }
 
@@ -403,7 +417,7 @@ public class Player : NetworkBehaviour
             Credits = ItemService.GetPlayerDefaults().Credits;
 
             // Save account
-            SaveAccount();
+            SavePlayerData();
         }
     }
 
@@ -462,8 +476,6 @@ public class Player : NetworkBehaviour
             LandedLocationId = landableId;
 
             IsLanded = true;
-
-            SaveAccount();
 
             ship.SetLanding();
         }
@@ -724,9 +736,7 @@ public class Player : NetworkBehaviour
         item.SpentResources = null;
         item.Upgrades = null;
 
-        SaveItem(item);
-
-        SaveAccount();
+        UpdateItem(item);
     }
 
     [TargetRpc]
@@ -803,9 +813,7 @@ public class Player : NetworkBehaviour
             item.Upgrades[i] = upgrade;
         }
 
-        SaveItem(item);
-        SaveAccount();
-
+        UpdateItem(item);
     }
 
     #endregion
@@ -1148,8 +1156,6 @@ public class Player : NetworkBehaviour
             AddBankResource(item.Type, item.Amount);
             TakeResource(item.Type, item.Amount);
         }
-
-        SaveAccount();
     }
 
     public void WithdrawAllCargo()
@@ -1167,8 +1173,6 @@ public class Player : NetworkBehaviour
             AddResource(item.Type, item.Amount);
             TakeBankResource(item.Type, item.Amount);
         }
-
-        SaveAccount();
     }
 
     public void BankTransaction(BankAction action, ResourceType type, int balance)
@@ -1228,8 +1232,6 @@ public class Player : NetworkBehaviour
                 }
                 break;
         }
-
-        SaveAccount();
     }
     #endregion
 }

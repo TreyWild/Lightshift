@@ -83,7 +83,7 @@ public class UpgradeView : MonoBehaviour
 
     public void InitializeUpgrades(Item item)
     {
-        _item = item;
+        _item = _player.GetItem(item.Id);
         itemId = item.Id;
 
         _gameItem = ItemService.GetItem(item.ModuleId);
@@ -115,7 +115,9 @@ public class UpgradeView : MonoBehaviour
                 upgrades.Add(upgrade);
             }
             script.Init(upgrade, upgradeInfo, totalUpgrades, _player, totalUpgrades >= _gameItem.MaxUpgrades);
-            _controls.Add(script);
+
+            if (!_controls.Contains(script))
+                _controls.Add(script);
         }
 
         item.Upgrades = upgrades.ToArray();
@@ -222,5 +224,11 @@ public class UpgradeView : MonoBehaviour
     public void Close()
     {
         Destroy(gameObject);
+    }
+
+    private void OnDestroy()
+    {
+        _player.Resources.Callback -= OnResourceChanged;
+        _player.Items.Callback -= OnItemsChanged;
     }
 }

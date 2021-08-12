@@ -24,12 +24,20 @@ public class Server : MonoBehaviour
         Instance = this;
         _players = new List<Player>();
     }
+
+    private void OnApplicationQuit()
+    {
+        foreach (var player in _players)
+            player.SavePlayerData();
+    }
+
+
     public static void RemovePlayer(Player player)
     {
         if (Instance._players.Contains(player))
             Instance._players.Remove(player);
 
-        player.SaveAccount();
+        player.SavePlayerData();
     }
 
     public static Player GetPlayer(NetworkConnection connection)

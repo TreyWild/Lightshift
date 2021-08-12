@@ -2,8 +2,7 @@
   "runtimeOptions": {
     "additionalProbingPaths": [
       "C:\\Users\\Bryly\\.dotnet\\store\\|arch|\\|tfm|",
-      "C:\\Users\\Bryly\\.nuget\\packages",
-      "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      "C:\\Users\\Bryly\\.nuget\\packages"
     ]
   }
 }
