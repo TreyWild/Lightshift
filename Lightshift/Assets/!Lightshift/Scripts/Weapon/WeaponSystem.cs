@@ -145,7 +145,7 @@ public class WeaponSystem : NetworkBehaviour
             else
                 gunPoint += (Vector2)transform.position;
 
-            Projectile bullet = LSObjectPool.GetUsableProjectile();
+            Projectile bullet = LSObjectPool.GetUsableProjectile(weapon.Id);
 
             var velocity = Vector2.zero;
             if (weapon.weaponData.inheritVelocity)

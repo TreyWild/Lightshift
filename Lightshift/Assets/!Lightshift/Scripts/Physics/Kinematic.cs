@@ -14,6 +14,7 @@ public class Kinematic : MonoBehaviour
         get => _rigidBody.drag;
         set => _rigidBody.drag = value;
     }
+
     public float mass = 1;
     private Rigidbody2D _rigidBody;
     private Transform _transform { get; set; }
@@ -60,6 +61,11 @@ public class Kinematic : MonoBehaviour
     {
         //_transform.eulerAngles = new Vector3(_transform.eulerAngles.x, _transform.eulerAngles.y, angle);
         _rigidBody.SetRotation(angle);
+    }
+
+    public void TorqueRotation(float angle)
+    {
+        _rigidBody.AddTorque(angle);
     }
 
     public void AddForce(Vector2 force) 

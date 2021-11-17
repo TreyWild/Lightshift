@@ -86,6 +86,7 @@ public class Npc : Ship
         var targetAngle = GetTargetRotationMod();
         kinematic.SetDirection(kinematic.rotation + speed * targetAngle * Time.fixedDeltaTime);
     }
+
     public void RunAIChecks()
     {
         var target = targetNeutral;

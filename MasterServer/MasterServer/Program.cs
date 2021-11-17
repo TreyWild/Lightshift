@@ -22,7 +22,7 @@ namespace MasterServer
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseKestrel(config => config.Listen(IPAddress.Parse("67.211.213.146"), port: 5000));
+                    //webBuilder.UseKestrel(config => config.Listen(IPAddress.Parse("67.211.213.146"), port: 5000));
                     webBuilder.UseStartup<Startup>();
                 });
     }

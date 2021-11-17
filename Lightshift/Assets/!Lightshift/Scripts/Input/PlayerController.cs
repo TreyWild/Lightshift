@@ -125,13 +125,16 @@ public class PlayerController : NetworkBehaviour
             CmdUpdateDrifting(drifting);
             Drifting = drifting;
         }
-
-        var weapon = Input.GetKey(Settings.FireKey) || (Settings.FireWithWeaponHotkeys && (
-            Input.GetKey(Settings.Weapon1) ||
+        var pressingWeaponHotKey = Input.GetKey(Settings.Weapon1) ||
             Input.GetKey(Settings.Weapon2) ||
             Input.GetKey(Settings.Weapon3) ||
             Input.GetKey(Settings.Weapon4) ||
-            Input.GetKey(Settings.Weapon5)));
+            Input.GetKey(Settings.Weapon5) ||
+            Input.GetKey(Settings.FireKey);
+
+        var weapon = Input.GetKey(Settings.FireKey) || (Settings.FireWithWeaponHotkeys && pressingWeaponHotKey);
+
+
 
         if (weapon != Weapon)
         {

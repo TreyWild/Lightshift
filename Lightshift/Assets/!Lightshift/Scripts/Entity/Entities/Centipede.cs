@@ -12,7 +12,7 @@ public class Centipede : MonoBehaviour
     [SerializeField] private GameObject _headPrefab;
     [SerializeField] private GameObject _bodyPrefab;
     [SerializeField] private GameObject _tailPrefab;
-
+    [SerializeField] private Transform _parent;
     public int BodyLength;
     public float SpacingOffset = 0.1f;
 
@@ -76,7 +76,13 @@ public class Centipede : MonoBehaviour
 
         if (type == SegmentType.Body)
             _segments.Add(body);
-        else _tail = body;
+        else 
+        {
+            _tail = body;
+                
+            if (_parent != null)
+            body.transform.parent = _parent;
+        }
     }
 
 

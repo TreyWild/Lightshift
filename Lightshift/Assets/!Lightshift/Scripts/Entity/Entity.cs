@@ -412,7 +412,9 @@ public class Entity : NetworkBehaviour
     public Action onKilled;
     public virtual void OnDeath()
     {
-        mapObject.IsVisible = false;
+        if (mapObject != null)
+            mapObject.IsVisible = false;
+
         if (hasAuthority)
         {
             transform.localScale = new Vector3(1,1,1);
@@ -434,7 +436,8 @@ public class Entity : NetworkBehaviour
 
     public virtual void OnRespawn()
     {
-        mapObject.IsVisible = true;
+        if (mapObject != null)
+            mapObject.IsVisible = true;
 
         //Respawn Effect
         Instantiate(PrefabManager.Instance.spawnEffectPrefab, transform);

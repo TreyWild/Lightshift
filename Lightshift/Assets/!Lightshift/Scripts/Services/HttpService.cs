@@ -36,7 +36,7 @@ namespace Assets._Lightshift.Scripts.Web
         }
         public static void Get<T>(string uri, object document, Action<T> callback, Action<Exception> error = null)
         {
-            RestClient.Post($"{WEB_SERVER_URL_MAIN}/{uri}", JsonConvert.SerializeObject(document)).Then(response =>
+            RestClient.Post($"{WEB_SERVER_URL_TESTING}/{uri}", JsonConvert.SerializeObject(document)).Then(response =>
             {
                 var json = response.Text;
                 callback?.Invoke(JsonConvert.DeserializeObject<T>(json));

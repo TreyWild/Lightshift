@@ -18,7 +18,6 @@ public class Projectile : MonoBehaviour
     private Kinematic _target;
     private float speed;
     private AudioSource _audioSource;
-    private BoxCollider2D _physicalCollider;
 
     public TrailRenderer GetTrailRenderer() 
     {
@@ -111,13 +110,17 @@ public class Projectile : MonoBehaviour
         _kinematic.SetDirection(_kinematic.rotation + data.agility * targetAngle * Time.fixedDeltaTime);
     }
 
-    private void SetAsDead() 
+    private void SetAsDead()
     {
         _trailRenderer.Clear();
         _trailRenderer.enabled = false;
         _trailRenderer.emitting = false;
         isAlive = false;
         gameObject.SetActive(false);
+        entity = null;
+        weapon = null;
+        _kinematic = null;
+        _target = null;
     }
 
     public void OnTriggerEnter2D(Collider2D collision)

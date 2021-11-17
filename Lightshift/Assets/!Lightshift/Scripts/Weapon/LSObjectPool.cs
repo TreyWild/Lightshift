@@ -10,7 +10,7 @@ public class LSObjectPool : MonoBehaviour
 
     private static LSObjectPool Instance;
 
-    private List<Projectile> _projectiles = new List<Projectile>();
+    private Dictionary<string, List<Projectile>> _projectiles = new Dictionary<string, List<Projectile>>();
     private Transform _projectileHolder;
     private Transform _effectsHolder;
     private void Awake()
@@ -21,14 +21,19 @@ public class LSObjectPool : MonoBehaviour
 
         _projectileHolder = transform;
     }
-    public static Projectile GetUsableProjectile()
+    public static Projectile GetUsableProjectile(string id)
     {
-        var projectile = Instance._projectiles.FirstOrDefault(p => !p.isAlive);
-        if (projectile == null)
-            projectile = Instantiate(Instance._bulletPrefab, Instance._projectileHolder).AddComponent<Projectile>();
+        if (!Instance._projectiles.ContainsKey(id))
+        {
+            Instance._projectiles.Add(id, new List<Projectile>());
+        }
 
-        if (!Instance._projectiles.Contains(projectile))
-            Instance._projectiles.Add(projectile);
+        var projectile = Instance._projectiles[id].FirstOrDefault(p => !p.isAlive);
+        if (projectile == null)
+        {
+            projectile = Instantiate(Instance._bulletPrefab, Instance._projectileHolder).AddComponent<Projectile>();
+            Instance._projectiles[id].Add(projectile);
+        }
 
         var trail = projectile.GetTrailRenderer();
         if (trail != null)
