@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "K8m1TvvzAQwoXq0sv5TDJR+skcKiknzYtB2Vj2dwU0xv1/Kg7VF4iYSNZQvmKDuRUMOmDkkFK5PwCjNaDXVfMQ==",
+  "dgSpecHash": "+mIpbLdQTRjIjwl/Ty4I2BQrT8ALh7dUhXwpWvCeOYsd3L2U+UvcQfu5NHaYETXZeEt+YEZn3Z4H929NURvpzQ==",
   "success": true,
   "projectFilePath": "C:\\Users\\Bryly\\Documents\\GitHub\\Lightshift\\MasterServer\\MasterServer\\MasterServer.csproj",
   "expectedPackageFiles": [
@@ -86,7 +86,11 @@
     "C:\\Users\\Bryly\\.nuget\\packages\\system.threading.tasks.extensions\\4.5.4\\system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "C:\\Users\\Bryly\\.nuget\\packages\\system.threading.timer\\4.3.0\\system.threading.timer.4.3.0.nupkg.sha512",
     "C:\\Users\\Bryly\\.nuget\\packages\\system.xml.readerwriter\\4.3.0\\system.xml.readerwriter.4.3.0.nupkg.sha512",
-    "C:\\Users\\Bryly\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512"
+    "C:\\Users\\Bryly\\.nuget\\packages\\system.xml.xdocument\\4.3.0\\system.xml.xdocument.4.3.0.nupkg.sha512",
+    "C:\\Users\\Bryly\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\3.1.21\\microsoft.netcore.app.host.win-x64.3.1.21.nupkg.sha512",
+    "C:\\Users\\Bryly\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\3.1.10\\microsoft.aspnetcore.app.ref.3.1.10.nupkg.sha512",
+    "C:\\Users\\Bryly\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\3.1.0\\microsoft.windowsdesktop.app.ref.3.1.0.nupkg.sha512",
+    "C:\\Users\\Bryly\\.nuget\\packages\\microsoft.netcore.app.ref\\3.1.0\\microsoft.netcore.app.ref.3.1.0.nupkg.sha512"
   ],
   "logs": []
 }
